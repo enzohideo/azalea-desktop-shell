@@ -3,20 +3,23 @@ use std::sync::mpsc;
 use clap::Parser;
 use gtk::gio::prelude::{ApplicationExt, ApplicationExtManual};
 
-use super::cli;
+use super::cli::{Arguments, Command, DaemonCommand};
 
 static LOG_NAME: &str = "LilyDesktopShell";
 static ID: &str = "usp.ime.LilyDesktopShell";
 
 pub fn run() {
-    let app = gtk::Application::builder().application_id(ID).build();
-
-    let args = cli::Arguments::parse();
+    let args = Arguments::parse();
     let mut gtk_args = vec![std::env::args().next().unwrap()];
     gtk_args.extend(args.gtk_options.clone());
 
     // TODO: Handle remote commands
-    daemon(&app, &gtk_args);
+    if let Command::Daemon(DaemonCommand::Start) = args.command {
+        let app = gtk::Application::builder().application_id(ID).build();
+        daemon(&app, &gtk_args);
+    } else {
+        todo!();
+    }
 }
 
 fn daemon(app: &gtk::Application, gtk_args: &Vec<String>) {
