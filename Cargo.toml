@@ -2,5 +2,13 @@
 name = "lily-desktop-shell"
 version = "0.1.0"
 edition = "2024"
+default-run = "lily"
+
+[lib]
+path = "src/lib/mod.rs"
+
+[[bin]]
+name = "lily"
+path = "src/main/mod.rs"
 
 [dependencies]
