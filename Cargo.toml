@@ -12,3 +12,4 @@ name = "lily"
 path = "src/main/mod.rs"
 
 [dependencies]
+gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }

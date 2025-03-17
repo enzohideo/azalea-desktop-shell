@@ -1,3 +1,5 @@
+use lily_desktop_shell::app;
+
 fn main() {
-    todo!();
+    app::run();
 }
