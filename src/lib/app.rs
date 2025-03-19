@@ -13,6 +13,7 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
+static SOCKET_NAME: &str = "lily.sock";
 static LOG_NAME: &str = "LilyDesktopShell";
 static ID: &str = "usp.ime.LilyDesktopShell";
 
@@ -21,28 +22,16 @@ pub fn run() {
     let mut gtk_args = vec![std::env::args().next().unwrap()];
     gtk_args.extend(args.gtk_options.clone());
 
-    // TODO: Handle remote commands
+    let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), SOCKET_NAME);
+
     // TODO: Check if it's remote through dbus
     match args.command {
-        Command::Daemon => daemon(&gtk_args),
-        Command::Remote(cmd) => match UnixStream::connect("/tmp/test.sock") {
-            Ok(stream) => {
-                let mut stream = UnixStreamWrapper::new(stream);
-                if let Err(e) = stream.write(&cmd) {
-                    println!("failed to write {e:?}");
-                } else {
-                    match stream.read::<()>() {
-                        Ok(_) => println!("Received"),
-                        Err(_) => println!("Failed to receive response"),
-                    }
-                }
-            }
-            Err(e) => println!("failed to connect {e:?}"),
-        },
+        Command::Daemon => daemon(&gtk_args, socket_path),
+        Command::Remote(cmd) => remote(cmd, socket_path),
     }
 }
 
-fn daemon(gtk_args: &Vec<String>) {
+fn daemon(gtk_args: &Vec<String>, socket_path: String) {
     let app = gtk::Application::builder().application_id(ID).build();
 
     if let Err(error) = app.register(gio::Cancellable::NONE) {
@@ -60,7 +49,7 @@ fn daemon(gtk_args: &Vec<String>) {
 
             pong_tx.send(app_guard).expect("Daemon could not pong!");
 
-            if let Err(e) = UnixListenerWrapper::bind("/tmp/test.sock").and_then(|listener| {
+            if let Err(e) = UnixListenerWrapper::bind(&socket_path).and_then(|listener| {
                 listener.loop_accept(|mut stream| {
                     let cmd = stream.read()?;
                     println!("received command: {cmd:?}");
@@ -81,4 +70,21 @@ fn daemon(gtk_args: &Vec<String>) {
     app.run_with_args(gtk_args);
 
     drop(pong_rx.try_recv());
+}
+
+fn remote(command: RemoteCommand, socket_path: String) {
+    match UnixStream::connect(socket_path) {
+        Ok(stream) => {
+            let mut stream = UnixStreamWrapper::new(stream);
+            if let Err(e) = stream.write(&command) {
+                println!("failed to write {e:?}");
+            } else {
+                match stream.read::<()>() {
+                    Ok(_) => println!("Received"),
+                    Err(_) => println!("Failed to receive response"),
+                }
+            }
+        }
+        Err(e) => println!("failed to connect {e:?}"),
+    }
 }
