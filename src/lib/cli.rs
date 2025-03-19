@@ -22,5 +22,6 @@ pub enum Command {
 
 #[derive(Parser, Encode, Decode, Debug)]
 pub enum RemoteCommand {
+    Create,
     Quit,
 }

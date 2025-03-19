@@ -38,17 +38,17 @@ impl UnixListenerWrapper {
                 Ok((stream, _addr)) => {
                     let stream = UnixStreamWrapper::new(stream);
                     match callback(stream) {
-                        Ok(leave) => {
-                            if leave {
-                                break;
+                        Ok(alive) => {
+                            if alive {
+                                continue;
                             }
+                            return Ok(());
                         }
                         Err(e) => println!("failed to execute callback {e:?}"),
                     }
                 }
             }
         }
-        Ok(())
     }
 }
 

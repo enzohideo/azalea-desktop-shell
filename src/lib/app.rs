@@ -1,9 +1,12 @@
 use std::{os::unix::net::UnixStream, sync::mpsc};
 
 use clap::Parser;
-use gtk::gio::{
-    self,
-    prelude::{ApplicationExt, ApplicationExtManual},
+use gtk::{
+    gio::{
+        self,
+        prelude::{ApplicationExt, ApplicationExtManual},
+    },
+    prelude::{GtkApplicationExt, GtkWindowExt},
 };
 
 use crate::{
@@ -48,18 +51,31 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
             gtk::glib::g_message!(LOG_NAME, "Daemon has started");
 
             pong_tx.send(app_guard).expect("Daemon could not pong!");
-
             if let Err(e) = UnixListenerWrapper::bind(&socket_path).and_then(|listener| {
                 listener.loop_accept(|mut stream| {
                     let cmd = stream.read()?;
                     println!("received command: {cmd:?}");
+
                     match cmd {
                         RemoteCommand::Quit => {
                             app.quit();
                             drop(stream.write(()));
-                            Ok(true)
+                            return Ok(false);
+                        }
+                        RemoteCommand::Create => {
+                            // FIXME: Some how make unix sockets work without blocking the main
+                            // loop or use actions (or dbus directly)
+                            let btn = gtk::Button::with_label("Hey");
+                            let window = gtk::Window::builder()
+                                .application(app)
+                                .title("Hello World")
+                                .child(&btn)
+                                .build();
+                            window.present();
                         }
                     }
+
+                    Ok(true)
                 })
             }) {
                 println!("Failed to bind unix socket {e:?}");
