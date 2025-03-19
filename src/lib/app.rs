@@ -1,4 +1,4 @@
-use std::{os::unix::net::UnixStream, sync::mpsc};
+use std::sync::mpsc;
 
 use clap::Parser;
 use gtk::{
@@ -6,12 +6,13 @@ use gtk::{
         self,
         prelude::{ApplicationExt, ApplicationExtManual},
     },
-    prelude::{GtkApplicationExt, GtkWindowExt},
+    glib,
+    prelude::GtkWindowExt,
 };
 
 use crate::{
     cli::RemoteCommand,
-    socket::{UnixListenerWrapper, UnixStreamWrapper},
+    socket::{self, r#async::UnixStreamWrapper},
 };
 
 use super::cli::{Arguments, Command};
@@ -29,7 +30,9 @@ pub fn run() {
 
     // TODO: Check if it's remote through dbus
     match args.command {
-        Command::Daemon => daemon(&gtk_args, socket_path),
+        Command::Daemon => {
+            daemon(&gtk_args, socket_path);
+        }
         Command::Remote(cmd) => remote(cmd, socket_path),
     }
 }
@@ -51,33 +54,46 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
             gtk::glib::g_message!(LOG_NAME, "Daemon has started");
 
             pong_tx.send(app_guard).expect("Daemon could not pong!");
-            if let Err(e) = UnixListenerWrapper::bind(&socket_path).and_then(|listener| {
-                listener.loop_accept(|mut stream| {
-                    let cmd = stream.read()?;
-                    println!("received command: {cmd:?}");
+            if let Err(e) =
+                socket::r#async::UnixListenerWrapper::bind(&socket_path).and_then(|listener| {
+                    let app = app.clone();
 
-                    match cmd {
-                        RemoteCommand::Quit => {
-                            app.quit();
-                            drop(stream.write(()));
-                            return Ok(false);
-                        }
-                        RemoteCommand::Create => {
-                            // FIXME: Some how make unix sockets work without blocking the main
-                            // loop or use actions (or dbus directly)
-                            let btn = gtk::Button::with_label("Hey");
-                            let window = gtk::Window::builder()
-                                .application(app)
-                                .title("Hello World")
-                                .child(&btn)
-                                .build();
-                            window.present();
-                        }
-                    }
+                    glib::spawn_future_local(glib::clone!(
+                        #[weak]
+                        app,
+                        async move {
+                            listener
+                                .loop_accept(async |mut stream: UnixStreamWrapper| {
+                                    let cmd = stream.read().await.unwrap();
+                                    println!("received command: {cmd:?}");
 
-                    Ok(true)
+                                    match cmd {
+                                        RemoteCommand::Quit => {
+                                            app.quit();
+                                            drop(stream.write(()));
+                                            return Ok(false);
+                                        }
+                                        RemoteCommand::Create => {
+                                            let btn = gtk::Button::with_label("Hey");
+                                            let window = gtk::Window::builder()
+                                                .application(&app)
+                                                .title("Hello World")
+                                                .child(&btn)
+                                                .build();
+                                            window.present();
+                                        }
+                                    }
+
+                                    Ok(true)
+                                })
+                                .await
+                                .unwrap();
+                        }
+                    ));
+
+                    Ok(())
                 })
-            }) {
+            {
                 println!("Failed to bind unix socket {e:?}");
             };
         }
@@ -89,9 +105,9 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
 }
 
 fn remote(command: RemoteCommand, socket_path: String) {
-    match UnixStream::connect(socket_path) {
+    match std::os::unix::net::UnixStream::connect(socket_path) {
         Ok(stream) => {
-            let mut stream = UnixStreamWrapper::new(stream);
+            let mut stream = socket::sync::UnixStreamWrapper::new(stream);
             if let Err(e) = stream.write(&command) {
                 println!("failed to write {e:?}");
             } else {
