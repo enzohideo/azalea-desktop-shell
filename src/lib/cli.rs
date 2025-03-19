@@ -14,13 +14,13 @@ pub struct Arguments {
 
 #[derive(Parser, Encode, Decode)]
 pub enum Command {
-    // TODO: Remove DaemonCommand in favour of flat Daemon + Quit commands
-    #[command(subcommand)]
-    Daemon(DaemonCommand),
+    Daemon,
+
+    #[command(flatten)]
+    Remote(RemoteCommand),
 }
 
 #[derive(Parser, Encode, Decode, Debug)]
-pub enum DaemonCommand {
-    Start,
-    Stop,
+pub enum RemoteCommand {
+    Quit,
 }
