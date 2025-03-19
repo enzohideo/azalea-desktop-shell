@@ -1,6 +1,7 @@
+use bincode::{Decode, Encode};
 use clap::{Parser, arg, command};
 
-#[derive(Parser)]
+#[derive(Parser, Encode, Decode)]
 #[command(version, about, long_about = None)]
 pub struct Arguments {
     #[command(subcommand)]
@@ -11,13 +12,14 @@ pub struct Arguments {
     pub gtk_options: Vec<String>,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Encode, Decode)]
 pub enum Command {
+    // TODO: Remove DaemonCommand in favour of flat Daemon + Quit commands
     #[command(subcommand)]
     Daemon(DaemonCommand),
 }
 
-#[derive(Parser)]
+#[derive(Parser, Encode, Decode, Debug)]
 pub enum DaemonCommand {
     Start,
     Stop,

@@ -12,5 +12,6 @@ name = "lily"
 path = "src/main/mod.rs"
 
 [dependencies]
+bincode = "2.0.1"
 clap = { version = "4.5.32", features = [ "derive" ] }
 gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }

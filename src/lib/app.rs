@@ -21,6 +21,7 @@ pub fn run() {
     gtk_args.extend(args.gtk_options.clone());
 
     // TODO: Handle remote commands
+    // TODO: Check if it's remote through dbus
     match args.command {
         Command::Daemon(daemon_command) => daemon(daemon_command, &gtk_args),
     }
@@ -59,13 +60,23 @@ fn daemon(command: DaemonCommand, gtk_args: &Vec<String>) {
                     loop {
                         match socket.accept() {
                             Ok((mut stream, _addr)) => {
-                                let mut response = String::new();
-                                if let Err(e) = stream.read_to_string(&mut response) {
+                                let mut response = vec![];
+                                if let Err(e) = stream.read_to_end(&mut response) {
                                     println!("failed {e:?}");
                                 } else {
-                                    // TODO: Handle different remote requests
-                                    println!("daemon: {response:?}");
-                                    app.quit();
+                                    let (cmd, len): (DaemonCommand, usize) =
+                                        bincode::decode_from_slice(
+                                            &response,
+                                            bincode::config::standard(),
+                                        )
+                                        .unwrap();
+                                    match cmd {
+                                        DaemonCommand::Stop => {
+                                            println!("daemon command: {cmd:?}, len: {len:?}");
+                                            app.quit();
+                                        }
+                                        _ => todo!(),
+                                    }
                                     return;
                                 }
                             }
@@ -79,9 +90,11 @@ fn daemon(command: DaemonCommand, gtk_args: &Vec<String>) {
 
             drop(pong_rx.try_recv());
         }
-        DaemonCommand::Stop => match UnixStream::connect("/tmp/test.sock") {
+        cmd => match UnixStream::connect("/tmp/test.sock") {
             Ok(mut stream) => {
-                if let Err(e) = stream.write_all(b"hello world") {
+                if let Err(e) = stream
+                    .write_all(&bincode::encode_to_vec(&cmd, bincode::config::standard()).unwrap())
+                {
                     println!("failed to write {e:?}");
                 }
             }
