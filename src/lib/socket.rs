@@ -1,6 +1,6 @@
 use std::{
     io::{Read, Write},
-    os::unix::net::UnixStream,
+    os::unix::net::{UnixListener, UnixStream},
 };
 
 use bincode::{de, enc};
@@ -9,6 +9,47 @@ use bincode::{de, enc};
 pub enum Error {
     Encode,
     Decode,
+    UnixSocket(String),
+}
+
+pub struct UnixListenerWrapper {
+    listener: UnixListener,
+}
+
+impl UnixListenerWrapper {
+    pub fn bind<P>(path: P) -> Result<Self, Error>
+    where
+        P: AsRef<std::path::Path>,
+    {
+        drop(std::fs::remove_file(&path));
+        match UnixListener::bind(path) {
+            Ok(listener) => Ok(Self { listener }),
+            Err(e) => Err(Error::UnixSocket(e.to_string())),
+        }
+    }
+
+    pub fn loop_accept<F>(&self, mut callback: F) -> Result<(), Error>
+    where
+        F: FnMut(UnixStreamWrapper) -> Result<bool, Error>,
+    {
+        loop {
+            match self.listener.accept() {
+                Err(e) => println!("failed to connect {e:?}"),
+                Ok((stream, _addr)) => {
+                    let stream = UnixStreamWrapper::new(stream);
+                    match callback(stream) {
+                        Ok(leave) => {
+                            if leave {
+                                break;
+                            }
+                        }
+                        Err(e) => println!("failed to execute callback {e:?}"),
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 pub struct UnixStreamWrapper {

@@ -1,7 +1,4 @@
-use std::{
-    os::unix::net::{UnixListener, UnixStream},
-    sync::mpsc,
-};
+use std::{os::unix::net::UnixStream, sync::mpsc};
 
 use clap::Parser;
 use gtk::gio::{
@@ -9,7 +6,10 @@ use gtk::gio::{
     prelude::{ApplicationExt, ApplicationExtManual},
 };
 
-use crate::{cli::RemoteCommand, socket::UnixStreamWrapper};
+use crate::{
+    cli::RemoteCommand,
+    socket::{UnixListenerWrapper, UnixStreamWrapper},
+};
 
 use super::cli::{Arguments, Command};
 
@@ -58,40 +58,23 @@ fn daemon(gtk_args: &Vec<String>) {
         if let Ok(app_guard) = ping_rx.try_recv() {
             gtk::glib::g_message!(LOG_NAME, "Daemon has started");
 
-            drop(std::fs::remove_file("/tmp/test.sock"));
-
-            let socket = match UnixListener::bind("/tmp/test.sock") {
-                Ok(socket) => socket,
-                Err(e) => {
-                    eprintln!("failed to connect {e:?}");
-                    return;
-                }
-            };
-
             pong_tx.send(app_guard).expect("Daemon could not pong!");
 
-            loop {
-                match socket.accept() {
-                    Err(e) => println!("failed to connect {e:?}"),
-                    Ok((stream, _addr)) => {
-                        let mut stream = UnixStreamWrapper::new(stream);
-
-                        match stream.read() {
-                            Err(e) => println!("failed {e:?}"),
-                            Ok(cmd) => {
-                                println!("received command: {cmd:?}");
-                                match cmd {
-                                    RemoteCommand::Quit => {
-                                        app.quit();
-                                        drop(stream.write(()));
-                                        return;
-                                    }
-                                }
-                            }
+            if let Err(e) = UnixListenerWrapper::bind("/tmp/test.sock").and_then(|listener| {
+                listener.loop_accept(|mut stream| {
+                    let cmd = stream.read()?;
+                    println!("received command: {cmd:?}");
+                    match cmd {
+                        RemoteCommand::Quit => {
+                            app.quit();
+                            drop(stream.write(()));
+                            Ok(true)
                         }
                     }
-                }
-            }
+                })
+            }) {
+                println!("Failed to bind unix socket {e:?}");
+            };
         }
     });
 
