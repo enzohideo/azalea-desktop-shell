@@ -1,5 +1,4 @@
 use std::{
-    io::{Read, Write},
     os::unix::net::{UnixListener, UnixStream},
     sync::mpsc,
 };
@@ -10,7 +9,7 @@ use gtk::gio::{
     prelude::{ApplicationExt, ApplicationExtManual},
 };
 
-use crate::cli::RemoteCommand;
+use crate::{cli::RemoteCommand, socket::UnixStreamWrapper};
 
 use super::cli::{Arguments, Command};
 
@@ -27,21 +26,14 @@ pub fn run() {
     match args.command {
         Command::Daemon => daemon(&gtk_args),
         Command::Remote(cmd) => match UnixStream::connect("/tmp/test.sock") {
-            Ok(mut stream) => {
-                if let Err(e) = stream
-                    .write_all(&bincode::encode_to_vec(&cmd, bincode::config::standard()).unwrap())
-                {
+            Ok(stream) => {
+                let mut stream = UnixStreamWrapper::new(stream);
+                if let Err(e) = stream.write(&cmd) {
                     println!("failed to write {e:?}");
                 } else {
-                    drop(stream.shutdown(std::net::Shutdown::Write));
-                    let mut response = vec![];
-                    drop(stream.read_to_end(&mut response));
-                    let (response, _len): (Result<(), ()>, usize) =
-                        bincode::decode_from_slice(&response, bincode::config::standard()).unwrap();
-                    if let Ok(_) = response {
-                        println!("Success");
-                    } else {
-                        println!("Failure");
+                    match stream.read::<()>() {
+                        Ok(_) => println!("Received"),
+                        Err(_) => println!("Failed to receive response"),
                     }
                 }
             }
@@ -80,39 +72,24 @@ fn daemon(gtk_args: &Vec<String>) {
 
             loop {
                 match socket.accept() {
-                    Ok((mut stream, _addr)) => {
-                        let mut response = vec![];
+                    Err(e) => println!("failed to connect {e:?}"),
+                    Ok((stream, _addr)) => {
+                        let mut stream = UnixStreamWrapper::new(stream);
 
-                        if let Err(e) = stream.read_to_end(&mut response) {
-                            println!("failed {e:?}");
-                        } else {
-                            match bincode::decode_from_slice(&response, bincode::config::standard())
-                            {
-                                Ok((cmd, len)) => {
-                                    println!("received command: {cmd:?}, len: {len:?}");
-                                    match cmd {
-                                        RemoteCommand::Quit => {
-                                            app.quit();
-                                            // TODO: Simplify this with a wrapper
-                                            let answer: Result<(), ()> = Ok(());
-                                            drop(
-                                                stream.write_all(
-                                                    &bincode::encode_to_vec(
-                                                        &answer,
-                                                        bincode::config::standard(),
-                                                    )
-                                                    .unwrap(),
-                                                ),
-                                            );
-                                            return;
-                                        }
+                        match stream.read() {
+                            Err(e) => println!("failed {e:?}"),
+                            Ok(cmd) => {
+                                println!("received command: {cmd:?}");
+                                match cmd {
+                                    RemoteCommand::Quit => {
+                                        app.quit();
+                                        drop(stream.write(()));
+                                        return;
                                     }
                                 }
-                                Err(e) => println!("{e:?}"),
                             }
                         }
                     }
-                    Err(e) => println!("failed to connect {e:?}"),
                 }
             }
         }
