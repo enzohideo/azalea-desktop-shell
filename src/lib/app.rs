@@ -32,6 +32,17 @@ pub fn run() {
                     .write_all(&bincode::encode_to_vec(&cmd, bincode::config::standard()).unwrap())
                 {
                     println!("failed to write {e:?}");
+                } else {
+                    drop(stream.shutdown(std::net::Shutdown::Write));
+                    let mut response = vec![];
+                    drop(stream.read_to_end(&mut response));
+                    let (response, _len): (Result<(), ()>, usize) =
+                        bincode::decode_from_slice(&response, bincode::config::standard()).unwrap();
+                    if let Ok(_) = response {
+                        println!("Success");
+                    } else {
+                        println!("Failure");
+                    }
                 }
             }
             Err(e) => println!("failed to connect {e:?}"),
@@ -80,7 +91,21 @@ fn daemon(gtk_args: &Vec<String>) {
                                 Ok((cmd, len)) => {
                                     println!("received command: {cmd:?}, len: {len:?}");
                                     match cmd {
-                                        RemoteCommand::Quit => app.quit(),
+                                        RemoteCommand::Quit => {
+                                            app.quit();
+                                            // TODO: Simplify this with a wrapper
+                                            let answer: Result<(), ()> = Ok(());
+                                            drop(
+                                                stream.write_all(
+                                                    &bincode::encode_to_vec(
+                                                        &answer,
+                                                        bincode::config::standard(),
+                                                    )
+                                                    .unwrap(),
+                                                ),
+                                            );
+                                            return;
+                                        }
                                     }
                                 }
                                 Err(e) => println!("{e:?}"),
