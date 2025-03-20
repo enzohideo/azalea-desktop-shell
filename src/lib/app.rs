@@ -54,10 +54,9 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
             gtk::glib::g_message!(LOG_NAME, "Daemon has started");
 
             pong_tx.send(app_guard).expect("Daemon could not pong!");
-            if let Err(e) =
-                socket::r#async::UnixListenerWrapper::bind(&socket_path).and_then(|listener| {
-                    let app = app.clone();
 
+            match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
+                Ok(listener) => {
                     glib::spawn_future_local(glib::clone!(
                         #[weak]
                         app,
@@ -90,12 +89,9 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
                                 .unwrap();
                         }
                     ));
-
-                    Ok(())
-                })
-            {
-                println!("Failed to bind unix socket {e:?}");
-            };
+                }
+                Err(e) => println!("Failed to bind unix socket {e:?}"),
+            }
         }
     });
 
