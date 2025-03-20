@@ -118,21 +118,16 @@ pub mod r#async {
 
         pub async fn loop_accept<F>(&self, mut callback: F) -> Result<(), Error>
         where
-            F: AsyncFnMut(UnixStreamWrapper) -> Result<bool, Error>,
+            F: AsyncFnMut(UnixStreamWrapper) -> bool,
         {
             loop {
                 match self.listener.accept().await {
                     Err(e) => println!("failed to connect {e:?}"),
                     Ok((stream, _addr)) => {
                         let stream = UnixStreamWrapper::new(stream);
-                        match callback(stream).await {
-                            Ok(alive) => {
-                                if alive {
-                                    continue;
-                                }
-                                return Ok(());
-                            }
-                            Err(e) => println!("failed to execute callback {e:?}"),
+                        let alive = callback(stream).await;
+                        if !alive {
+                            return Ok(());
                         }
                     }
                 }

@@ -30,9 +30,7 @@ pub fn run() {
 
     // TODO: Check if it's remote through dbus
     match args.command {
-        Command::Daemon => {
-            daemon(&gtk_args, socket_path);
-        }
+        Command::Daemon => daemon(&gtk_args, socket_path),
         Command::Remote(cmd) => remote(cmd, socket_path),
     }
 }
@@ -62,28 +60,8 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
                         app,
                         async move {
                             listener
-                                .loop_accept(async |mut stream: UnixStreamWrapper| {
-                                    let cmd = stream.read().await.unwrap();
-                                    println!("received command: {cmd:?}");
-
-                                    match cmd {
-                                        RemoteCommand::Quit => {
-                                            app.quit();
-                                            drop(stream.write(()));
-                                            return Ok(false);
-                                        }
-                                        RemoteCommand::Create => {
-                                            let btn = gtk::Button::with_label("Hey");
-                                            let window = gtk::Window::builder()
-                                                .application(&app)
-                                                .title("Hello World")
-                                                .child(&btn)
-                                                .build();
-                                            window.present();
-                                        }
-                                    }
-
-                                    Ok(true)
+                                .loop_accept(async |stream: UnixStreamWrapper| {
+                                    handle_command(&app, stream).await
                                 })
                                 .await
                                 .unwrap();
@@ -115,4 +93,28 @@ fn remote(command: RemoteCommand, socket_path: String) {
         }
         Err(e) => println!("failed to connect {e:?}"),
     }
+}
+
+async fn handle_command(app: &gtk::Application, mut stream: UnixStreamWrapper) -> bool {
+    match stream.read().await {
+        Ok(cmd) => match cmd {
+            RemoteCommand::Quit => {
+                app.quit();
+                drop(stream.write(()));
+                return false;
+            }
+            RemoteCommand::Create => {
+                let btn = gtk::Button::with_label("Hey");
+                let window = gtk::Window::builder()
+                    .application(app)
+                    .title("Hello World")
+                    .child(&btn)
+                    .build();
+                window.present();
+            }
+        },
+        Err(e) => println!("Failed to read command {e:?}"),
+    }
+
+    true
 }
