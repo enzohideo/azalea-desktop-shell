@@ -63,8 +63,7 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
                                 .loop_accept(async |stream: UnixStreamWrapper| {
                                     handle_command(&app, stream).await
                                 })
-                                .await
-                                .unwrap();
+                                .await;
                         }
                     ));
                 }

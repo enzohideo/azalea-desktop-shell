@@ -116,7 +116,7 @@ pub mod r#async {
             }
         }
 
-        pub async fn loop_accept<F>(&self, mut callback: F) -> Result<(), Error>
+        pub async fn loop_accept<F>(&self, mut callback: F)
         where
             F: AsyncFnMut(UnixStreamWrapper) -> bool,
         {
@@ -127,7 +127,7 @@ pub mod r#async {
                         let stream = UnixStreamWrapper::new(stream);
                         let alive = callback(stream).await;
                         if !alive {
-                            return Ok(());
+                            return;
                         }
                     }
                 }
