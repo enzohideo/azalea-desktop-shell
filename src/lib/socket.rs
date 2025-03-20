@@ -63,6 +63,16 @@ pub mod sync {
             Self { stream }
         }
 
+        pub fn connect<P>(path: P) -> Result<Self, Error>
+        where
+            P: AsRef<std::path::Path>,
+        {
+            match std::os::unix::net::UnixStream::connect(path) {
+                Ok(stream) => Ok(UnixStreamWrapper::new(stream)),
+                Err(e) => Err(Error::UnixSocket(e.to_string())),
+            }
+        }
+
         pub fn read<T>(&mut self) -> Result<T, Error>
         where
             T: de::Decode<()>,

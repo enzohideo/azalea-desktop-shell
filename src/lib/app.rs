@@ -78,9 +78,8 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
 }
 
 fn remote(command: RemoteCommand, socket_path: String) {
-    match std::os::unix::net::UnixStream::connect(socket_path) {
-        Ok(stream) => {
-            let mut stream = socket::sync::UnixStreamWrapper::new(stream);
+    match socket::sync::UnixStreamWrapper::connect(socket_path) {
+        Ok(mut stream) => {
             if let Err(e) = stream.write(&command) {
                 println!("failed to write {e:?}");
             } else {
