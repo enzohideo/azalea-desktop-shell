@@ -1,4 +1,4 @@
-use lily_desktop_shell::app;
+use azalea_desktop_shell::app;
 
 fn main() {
     app::run();

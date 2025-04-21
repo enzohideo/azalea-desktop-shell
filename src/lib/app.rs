@@ -17,9 +17,9 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
-static SOCKET_NAME: &str = "lily.sock";
-static LOG_NAME: &str = "LilyDesktopShell";
-static ID: &str = "usp.ime.LilyDesktopShell";
+static SOCKET_NAME: &str = "azalea.sock";
+static LOG_NAME: &str = "AzaleaDesktopShell";
+static ID: &str = "usp.ime.AzaleaDesktopShell";
 
 pub fn run() {
     let args = Arguments::parse();

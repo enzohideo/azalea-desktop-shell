@@ -11,7 +11,7 @@
       inherit (nixpkgs) lib;
       forEachSystem = lib.genAttrs (import systems);
       pkgsFor = forEachSystem (system: nixpkgs.legacyPackages.${system});
-      name = "lily-desktop-shell";
+      name = "azalea-desktop-shell";
     in
     {
       devShells = forEachSystem (
@@ -21,7 +21,7 @@
         in
         {
           default = pkgs.mkShell {
-            name = "lily-devshell";
+            name = "azalea-devshell";
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             buildInputs = with pkgs; [
               cargo
