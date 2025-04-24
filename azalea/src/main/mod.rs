@@ -1,4 +1,4 @@
-use azalea_desktop_shell::app;
+use azalea::app;
 
 fn main() {
     app::run();
