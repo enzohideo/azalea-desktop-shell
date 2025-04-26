@@ -27,6 +27,7 @@
               cargo
               rustc
               rustfmt
+              rust-analyzer
               pkg-config
 
               gtk4
