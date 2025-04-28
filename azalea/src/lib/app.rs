@@ -9,6 +9,7 @@ use gtk::{
     glib,
     prelude::GtkWindowExt,
 };
+use gtk4_layer_shell::LayerShell;
 
 use crate::{
     cli::{DaemonCommand, WindowCommand},
@@ -60,14 +61,16 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String, config: Option<Config>) {
             pong_tx.send(app_guard).expect("Daemon could not pong!");
 
             if let Some(config) = &config {
-                for window in &config.windows {
+                for window_model in &config.windows {
                     // TODO: Determine which window to create based on init value
                     let btn = gtk::Button::with_label("Hey");
                     let window = gtk::Window::builder()
                         .application(app)
-                        .title(&window.title)
+                        .title(&window_model.namespace)
                         .child(&btn)
                         .build();
+                    window.init_layer_shell();
+                    window.set_namespace(Some(&window_model.namespace));
                     window.present();
                 }
             }
@@ -128,13 +131,15 @@ fn handle_command(cmd: Command, app: &gtk::Application) {
         Command::Daemon(DaemonCommand::Stop) => {
             app.quit();
         }
-        Command::Window(WindowCommand::Create(window)) => {
+        Command::Window(WindowCommand::Create(window_model)) => {
             let btn = gtk::Button::with_label("Hey");
             let window = gtk::Window::builder()
                 .application(app)
-                .title(window.title)
+                .title(&window_model.namespace)
                 .child(&btn)
                 .build();
+            window.init_layer_shell();
+            window.set_namespace(Some(&window_model.namespace));
             window.present();
         }
     }
