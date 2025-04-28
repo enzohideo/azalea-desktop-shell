@@ -11,7 +11,7 @@ use gtk::{
 };
 
 use crate::{
-    cli::RemoteCommand,
+    cli::{DaemonCommand, WindowCommand},
     socket::{self, r#async::UnixStreamWrapper},
 };
 
@@ -30,8 +30,8 @@ pub fn run() {
 
     // TODO: Check if it's remote through dbus
     match args.command {
-        Command::Daemon => daemon(&gtk_args, socket_path),
-        Command::Remote(cmd) => remote(cmd, socket_path),
+        Command::Daemon(DaemonCommand::Start) => daemon(&gtk_args, socket_path),
+        cmd => send_command(cmd, socket_path),
     }
 }
 
@@ -81,7 +81,7 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
     drop(pong_rx.try_recv());
 }
 
-fn remote(command: RemoteCommand, socket_path: String) {
+fn send_command(command: Command, socket_path: String) {
     match socket::sync::UnixStreamWrapper::connect(socket_path) {
         Ok(mut stream) => {
             if let Err(e) = stream.write(&command) {
@@ -97,13 +97,17 @@ fn remote(command: RemoteCommand, socket_path: String) {
     }
 }
 
-fn handle_command(cmd: RemoteCommand, app: &gtk::Application) {
+fn handle_command(cmd: Command, app: &gtk::Application) {
     match cmd {
-        RemoteCommand::Quit => {
+        Command::Daemon(DaemonCommand::Start) => {
+            todo!()
+            // TODO: Warning message;
+        }
+        Command::Daemon(DaemonCommand::Stop) => {
             app.quit();
             // FIXME: drop(stream.write(()));
         }
-        RemoteCommand::Create => {
+        Command::Window(WindowCommand::Create) => {
             let btn = gtk::Button::with_label("Hey");
             let window = gtk::Window::builder()
                 .application(app)

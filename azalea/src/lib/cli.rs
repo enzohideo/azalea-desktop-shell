@@ -14,14 +14,20 @@ pub struct Arguments {
 
 #[derive(Parser, Encode, Decode)]
 pub enum Command {
-    Daemon,
+    #[command(subcommand)]
+    Daemon(DaemonCommand),
 
-    #[command(flatten)]
-    Remote(RemoteCommand),
+    #[command(subcommand)]
+    Window(WindowCommand),
 }
 
 #[derive(Parser, Encode, Decode, Debug)]
-pub enum RemoteCommand {
+pub enum DaemonCommand {
+    Start,
+    Stop,
+}
+
+#[derive(Parser, Encode, Decode, Debug)]
+pub enum WindowCommand {
     Create,
-    Quit,
 }
