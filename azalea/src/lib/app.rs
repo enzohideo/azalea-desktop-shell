@@ -60,8 +60,12 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
                         app,
                         async move {
                             listener
-                                .loop_accept(async |stream: UnixStreamWrapper| {
-                                    handle_command(&app, stream).await
+                                .loop_accept(async |mut stream: UnixStreamWrapper| {
+                                    match stream.read().await {
+                                        Ok(cmd) => handle_command(cmd, &app),
+                                        Err(e) => println!("Failed to read command {e:?}"),
+                                    };
+                                    return true;
                                 })
                                 .await;
                         }
@@ -93,26 +97,20 @@ fn remote(command: RemoteCommand, socket_path: String) {
     }
 }
 
-async fn handle_command(app: &gtk::Application, mut stream: UnixStreamWrapper) -> bool {
-    match stream.read().await {
-        Ok(cmd) => match cmd {
-            RemoteCommand::Quit => {
-                app.quit();
-                drop(stream.write(()));
-                return false;
-            }
-            RemoteCommand::Create => {
-                let btn = gtk::Button::with_label("Hey");
-                let window = gtk::Window::builder()
-                    .application(app)
-                    .title("Hello World")
-                    .child(&btn)
-                    .build();
-                window.present();
-            }
-        },
-        Err(e) => println!("Failed to read command {e:?}"),
+fn handle_command(cmd: RemoteCommand, app: &gtk::Application) {
+    match cmd {
+        RemoteCommand::Quit => {
+            app.quit();
+            // FIXME: drop(stream.write(()));
+        }
+        RemoteCommand::Create => {
+            let btn = gtk::Button::with_label("Hey");
+            let window = gtk::Window::builder()
+                .application(app)
+                .title("Hello World")
+                .child(&btn)
+                .build();
+            window.present();
+        }
     }
-
-    true
 }
