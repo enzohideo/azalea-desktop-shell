@@ -1,6 +1,8 @@
 use bincode::{Decode, Encode};
 use clap::{Parser, arg, command};
 
+use crate::model;
+
 #[derive(Parser, Encode, Decode)]
 #[command(version, about, long_about = None)]
 pub struct Arguments {
@@ -29,5 +31,5 @@ pub enum DaemonCommand {
 
 #[derive(Parser, Encode, Decode, Debug)]
 pub enum WindowCommand {
-    Create,
+    Create(model::Window),
 }
