@@ -63,7 +63,10 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String) {
                                 .loop_accept(async |mut stream: UnixStreamWrapper| {
                                     match stream.read().await {
                                         Ok(cmd) => handle_command(cmd, &app),
-                                        Err(e) => println!("Failed to read command {e:?}"),
+                                        Err(e) => {
+                                            println!("Failed to read command {e:?}");
+                                            return false;
+                                        }
                                     };
                                     return true;
                                 })
@@ -100,12 +103,11 @@ fn send_command(command: Command, socket_path: String) {
 fn handle_command(cmd: Command, app: &gtk::Application) {
     match cmd {
         Command::Daemon(DaemonCommand::Start) => {
-            todo!()
             // TODO: Warning message;
+            todo!()
         }
         Command::Daemon(DaemonCommand::Stop) => {
             app.quit();
-            // FIXME: drop(stream.write(()));
         }
         Command::Window(WindowCommand::Create) => {
             let btn = gtk::Button::with_label("Hey");
