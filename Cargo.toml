@@ -9,6 +9,7 @@ authors = ["enzohideo"]
 
 [workspace.dependencies]
 azalea-core = { path = "azalea-core" }
+azalea-window = { path = "azalea-window" }
 
 clap = { version = "4.5.32", features = [ "derive" ] }
 

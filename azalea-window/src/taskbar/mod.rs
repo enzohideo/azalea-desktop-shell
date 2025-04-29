@@ -1,6 +1,6 @@
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize)]
 pub struct Init {}
 
 pub struct Model {}

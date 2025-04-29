@@ -8,6 +8,10 @@ authors.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
 gtk.workspace = true
 gtk4-layer-shell.workspace = true
 relm4.workspace = true

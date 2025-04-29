@@ -143,6 +143,7 @@ name = "azalea"
 version = "0.0.0"
 dependencies = [
  "azalea-core",
+ "azalea-window",
  "clap",
  "gtk4",
  "gtk4-layer-shell",
@@ -169,9 +170,12 @@ dependencies = [
 name = "azalea-window"
 version = "0.0.0"
 dependencies = [
+ "clap",
  "gtk4",
  "gtk4-layer-shell",
  "relm4",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

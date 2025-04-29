@@ -1,16 +1,15 @@
-// TODO: Separate azalea lib and azalea-core (re-export it in azalea)
 use azalea::core::{
     app::{self, Application},
     config::Config,
     model,
 };
+use azalea::window::taskbar;
 
 // TODO: Macro to create Init based on list of widgets?
 #[derive(clap::Subcommand, serde::Serialize, serde::Deserialize, Debug)]
 pub enum Init {
     Default,
-    // TODO: Add this after change bincode -> serde.
-    // Taskbar(window::taskbar::Init)
+    Taskbar(taskbar::Init),
 }
 
 pub struct AzaleaDesktopShell {}
@@ -20,7 +19,7 @@ fn main() {
     let config = Config {
         windows: vec![model::window::Init {
             id: format!("default"),
-            init: Init::Default,
+            init: Init::Taskbar(taskbar::Init {}),
             layer_shell: None,
         }],
     };
