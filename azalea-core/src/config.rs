@@ -4,5 +4,5 @@ pub struct Config<Init>
 where
     Init: clap::Subcommand + std::fmt::Debug,
 {
-    pub windows: Vec<model::window::Init<Init>>,
+    pub windows: Vec<model::window::InitData<Init>>,
 }

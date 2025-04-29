@@ -37,20 +37,16 @@ pub mod window {
     pub type Id = String;
 
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-    pub struct Init<InitData>
+    pub struct InitData<InitWrapper>
     where
-        InitData: clap::Subcommand + std::fmt::Debug,
+        InitWrapper: clap::Subcommand + std::fmt::Debug,
     {
         pub id: Id,
 
         #[command(subcommand)]
-        pub init: InitData,
+        pub init: InitWrapper,
 
         #[command(flatten)]
         pub layer_shell: Option<layer_shell::Model>,
-    }
-
-    pub enum Action {
-        Create { init: () },
     }
 }

@@ -7,9 +7,8 @@ use gtk::{
         prelude::{ApplicationExt, ApplicationExtManual},
     },
     glib,
-    prelude::GtkWindowExt,
+    prelude::{GtkApplicationExt, GtkWindowExt},
 };
-use gtk4_layer_shell::LayerShell;
 
 use crate::{
     cli::{DaemonCommand, WindowCommand},
@@ -23,16 +22,16 @@ static SOCKET_NAME: &str = "azalea.sock";
 static LOG_NAME: &str = "AzaleaDesktopShell";
 static ID: &str = "usp.ime.AzaleaDesktopShell";
 
-pub trait Application<Init>
+pub trait Application<InitWrapper>
 where
-    Init: clap::Subcommand
+    InitWrapper: clap::Subcommand
         + serde::Serialize
         + serde::de::DeserializeOwned
         + std::fmt::Debug
         + 'static,
     Self: 'static + Sized,
 {
-    fn run(self, config: Option<Config<Init>>) {
+    fn run(self, config: Option<Config<InitWrapper>>) {
         let args = Arguments::parse();
         let mut gtk_args = vec![std::env::args().next().unwrap()];
         gtk_args.extend(args.gtk_options.clone());
@@ -51,7 +50,12 @@ where
         }
     }
 
-    fn daemon(self, gtk_args: &Vec<String>, socket_path: String, config: Option<Config<Init>>) {
+    fn daemon(
+        self,
+        gtk_args: &Vec<String>,
+        socket_path: String,
+        config: Option<Config<InitWrapper>>,
+    ) {
         let app = gtk::Application::builder().application_id(ID).build();
 
         if let Err(error) = app.register(gio::Cancellable::NONE) {
@@ -73,14 +77,9 @@ where
 
                 if let Some(config) = &config {
                     for window_model in &config.windows {
-                        // TODO: Determine which window to create based on init value
-                        let btn = gtk::Button::with_label("Hey");
-                        let window = gtk::Window::builder()
-                            .application(app)
-                            .title(&window_model.id)
-                            .child(&btn)
-                            .build();
-                        window.init_layer_shell();
+                        let window = state.borrow_mut().create_window(&window_model.init);
+                        window.set_title(Some(&window_model.id));
+                        app.add_window(&window);
                         window.present();
                     }
                 }
@@ -118,7 +117,7 @@ where
         drop(pong_rx.try_recv());
     }
 
-    fn remote(self, command: Command<Init>, socket_path: String) {
+    fn remote(self, command: Command<InitWrapper>, socket_path: String) {
         match socket::sync::UnixStreamWrapper::connect(socket_path) {
             Ok(mut stream) => {
                 if let Err(e) = stream.write(&command) {
@@ -134,7 +133,7 @@ where
         }
     }
 
-    fn handle_command(&mut self, cmd: Command<Init>, app: &gtk::Application) {
+    fn handle_command(&mut self, cmd: Command<InitWrapper>, app: &gtk::Application) {
         match cmd {
             Command::Daemon(DaemonCommand::Start) => {
                 // TODO: Warning message;
@@ -144,15 +143,13 @@ where
                 app.quit();
             }
             Command::Window(WindowCommand::Create(window_model)) => {
-                let btn = gtk::Button::with_label("Hey");
-                let window = gtk::Window::builder()
-                    .application(app)
-                    .title(&window_model.id)
-                    .child(&btn)
-                    .build();
-                window.init_layer_shell();
+                let window = self.create_window(&window_model.init);
+                window.set_title(Some(&window_model.id));
+                app.add_window(&window);
                 window.present();
             }
         }
     }
+
+    fn create_window(&mut self, init: &InitWrapper) -> gtk::Window;
 }
