@@ -31,5 +31,5 @@ pub enum DaemonCommand {
 
 #[derive(Parser, Encode, Decode, Debug)]
 pub enum WindowCommand {
-    Create(model::Window),
+    Create(model::window::Init),
 }
