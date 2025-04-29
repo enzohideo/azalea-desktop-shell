@@ -39,11 +39,15 @@ pub mod window {
     pub type Id = String;
 
     #[derive(Parser, Encode, Decode, Debug)]
-    pub struct Init {
+    pub struct Init<InitData>
+    where
+        InitData:
+            clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+    {
         pub id: Id,
 
-        #[clap(long)]
-        pub init: (),
+        #[command(subcommand)]
+        pub init: InitData,
 
         #[command(flatten)]
         pub layer_shell: Option<layer_shell::Model>,

@@ -5,9 +5,12 @@ use crate::model;
 
 #[derive(Parser, Encode, Decode)]
 #[command(version, about, long_about = None)]
-pub struct Arguments {
+pub struct Arguments<Init>
+where
+    Init: clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+{
     #[command(subcommand)]
-    pub command: Command,
+    pub command: Command<Init>,
 
     /// Unknown arguments or everything after -- gets passed through to GTK.
     #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
@@ -15,12 +18,15 @@ pub struct Arguments {
 }
 
 #[derive(Parser, Encode, Decode)]
-pub enum Command {
+pub enum Command<Init>
+where
+    Init: clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+{
     #[command(subcommand)]
     Daemon(DaemonCommand),
 
     #[command(subcommand)]
-    Window(WindowCommand),
+    Window(WindowCommand<Init>),
 }
 
 #[derive(Parser, Encode, Decode, Debug)]
@@ -30,6 +36,9 @@ pub enum DaemonCommand {
 }
 
 #[derive(Parser, Encode, Decode, Debug)]
-pub enum WindowCommand {
-    Create(model::window::Init),
+pub enum WindowCommand<Init>
+where
+    Init: clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+{
+    Create(model::window::Init<Init>),
 }
