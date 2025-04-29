@@ -66,11 +66,10 @@ fn daemon(gtk_args: &Vec<String>, socket_path: String, config: Option<Config>) {
                     let btn = gtk::Button::with_label("Hey");
                     let window = gtk::Window::builder()
                         .application(app)
-                        .title(&window_model.namespace)
+                        .title(&window_model.id)
                         .child(&btn)
                         .build();
                     window.init_layer_shell();
-                    window.set_namespace(Some(&window_model.namespace));
                     window.present();
                 }
             }
@@ -135,11 +134,10 @@ fn handle_command(cmd: Command, app: &gtk::Application) {
             let btn = gtk::Button::with_label("Hey");
             let window = gtk::Window::builder()
                 .application(app)
-                .title(&window_model.namespace)
+                .title(&window_model.id)
                 .child(&btn)
                 .build();
             window.init_layer_shell();
-            window.set_namespace(Some(&window_model.namespace));
             window.present();
         }
     }
