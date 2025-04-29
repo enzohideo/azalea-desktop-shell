@@ -39,5 +39,5 @@ pub enum WindowCommand<Init>
 where
     Init: clap::Subcommand + std::fmt::Debug,
 {
-    Create(model::window::InitData<Init>),
+    Create(model::window::InitDTO<Init>),
 }

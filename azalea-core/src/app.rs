@@ -76,8 +76,9 @@ where
                 pong_tx.send(app_guard).expect("Daemon could not pong!");
 
                 if let Some(config) = &config {
-                    for model in &config.windows { // TODO: Take ownership instead of borrow
-                        state.borrow_mut().create_window_from_model(&model, app)
+                    for dto in &config.windows {
+                        // TODO: Take ownership instead of borrow
+                        state.borrow_mut().create_window_from_dto(&dto, app)
                     }
                 }
 
@@ -140,18 +141,18 @@ where
                 app.quit();
             }
             Command::Window(WindowCommand::Create(model)) => {
-                self.create_window_from_model(&model, app)
+                self.create_window_from_dto(&model, app)
             }
         }
     }
 
-    fn create_window_from_model(
+    fn create_window_from_dto(
         &mut self,
-        model: &crate::model::window::InitData<InitWrapper>,
+        dto: &crate::model::window::InitDTO<InitWrapper>,
         app: &gtk::Application,
     ) {
-        let window = self.create_window(&model.init);
-        window.set_title(Some(&model.id));
+        let window = self.create_window(&dto.init);
+        window.set_title(Some(&dto.id));
         app.add_window(&window);
         window.present();
     }

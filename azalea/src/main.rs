@@ -44,7 +44,7 @@ impl app::Application<InitWrapper> for AzaleaDesktopShell {
 
 fn main() {
     let config = Config {
-        windows: vec![model::window::InitData {
+        windows: vec![model::window::InitDTO {
             id: format!("default"),
             init: InitWrapper::Taskbar(taskbar::Init {}),
             layer_shell: None,

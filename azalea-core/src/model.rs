@@ -37,7 +37,7 @@ pub mod window {
     pub type Id = String;
 
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-    pub struct InitData<InitWrapper>
+    pub struct InitDTO<InitWrapper>
     where
         InitWrapper: clap::Subcommand + std::fmt::Debug,
     {
