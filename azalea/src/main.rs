@@ -1,5 +1,5 @@
 // TODO: Separate azalea lib and azalea-core (re-export it in azalea)
-use azalea::{
+use azalea::core::{
     app::{self, Application},
     config::Config,
     model,

@@ -142,6 +142,18 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 name = "azalea"
 version = "0.0.0"
 dependencies = [
+ "azalea-core",
+ "bincode",
+ "clap",
+ "gtk4",
+ "gtk4-layer-shell",
+ "relm4",
+]
+
+[[package]]
+name = "azalea-core"
+version = "0.0.0"
+dependencies = [
  "async-net",
  "bincode",
  "clap",

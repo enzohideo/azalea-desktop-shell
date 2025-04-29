@@ -1,22 +1,21 @@
 [package]
-name = "azalea"
+name = "azalea-core"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-default-run = "azalea"
 
 [lib]
 path = "src/lib.rs"
 
-[[bin]]
-name = "azalea"
-path = "src/main.rs"
-
 [dependencies]
-azalea-core.workspace = true
-
 clap.workspace = true
+
+async-net.workspace = true
+futures-lite.workspace = true
+
 bincode.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 gtk.workspace = true
 gtk4-layer-shell.workspace = true
