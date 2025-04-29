@@ -161,7 +161,6 @@ dependencies = [
  "futures-lite",
  "gtk4",
  "gtk4-layer-shell",
- "relm4",
  "serde",
  "serde_json",
 ]
