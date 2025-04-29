@@ -1,8 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["azalea"]
+members = ["azalea", "azalea-window"]
 
 [workspace.package]
 version = "0.0.0"
 edition = "2024"
 authors = ["enzohideo"]
+
+[workspace.dependencies]
+gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }
+gtk4-layer-shell = "0.5.0"
+relm4 = "0.9.1"

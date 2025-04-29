@@ -1,0 +1,13 @@
+[package]
+name = "azalea-window"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+gtk.workspace = true
+gtk4-layer-shell.workspace = true
+relm4.workspace = true

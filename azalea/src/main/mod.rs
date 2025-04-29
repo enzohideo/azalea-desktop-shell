@@ -1,3 +1,4 @@
+// TODO: Separate azalea lib and azalea-core (re-export it in azalea)
 use azalea::{
     app::{self, Application},
     config::Config,
@@ -8,6 +9,8 @@ use azalea::{
 #[derive(clap::Subcommand, bincode::Encode, bincode::Decode, Debug)]
 pub enum Init {
     Default,
+    // TODO: Add this after change bincode -> serde.
+    // Taskbar(window::taskbar::Init)
 }
 
 pub struct AzaleaDesktopShell {}
