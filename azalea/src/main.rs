@@ -28,11 +28,9 @@ impl app::Application<InitWrapper> for AzaleaDesktopShell {
         match &init {
             InitWrapper::Default => {
                 let btn = gtk::Button::with_label("Hey");
-                let window = gtk::Window::builder()
-                    .child(&btn)
-                    .build();
+                let window = gtk::Window::builder().child(&btn).build();
                 window
-            },
+            }
             InitWrapper::Taskbar(init) => {
                 let builder = taskbar::Model::builder();
                 let controller = builder.launch(init.clone()).detach();

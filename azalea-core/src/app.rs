@@ -76,11 +76,8 @@ where
                 pong_tx.send(app_guard).expect("Daemon could not pong!");
 
                 if let Some(config) = &config {
-                    for window_model in &config.windows {
-                        let window = state.borrow_mut().create_window(&window_model.init);
-                        window.set_title(Some(&window_model.id));
-                        app.add_window(&window);
-                        window.present();
+                    for model in &config.windows { // TODO: Take ownership instead of borrow
+                        state.borrow_mut().create_window_from_model(&model, app)
                     }
                 }
 
@@ -142,13 +139,21 @@ where
             Command::Daemon(DaemonCommand::Stop) => {
                 app.quit();
             }
-            Command::Window(WindowCommand::Create(window_model)) => {
-                let window = self.create_window(&window_model.init);
-                window.set_title(Some(&window_model.id));
-                app.add_window(&window);
-                window.present();
+            Command::Window(WindowCommand::Create(model)) => {
+                self.create_window_from_model(&model, app)
             }
         }
+    }
+
+    fn create_window_from_model(
+        &mut self,
+        model: &crate::model::window::InitData<InitWrapper>,
+        app: &gtk::Application,
+    ) {
+        let window = self.create_window(&model.init);
+        window.set_title(Some(&model.id));
+        app.add_window(&window);
+        window.present();
     }
 
     fn create_window(&mut self, init: &InitWrapper) -> gtk::Window;
