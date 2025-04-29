@@ -23,5 +23,7 @@ fn main() {
             layer_shell: None,
         }],
     };
-    AzaleaDesktopShell::run(Some(config));
+    let app = AzaleaDesktopShell {};
+
+    app.run(Some(config));
 }

@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::{cell::RefCell, rc::Rc, sync::mpsc};
 
 use clap::Parser;
 use gtk::{
@@ -30,8 +30,9 @@ where
         + serde::de::DeserializeOwned
         + std::fmt::Debug
         + 'static,
+    Self: 'static + Sized,
 {
-    fn run(config: Option<Config<Init>>) {
+    fn run(self, config: Option<Config<Init>>) {
         let args = Arguments::parse();
         let mut gtk_args = vec![std::env::args().next().unwrap()];
         gtk_args.extend(args.gtk_options.clone());
@@ -45,12 +46,12 @@ where
 
         // TODO: Check if it's remote through dbus
         match args.command {
-            Command::Daemon(DaemonCommand::Start) => Self::daemon(&gtk_args, socket_path, config),
-            cmd => Self::send_command(cmd, socket_path),
+            Command::Daemon(DaemonCommand::Start) => self.daemon(&gtk_args, socket_path, config),
+            cmd => self.remote(cmd, socket_path),
         }
     }
 
-    fn daemon(gtk_args: &Vec<String>, socket_path: String, config: Option<Config<Init>>) {
+    fn daemon(self, gtk_args: &Vec<String>, socket_path: String, config: Option<Config<Init>>) {
         let app = gtk::Application::builder().application_id(ID).build();
 
         if let Err(error) = app.register(gio::Cancellable::NONE) {
@@ -61,6 +62,8 @@ where
         let (pong_tx, pong_rx) = mpsc::channel();
 
         ping_tx.send(app.hold()).expect("Daemon could not ping!");
+
+        let state = Rc::new(RefCell::new(self));
 
         app.connect_activate(move |app| {
             if let Ok(app_guard) = ping_rx.try_recv() {
@@ -87,11 +90,13 @@ where
                         glib::spawn_future_local(glib::clone!(
                             #[weak]
                             app,
+                            #[weak]
+                            state,
                             async move {
                                 listener
                                     .loop_accept(async |mut stream: UnixStreamWrapper| {
                                         match stream.read().await {
-                                            Ok(cmd) => Self::handle_command(cmd, &app),
+                                            Ok(cmd) => state.borrow_mut().handle_command(cmd, &app),
                                             Err(e) => {
                                                 println!("Failed to read command {e:?}");
                                                 return false;
@@ -113,7 +118,7 @@ where
         drop(pong_rx.try_recv());
     }
 
-    fn send_command(command: Command<Init>, socket_path: String) {
+    fn remote(self, command: Command<Init>, socket_path: String) {
         match socket::sync::UnixStreamWrapper::connect(socket_path) {
             Ok(mut stream) => {
                 if let Err(e) = stream.write(&command) {
@@ -129,7 +134,7 @@ where
         }
     }
 
-    fn handle_command(cmd: Command<Init>, app: &gtk::Application) {
+    fn handle_command(&mut self, cmd: Command<Init>, app: &gtk::Application) {
         match cmd {
             Command::Daemon(DaemonCommand::Start) => {
                 // TODO: Warning message;
