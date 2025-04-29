@@ -1,13 +1,12 @@
-use bincode::{Decode, Encode};
 use clap::{Parser, arg, command};
 
 use crate::model;
 
-#[derive(Parser, Encode, Decode)]
+#[derive(Parser, serde::Serialize)]
 #[command(version, about, long_about = None)]
 pub struct Arguments<Init>
 where
-    Init: clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+    Init: clap::Subcommand + std::fmt::Debug,
 {
     #[command(subcommand)]
     pub command: Command<Init>,
@@ -17,10 +16,10 @@ where
     pub gtk_options: Vec<String>,
 }
 
-#[derive(Parser, Encode, Decode)]
+#[derive(Parser, serde::Serialize, serde::Deserialize)]
 pub enum Command<Init>
 where
-    Init: clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+    Init: clap::Subcommand + std::fmt::Debug,
 {
     #[command(subcommand)]
     Daemon(DaemonCommand),
@@ -29,16 +28,16 @@ where
     Window(WindowCommand<Init>),
 }
 
-#[derive(Parser, Encode, Decode, Debug)]
+#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
 pub enum DaemonCommand {
     Start,
     Stop,
 }
 
-#[derive(Parser, Encode, Decode, Debug)]
+#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
 pub enum WindowCommand<Init>
 where
-    Init: clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+    Init: clap::Subcommand + std::fmt::Debug,
 {
     Create(model::window::Init<Init>),
 }

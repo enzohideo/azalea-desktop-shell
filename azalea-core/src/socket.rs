@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum Error {
-    Encode,
-    Decode,
+    Read,
+    Write,
     UnixSocket(String),
 }
 
@@ -11,8 +11,6 @@ pub mod sync {
         io::{Read, Write},
         os::unix::net::{UnixListener, UnixStream},
     };
-
-    use bincode::{de, enc};
 
     pub struct UnixListenerWrapper {
         listener: UnixListener,
@@ -75,26 +73,26 @@ pub mod sync {
 
         pub fn read<T>(&mut self) -> Result<T, Error>
         where
-            T: de::Decode<()>,
+            T: serde::de::DeserializeOwned,
         {
             let mut response = vec![];
             drop(self.stream.read_to_end(&mut response));
-            match bincode::decode_from_slice(&response, bincode::config::standard()) {
-                Ok((response, _len)) => Ok(response),
-                Err(_) => Err(Error::Decode),
+            match serde_json::from_slice(&response) {
+                Ok(response) => Ok(response),
+                Err(_) => Err(Error::Read),
             }
         }
 
         pub fn write<E>(&mut self, payload: E) -> Result<(), Error>
         where
-            E: enc::Encode,
+            E: serde::Serialize,
         {
             let ans = match self
                 .stream
-                .write_all(&bincode::encode_to_vec(&payload, bincode::config::standard()).unwrap())
+                .write_all(&serde_json::to_vec(&payload).unwrap())
             {
                 Ok(_) => Ok(()),
-                Err(_) => Err(Error::Encode),
+                Err(_) => Err(Error::Write),
             };
             drop(self.stream.shutdown(std::net::Shutdown::Write));
             ans
@@ -107,8 +105,6 @@ pub mod r#async {
     use futures_lite::io::{AsyncReadExt, AsyncWriteExt};
 
     use async_net::unix::{UnixListener, UnixStream};
-
-    use bincode::{de, enc};
 
     pub struct UnixListenerWrapper {
         listener: UnixListener,
@@ -156,27 +152,27 @@ pub mod r#async {
 
         pub async fn read<T>(&mut self) -> Result<T, Error>
         where
-            T: de::Decode<()>,
+            T: serde::de::DeserializeOwned,
         {
             let mut response = vec![];
             drop(self.stream.read_to_end(&mut response).await);
-            match bincode::decode_from_slice(&response, bincode::config::standard()) {
-                Ok((response, _len)) => Ok(response),
-                Err(_) => Err(Error::Decode),
+            match serde_json::from_slice(&response) {
+                Ok(response) => Ok(response),
+                Err(_) => Err(Error::Read),
             }
         }
 
         pub async fn write<E>(&mut self, payload: E) -> Result<(), Error>
         where
-            E: enc::Encode,
+            E: serde::Serialize,
         {
             let ans = match self
                 .stream
-                .write_all(&bincode::encode_to_vec(&payload, bincode::config::standard()).unwrap())
+                .write_all(&serde_json::to_vec(&payload).unwrap())
                 .await
             {
                 Ok(_) => Ok(()),
-                Err(_) => Err(Error::Encode),
+                Err(_) => Err(Error::Write),
             };
             drop(self.stream.shutdown(std::net::Shutdown::Write));
             ans

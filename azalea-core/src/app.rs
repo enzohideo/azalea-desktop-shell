@@ -26,8 +26,8 @@ static ID: &str = "usp.ime.AzaleaDesktopShell";
 pub trait Application<Init>
 where
     Init: clap::Subcommand
-        + bincode::enc::Encode
-        + bincode::de::Decode<()>
+        + serde::Serialize
+        + serde::de::DeserializeOwned
         + std::fmt::Debug
         + 'static,
 {

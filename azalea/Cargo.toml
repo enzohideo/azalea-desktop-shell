@@ -16,7 +16,8 @@ path = "src/main.rs"
 azalea-core.workspace = true
 
 clap.workspace = true
-bincode.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 gtk.workspace = true
 gtk4-layer-shell.workspace = true

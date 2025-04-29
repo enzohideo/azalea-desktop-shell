@@ -6,7 +6,7 @@ use azalea::core::{
 };
 
 // TODO: Macro to create Init based on list of widgets?
-#[derive(clap::Subcommand, bincode::Encode, bincode::Decode, Debug)]
+#[derive(clap::Subcommand, serde::Serialize, serde::Deserialize, Debug)]
 pub enum Init {
     Default,
     // TODO: Add this after change bincode -> serde.

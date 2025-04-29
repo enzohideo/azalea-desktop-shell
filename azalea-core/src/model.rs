@@ -1,10 +1,9 @@
 pub mod layer_shell {
-    use bincode::{Decode, Encode};
     use clap::Parser;
 
     pub type Namespace = String;
 
-    #[derive(clap::ValueEnum, Encode, Decode, Debug, Clone)]
+    #[derive(clap::ValueEnum, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub enum Layer {
         Background,
         Bottom,
@@ -12,7 +11,7 @@ pub mod layer_shell {
         Overlay,
     }
 
-    #[derive(clap::ValueEnum, Encode, Decode, Debug, Clone)]
+    #[derive(clap::ValueEnum, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub enum Anchor {
         Top,
         Bottom,
@@ -20,7 +19,7 @@ pub mod layer_shell {
         Right,
     }
 
-    #[derive(Parser, Encode, Decode, Debug, Clone)]
+    #[derive(Parser, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub struct Model {
         #[clap(long)]
         layer: Option<Layer>,
@@ -31,18 +30,16 @@ pub mod layer_shell {
 }
 
 pub mod window {
-    use bincode::{Decode, Encode};
     use clap::Parser;
 
     use super::layer_shell;
 
     pub type Id = String;
 
-    #[derive(Parser, Encode, Decode, Debug)]
+    #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
     pub struct Init<InitData>
     where
-        InitData:
-            clap::Subcommand + bincode::enc::Encode + bincode::de::Decode<()> + std::fmt::Debug,
+        InitData: clap::Subcommand + std::fmt::Debug,
     {
         pub id: Id,
 
