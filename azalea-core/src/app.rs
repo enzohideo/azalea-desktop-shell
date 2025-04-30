@@ -153,6 +153,7 @@ where
         window.set_title(Some(&dto.id));
         app.add_window(window);
         window.present();
+        self.store_window(dto.id.clone(), wrapped_window);
     }
 
     fn create_window(&self, dto: &InitWrapper) -> WindowWrapper;
