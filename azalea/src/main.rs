@@ -56,9 +56,14 @@ impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
 fn main() {
     let config = Config {
         windows: vec![model::window::InitDTO {
-            id: format!("default"),
+            id: format!("bottom-taskbar"),
             init: InitWrapper::Taskbar(taskbar::Init {}),
-            layer_shell: None,
+            layer_shell: Some(model::layer_shell::Model {
+                namespace: Some(format!("taskbar")),
+                layer: Some(model::layer_shell::Layer::Bottom),
+                anchors: vec![model::layer_shell::Anchor::Bottom],
+                auto_exclusive_zone: true,
+            }),
         }],
     };
 

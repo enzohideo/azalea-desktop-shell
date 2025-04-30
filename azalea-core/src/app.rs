@@ -9,6 +9,7 @@ use gtk::{
     glib,
     prelude::{GtkApplicationExt, GtkWindowExt},
 };
+use gtk4_layer_shell::LayerShell;
 
 use crate::{
     cli::{DaemonCommand, WindowCommand},
@@ -150,9 +151,26 @@ where
     ) {
         let wrapped_window = self.create_window(&dto.init);
         let window = Self::unwrap_window(&wrapped_window);
+
         window.set_title(Some(&dto.id));
+
+        if let Some(layer_shell) = &dto.layer_shell {
+            window.init_layer_shell();
+            window.set_namespace(layer_shell.namespace.as_deref());
+            if let Some(layer) = &layer_shell.layer {
+                window.set_layer(layer.into());
+            }
+            for anchor in &layer_shell.anchors {
+                window.set_anchor(anchor.into(), true);
+            }
+            if layer_shell.auto_exclusive_zone {
+                window.auto_exclusive_zone_enable();
+            }
+        }
+
         app.add_window(window);
         window.present();
+
         self.store_window(dto.id.clone(), wrapped_window);
     }
 

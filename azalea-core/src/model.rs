@@ -11,6 +11,17 @@ pub mod layer_shell {
         Overlay,
     }
 
+    impl Into<gtk4_layer_shell::Layer> for &Layer {
+        fn into(self) -> gtk4_layer_shell::Layer {
+            match self {
+                Layer::Background => gtk4_layer_shell::Layer::Background,
+                Layer::Bottom => gtk4_layer_shell::Layer::Bottom,
+                Layer::Top => gtk4_layer_shell::Layer::Top,
+                Layer::Overlay => gtk4_layer_shell::Layer::Overlay,
+            }
+        }
+    }
+
     #[derive(clap::ValueEnum, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub enum Anchor {
         Top,
@@ -19,13 +30,29 @@ pub mod layer_shell {
         Right,
     }
 
+    impl Into<gtk4_layer_shell::Edge> for &Anchor {
+        fn into(self) -> gtk4_layer_shell::Edge {
+            match self {
+                Anchor::Top => gtk4_layer_shell::Edge::Top,
+                Anchor::Bottom => gtk4_layer_shell::Edge::Bottom,
+                Anchor::Left => gtk4_layer_shell::Edge::Left,
+                Anchor::Right => gtk4_layer_shell::Edge::Right,
+            }
+        }
+    }
+
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub struct Model {
-        #[clap(long)]
-        layer: Option<Layer>,
+        pub namespace: Option<Namespace>,
 
         #[clap(long)]
-        anchor: Option<Anchor>,
+        pub layer: Option<Layer>,
+
+        #[clap(long)]
+        pub anchors: Vec<Anchor>,
+
+        #[clap(long)]
+        pub auto_exclusive_zone: bool,
     }
 }
 
