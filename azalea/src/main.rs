@@ -14,7 +14,7 @@ pub enum InitWrapper {
 }
 
 pub enum ControllerWrapper {
-    Default,
+    Default(gtk::Window),
     Taskbar(relm4::component::Controller<taskbar::Model>),
 }
 
@@ -29,6 +29,8 @@ impl app::Application<InitWrapper> for AzaleaDesktopShell {
             InitWrapper::Default => {
                 let btn = gtk::Button::with_label("Hey");
                 let window = gtk::Window::builder().child(&btn).build();
+                self.connectors
+                    .push(ControllerWrapper::Default(window.clone()));
                 window
             }
             InitWrapper::Taskbar(init) => {
