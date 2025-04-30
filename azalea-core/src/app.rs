@@ -13,6 +13,7 @@ use gtk::{
 use crate::{
     cli::{DaemonCommand, WindowCommand},
     config::Config,
+    model,
     socket::{self, r#async::UnixStreamWrapper},
 };
 
@@ -22,7 +23,7 @@ static SOCKET_NAME: &str = "azalea.sock";
 static LOG_NAME: &str = "AzaleaDesktopShell";
 static ID: &str = "usp.ime.AzaleaDesktopShell";
 
-pub trait Application<InitWrapper>
+pub trait Application<InitWrapper, WindowWrapper>
 where
     InitWrapper: clap::Subcommand
         + serde::Serialize
@@ -78,7 +79,7 @@ where
                 if let Some(config) = &config {
                     for dto in &config.windows {
                         // TODO: Take ownership instead of borrow
-                        state.borrow_mut().create_window_from_dto(&dto, app)
+                        state.borrow_mut().create_layer_shell(&dto, app)
                     }
                 }
 
@@ -137,25 +138,24 @@ where
                 // TODO: Warning message;
                 todo!()
             }
-            Command::Daemon(DaemonCommand::Stop) => {
-                app.quit();
-            }
-            Command::Window(WindowCommand::Create(model)) => {
-                self.create_window_from_dto(&model, app)
-            }
+            Command::Daemon(DaemonCommand::Stop) => app.quit(),
+            Command::Window(WindowCommand::Create(dto)) => self.create_layer_shell(&dto, app),
         }
     }
 
-    fn create_window_from_dto(
+    fn create_layer_shell(
         &mut self,
         dto: &crate::model::window::InitDTO<InitWrapper>,
         app: &gtk::Application,
     ) {
-        let window = self.create_window(&dto.init);
+        let wrapped_window = self.create_window(&dto.init);
+        let window = Self::unwrap_window(&wrapped_window);
         window.set_title(Some(&dto.id));
-        app.add_window(&window);
+        app.add_window(window);
         window.present();
     }
 
-    fn create_window(&mut self, init: &InitWrapper) -> gtk::Window;
+    fn create_window(&self, dto: &InitWrapper) -> WindowWrapper;
+    fn store_window(&mut self, id: model::window::Id, window: WindowWrapper);
+    fn unwrap_window(window: &WindowWrapper) -> &gtk::Window;
 }

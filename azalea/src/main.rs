@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use azalea::core::{
     app::{self, Application},
     config::Config,
@@ -13,33 +15,40 @@ pub enum InitWrapper {
     Taskbar(taskbar::Init),
 }
 
-pub enum ControllerWrapper {
+pub enum WindowWrapper {
     Default(gtk::Window),
     Taskbar(relm4::component::Controller<taskbar::Model>),
 }
 
 #[derive(Default)]
 pub struct AzaleaDesktopShell {
-    connectors: Vec<ControllerWrapper>,
+    windows: HashMap<model::window::Id, WindowWrapper>,
 }
 
-impl app::Application<InitWrapper> for AzaleaDesktopShell {
-    fn create_window(&mut self, init: &InitWrapper) -> gtk::Window {
+impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
+    fn create_window(&self, init: &InitWrapper) -> WindowWrapper {
         match &init {
             InitWrapper::Default => {
                 let btn = gtk::Button::with_label("Hey");
                 let window = gtk::Window::builder().child(&btn).build();
-                self.connectors
-                    .push(ControllerWrapper::Default(window.clone()));
-                window
+                WindowWrapper::Default(window)
             }
             InitWrapper::Taskbar(init) => {
                 let builder = taskbar::Model::builder();
                 let controller = builder.launch(init.clone()).detach();
-                let window = controller.widget().clone();
-                self.connectors.push(ControllerWrapper::Taskbar(controller));
-                window
+                WindowWrapper::Taskbar(controller)
             }
+        }
+    }
+
+    fn store_window(&mut self, id: model::window::Id, window: WindowWrapper) {
+        self.windows.insert(id, window);
+    }
+
+    fn unwrap_window(window: &WindowWrapper) -> &gtk::Window {
+        match window {
+            WindowWrapper::Default(window) => window,
+            WindowWrapper::Taskbar(controller) => controller.widget(),
         }
     }
 }
