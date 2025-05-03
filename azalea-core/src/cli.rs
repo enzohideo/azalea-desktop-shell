@@ -1,6 +1,6 @@
 use clap::{Parser, arg, command};
 
-use crate::model;
+use crate::config;
 
 #[derive(Parser, serde::Serialize)]
 #[command(version, about, long_about = None)]
@@ -39,5 +39,5 @@ pub enum WindowCommand<Init>
 where
     Init: clap::Subcommand + std::fmt::Debug,
 {
-    Create(model::window::InitDTO<Init>),
+    Create(config::window::Config<Init>),
 }

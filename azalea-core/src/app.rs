@@ -13,8 +13,7 @@ use gtk4_layer_shell::LayerShell;
 
 use crate::{
     cli::{DaemonCommand, WindowCommand},
-    config::Config,
-    model,
+    config::{self, Config},
     socket::{self, r#async::UnixStreamWrapper},
 };
 
@@ -146,7 +145,7 @@ where
 
     fn create_layer_shell(
         &mut self,
-        dto: &crate::model::window::InitDTO<InitWrapper>,
+        dto: &crate::config::window::Config<InitWrapper>,
         app: &gtk::Application,
     ) {
         let wrapped_window = self.create_window(&dto.init);
@@ -175,6 +174,6 @@ where
     }
 
     fn create_window(&self, dto: &InitWrapper) -> WindowWrapper;
-    fn store_window(&mut self, id: model::window::Id, window: WindowWrapper);
+    fn store_window(&mut self, id: config::window::Id, window: WindowWrapper);
     fn unwrap_window(window: &WindowWrapper) -> &gtk::Window;
 }

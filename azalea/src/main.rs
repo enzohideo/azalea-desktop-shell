@@ -2,8 +2,7 @@ use std::collections::HashMap;
 
 use azalea::core::{
     app::{self, Application},
-    config::Config,
-    model,
+    config,
 };
 use azalea::window::taskbar;
 use relm4::{Component, ComponentController};
@@ -12,7 +11,7 @@ use relm4::{Component, ComponentController};
 #[derive(clap::Subcommand, serde::Serialize, serde::Deserialize, Debug)]
 pub enum InitWrapper {
     Default,
-    Taskbar(taskbar::Init),
+    Taskbar(taskbar::Config),
 }
 
 pub enum WindowWrapper {
@@ -21,7 +20,7 @@ pub enum WindowWrapper {
 }
 
 pub struct AzaleaDesktopShell {
-    windows: HashMap<model::window::Id, WindowWrapper>,
+    windows: HashMap<config::window::Id, WindowWrapper>,
 }
 
 impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
@@ -40,7 +39,7 @@ impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
         }
     }
 
-    fn store_window(&mut self, id: model::window::Id, window: WindowWrapper) {
+    fn store_window(&mut self, id: config::window::Id, window: WindowWrapper) {
         self.windows.insert(id, window);
     }
 
@@ -53,27 +52,29 @@ impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
 }
 
 fn main() {
-    let config = Config {
-        windows: vec![model::window::InitDTO {
+    let config = config::Config {
+        windows: vec![config::window::Config {
             id: format!("bottom-taskbar"),
-            init: InitWrapper::Taskbar({
-                use taskbar::widget::Kind::*;
 
-                taskbar::Init {
+            init: InitWrapper::Taskbar({
+                use taskbar::{Config, widget::Kind::*};
+
+                Config {
                     start: vec![],
                     center: vec![],
                     end: vec![Time],
                 }
             }),
-            layer_shell: Some(model::layer_shell::Model {
-                namespace: Some(format!("taskbar")),
-                layer: Some(model::layer_shell::Layer::Bottom),
-                anchors: vec![
-                    model::layer_shell::Anchor::Left,
-                    model::layer_shell::Anchor::Right,
-                    model::layer_shell::Anchor::Bottom,
-                ],
-                auto_exclusive_zone: true,
+
+            layer_shell: Some({
+                use config::layer_shell::{Anchor, Config, Layer};
+
+                Config {
+                    namespace: Some(format!("taskbar")),
+                    layer: Some(Layer::Bottom),
+                    anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
+                    auto_exclusive_zone: true,
+                }
             }),
         }],
     };

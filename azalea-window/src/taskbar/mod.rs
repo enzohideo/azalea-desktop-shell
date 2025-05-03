@@ -5,7 +5,7 @@ use widget::{WidgetWrapper, build_widget};
 pub mod widget;
 
 #[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize)]
-pub struct Init {
+pub struct Config {
     #[clap(long)]
     pub start: Vec<widget::Kind>,
 
@@ -22,7 +22,7 @@ pub struct Model {
 
 #[component(pub)]
 impl SimpleComponent for Model {
-    type Init = Init;
+    type Init = Config;
     type Input = ();
     type Output = ();
 
