@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["azalea", "azalea-core", "azalea-window"]
+members = [
+  "azalea",
+  "azalea-core",
+  "azalea-service",
+  "azalea-window",
+]
 
 [workspace.package]
 version = "0.0.0"
@@ -10,6 +15,7 @@ authors = ["enzohideo"]
 [workspace.dependencies]
 azalea-core = { path = "azalea-core" }
 azalea-window = { path = "azalea-window" }
+azalea-service = { path = "azalea-service" }
 
 clap = { version = "4.5.32", features = [ "derive" ] }
 
@@ -18,6 +24,8 @@ futures-lite = "2.6.0"
 
 serde = { version = "1.0.218", features = ["derive"] }
 serde_json = "1.0.140"
+
+chrono = "0.4.41"
 
 gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }
 gtk4-layer-shell = "0.5.0"

@@ -4,3 +4,6 @@ pub mod core {
 pub mod window {
     pub use azalea_window::*;
 }
+pub mod service {
+    pub use azalea_service::*;
+}

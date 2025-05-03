@@ -1,26 +1,21 @@
 [package]
-name = "azalea"
+name = "azalea-service"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
-default-run = "azalea"
 
 [lib]
 path = "src/lib.rs"
 
-[[bin]]
-name = "azalea"
-path = "src/main.rs"
-
 [dependencies]
-azalea-core.workspace = true
-azalea-window.workspace = true
-azalea-service.workspace = true
-
 clap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
+chrono.workspace = true
+
 gtk.workspace = true
 gtk4-layer-shell.workspace = true
 relm4.workspace = true
+
+flume = "0.11.1"
