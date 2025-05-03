@@ -46,7 +46,7 @@ pub mod layer_shell {
         pub namespace: Option<Namespace>,
 
         #[clap(long)]
-        pub layer: Option<Layer>,
+        pub layer: Layer,
 
         #[clap(long)]
         pub anchors: Vec<Anchor>,

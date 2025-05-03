@@ -156,9 +156,7 @@ where
         if let Some(layer_shell) = &dto.layer_shell {
             window.init_layer_shell();
             window.set_namespace(layer_shell.namespace.as_deref());
-            if let Some(layer) = &layer_shell.layer {
-                window.set_layer(layer.into());
-            }
+            window.set_layer((&layer_shell.layer).into());
             for anchor in &layer_shell.anchors {
                 window.set_anchor(anchor.into(), true);
             }

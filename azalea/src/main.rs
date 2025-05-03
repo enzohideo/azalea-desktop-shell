@@ -71,7 +71,7 @@ fn main() {
 
                 Config {
                     namespace: Some(format!("taskbar")),
-                    layer: Some(Layer::Bottom),
+                    layer: Layer::Bottom,
                     anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
                     auto_exclusive_zone: true,
                 }
