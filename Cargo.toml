@@ -26,6 +26,7 @@ serde = { version = "1.0.218", features = ["derive"] }
 serde_json = "1.0.140"
 
 chrono = "0.4.41"
+tokio = { version = "1.44.2", features = ["time"] }
 
 gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }
 gtk4-layer-shell = "0.5.0"

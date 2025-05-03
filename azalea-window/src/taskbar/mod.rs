@@ -1,23 +1,29 @@
 use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
+use widget::{WidgetWrapper, build_widget};
+
+pub mod widget;
 
 #[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize)]
-pub struct Init {}
+pub struct Init {
+    #[clap(long)]
+    pub start: Vec<widget::Kind>,
 
-#[derive(Debug)]
-pub enum Input {
-    UpdateTime(chrono::DateTime<chrono::Local>),
+    #[clap(long)]
+    pub center: Vec<widget::Kind>,
+
+    #[clap(long)]
+    pub end: Vec<widget::Kind>,
 }
 
 pub struct Model {
-    // TODO: Move time to separate widget
-    time: chrono::DateTime<chrono::Local>,
+    widgets: Vec<WidgetWrapper>,
 }
 
 #[component(pub)]
 impl SimpleComponent for Model {
     type Init = Init;
-    type Input = Input;
+    type Input = ();
     type Output = ();
 
     view! {
@@ -27,50 +33,50 @@ impl SimpleComponent for Model {
                 #[name(start_widget)]
                 #[wrap(Some)]
                 set_start_widget = &gtk::Box {
-                    gtk::Label::new(Some("TODO: start widgets")) {}
+
                 },
 
                 #[name(center_widget)]
                 #[wrap(Some)]
                 set_center_widget = &gtk::Box {
-                    gtk::Label::new(Some("TODO: center widgets")) {}
+
                 },
 
                 #[name(end_widget)]
                 #[wrap(Some)]
                 set_end_widget = &gtk::Box {
-                    set_spacing: 12,
 
-                    gtk::Label {
-                        #[watch]
-                        set_label: &format!("{}", model.time.format("%d/%m/%y"))
-                    },
-
-                    gtk::Label {
-                        #[watch]
-                        set_label: &format!("{}", model.time.format("%H:%M:%S"))
-                    },
                 },
             }
         }
     }
 
     fn init(
-        _init: Self::Init,
+        init: Self::Init,
         _root: Self::Root,
         _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = Model {
-            time: chrono::Local::now(),
-        };
+        let mut model = Model { widgets: vec![] };
         let widgets = view_output!();
 
-        ComponentParts { model, widgets }
-    }
-
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
-        match message {
-            Input::UpdateTime(date_time) => self.time = date_time,
+        for widget_kind in init.start {
+            let (wrapper, widget) = build_widget(widget_kind);
+            model.widgets.push(wrapper);
+            widgets.start_widget.append(&widget);
         }
+
+        for widget_kind in init.center {
+            let (wrapper, widget) = build_widget(widget_kind);
+            model.widgets.push(wrapper);
+            widgets.center_widget.append(&widget);
+        }
+
+        for widget_kind in init.end {
+            let (wrapper, widget) = build_widget(widget_kind);
+            model.widgets.push(wrapper);
+            widgets.end_widget.append(&widget);
+        }
+
+        ComponentParts { model, widgets }
     }
 }

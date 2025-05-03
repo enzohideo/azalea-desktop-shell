@@ -13,6 +13,7 @@ serde.workspace = true
 serde_json.workspace = true
 
 chrono.workspace = true
+tokio.workspace = true
 
 gtk.workspace = true
 gtk4-layer-shell.workspace = true

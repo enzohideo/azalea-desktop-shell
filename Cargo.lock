@@ -206,6 +206,7 @@ dependencies = [
  "relm4",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

@@ -1,14 +1,11 @@
 use std::collections::HashMap;
 
-use azalea::window::taskbar;
-use azalea::{
-    core::{
-        app::{self, Application},
-        config::Config,
-        model,
-    },
-    service,
+use azalea::core::{
+    app::{self, Application},
+    config::Config,
+    model,
 };
+use azalea::window::taskbar;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
@@ -25,7 +22,6 @@ pub enum WindowWrapper {
 
 pub struct AzaleaDesktopShell {
     windows: HashMap<model::window::Id, WindowWrapper>,
-    time_service: service::Service<service::time::Model>,
 }
 
 impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
@@ -39,11 +35,6 @@ impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
             InitWrapper::Taskbar(init) => {
                 let builder = taskbar::Model::builder();
                 let controller = builder.launch(init.clone()).detach();
-                let sender = controller.sender().clone();
-
-                self.time_service
-                    .forward(sender, taskbar::Input::UpdateTime);
-
                 WindowWrapper::Taskbar(controller)
             }
         }
@@ -65,7 +56,15 @@ fn main() {
     let config = Config {
         windows: vec![model::window::InitDTO {
             id: format!("bottom-taskbar"),
-            init: InitWrapper::Taskbar(taskbar::Init {}),
+            init: InitWrapper::Taskbar({
+                use taskbar::widget::Kind::*;
+
+                taskbar::Init {
+                    start: vec![],
+                    center: vec![],
+                    end: vec![Time],
+                }
+            }),
             layer_shell: Some(model::layer_shell::Model {
                 namespace: Some(format!("taskbar")),
                 layer: Some(model::layer_shell::Layer::Bottom),
@@ -79,13 +78,8 @@ fn main() {
         }],
     };
 
-    let time_service = service::time::Model::builder()
-        .detach_worker(std::time::Duration::from_secs(1))
-        .into();
-
     let app = AzaleaDesktopShell {
         windows: Default::default(),
-        time_service,
     };
 
     app.run(Some(config));
