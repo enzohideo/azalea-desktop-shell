@@ -6,6 +6,8 @@ pub enum Error {
 }
 
 pub mod sync {
+    use crate::log;
+
     use super::Error;
     use std::{
         io::{Read, Write},
@@ -34,7 +36,7 @@ pub mod sync {
         {
             loop {
                 match self.listener.accept() {
-                    Err(e) => println!("failed to connect {e:?}"),
+                    Err(e) => log::warning!("failed to connect {e:?}"),
                     Ok((stream, _addr)) => {
                         let stream = UnixStreamWrapper::new(stream);
                         match callback(stream) {
@@ -44,7 +46,7 @@ pub mod sync {
                                 }
                                 return Ok(());
                             }
-                            Err(e) => println!("failed to execute callback {e:?}"),
+                            Err(e) => log::warning!("failed to execute callback {e:?}"),
                         }
                     }
                 }
@@ -101,6 +103,8 @@ pub mod sync {
 }
 
 pub mod r#async {
+    use crate::log;
+
     use super::Error;
     use futures_lite::io::{AsyncReadExt, AsyncWriteExt};
 
@@ -128,7 +132,7 @@ pub mod r#async {
         {
             loop {
                 match self.listener.accept().await {
-                    Err(e) => println!("failed to connect {e:?}"),
+                    Err(e) => log::warning!("failed to connect {e:?}"),
                     Ok((stream, _addr)) => {
                         let stream = UnixStreamWrapper::new(stream);
                         let alive = callback(stream).await;

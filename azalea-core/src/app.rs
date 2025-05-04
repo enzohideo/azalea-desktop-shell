@@ -14,14 +14,11 @@ use gtk4_layer_shell::LayerShell;
 use crate::{
     cli::{DaemonCommand, WindowCommand},
     config::{self, Config},
+    log,
     socket::{self, r#async::UnixStreamWrapper},
 };
 
 use super::cli::{Arguments, Command};
-
-static SOCKET_NAME: &str = "azalea.sock";
-static LOG_NAME: &str = "AzaleaDesktopShell";
-static ID: &str = "usp.ime.AzaleaDesktopShell";
 
 pub trait Application<ConfigWrapper, WindowWrapper>
 where
@@ -32,6 +29,9 @@ where
         + 'static,
     Self: 'static + Sized,
 {
+    const SOCKET_NAME: &str = "azalea.sock";
+    const APP_ID: &str = "usp.ime.Azalea";
+
     fn run(self, config: Option<Config<ConfigWrapper>>) {
         let args = Arguments::parse();
         let mut gtk_args = vec![std::env::args().next().unwrap()];
@@ -42,7 +42,7 @@ where
         // TODO: Receive app name, so it can look into ~/.config/appname/settings.json
         // TODO: Generate json schema
 
-        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), SOCKET_NAME);
+        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), Self::SOCKET_NAME);
 
         // TODO: Check if it's remote through dbus
         match args.command {
@@ -57,10 +57,12 @@ where
         socket_path: String,
         config: Option<Config<ConfigWrapper>>,
     ) {
-        let app = gtk::Application::builder().application_id(ID).build();
+        let app = gtk::Application::builder()
+            .application_id(Self::APP_ID)
+            .build();
 
         if let Err(error) = app.register(gio::Cancellable::NONE) {
-            gtk::glib::g_error!(LOG_NAME, "Failed to register gtk application {error:?}");
+            log::error!("Failed to register gtk application {error:?}");
         }
 
         let (ping_tx, ping_rx) = mpsc::channel();
@@ -72,7 +74,7 @@ where
 
         app.connect_activate(move |app| {
             if let Ok(app_guard) = ping_rx.try_recv() {
-                gtk::glib::g_message!(LOG_NAME, "Daemon has started");
+                log::message!("Daemon has started");
 
                 pong_tx.send(app_guard).expect("Daemon could not pong!");
 
@@ -96,7 +98,7 @@ where
                                         match stream.read().await {
                                             Ok(cmd) => state.borrow_mut().handle_command(cmd, &app),
                                             Err(e) => {
-                                                println!("Failed to read command {e:?}");
+                                                log::warning!("Failed to read command {e:?}");
                                                 return false;
                                             }
                                         };
@@ -106,7 +108,7 @@ where
                             }
                         ));
                     }
-                    Err(e) => println!("Failed to bind unix socket {e:?}"),
+                    Err(e) => log::error!("Failed to bind unix socket {e:?}"),
                 }
             }
         });
@@ -120,15 +122,15 @@ where
         match socket::sync::UnixStreamWrapper::connect(socket_path) {
             Ok(mut stream) => {
                 if let Err(e) = stream.write(&command) {
-                    println!("failed to write {e:?}");
+                    log::warning!("failed to write {e:?}");
                 } else {
                     match stream.read::<()>() {
                         Ok(_) => println!("Received"),
-                        Err(_) => println!("Failed to receive response"),
+                        Err(e) => log::warning!("Failed to receive response: {e:?}"),
                     }
                 }
             }
-            Err(e) => println!("failed to connect {e:?}"),
+            Err(e) => log::warning!("failed to connect {e:?}"),
         }
     }
 
