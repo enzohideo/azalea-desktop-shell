@@ -30,7 +30,7 @@ where
     Self: 'static + Sized,
 {
     const SOCKET_NAME: &str = "azalea.sock";
-    const APP_ID: &str = "usp.ime.Azalea";
+    const APP_ID: &str = "br.usp.ime.Azalea";
 
     fn run(self, config: Option<Config<ConfigWrapper>>) {
         let args = Arguments::parse();
