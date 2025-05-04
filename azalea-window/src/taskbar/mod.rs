@@ -22,7 +22,7 @@ pub struct Model {
 
 #[component(pub)]
 impl SimpleComponent for Model {
-    type Init = Config;
+    type Init = crate::Init<Config>;
     type Input = ();
     type Output = ();
 
@@ -59,19 +59,19 @@ impl SimpleComponent for Model {
         let mut model = Model { widgets: vec![] };
         let widgets = view_output!();
 
-        for widget_kind in init.start {
+        for widget_kind in init.config.start {
             let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.start_widget.append(&widget);
         }
 
-        for widget_kind in init.center {
+        for widget_kind in init.config.center {
             let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.center_widget.append(&widget);
         }
 
-        for widget_kind in init.end {
+        for widget_kind in init.config.end {
             let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.end_widget.append(&widget);

@@ -1,15 +1,17 @@
 use std::collections::HashMap;
 
-use azalea::core::{
-    app::{self, Application},
-    config,
+use azalea::{
+    core::{
+        app::{self, Application},
+        config,
+    },
+    window::{self, taskbar},
 };
-use azalea::window::taskbar;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
 #[derive(clap::Subcommand, serde::Serialize, serde::Deserialize, Debug)]
-pub enum InitWrapper {
+pub enum ConfigWrapper {
     Default,
     Taskbar(taskbar::Config),
 }
@@ -23,17 +25,21 @@ pub struct AzaleaDesktopShell {
     windows: HashMap<config::window::Id, WindowWrapper>,
 }
 
-impl app::Application<InitWrapper, WindowWrapper> for AzaleaDesktopShell {
-    fn create_window(&self, init: &InitWrapper) -> WindowWrapper {
+impl app::Application<ConfigWrapper, WindowWrapper> for AzaleaDesktopShell {
+    fn create_window(&self, init: &ConfigWrapper) -> WindowWrapper {
         match &init {
-            InitWrapper::Default => {
+            ConfigWrapper::Default => {
                 let btn = gtk::Button::with_label("Hey");
                 let window = gtk::Window::builder().child(&btn).build();
                 WindowWrapper::Default(window)
             }
-            InitWrapper::Taskbar(init) => {
+            ConfigWrapper::Taskbar(config) => {
                 let builder = taskbar::Model::builder();
-                let controller = builder.launch(init.clone()).detach();
+                let controller = builder
+                    .launch(window::Init::<taskbar::Config> {
+                        config: config.clone(),
+                    })
+                    .detach();
                 WindowWrapper::Taskbar(controller)
             }
         }
@@ -56,7 +62,7 @@ fn main() {
         windows: vec![config::window::Config {
             id: format!("bottom-taskbar"),
 
-            init: InitWrapper::Taskbar({
+            config: ConfigWrapper::Taskbar({
                 use taskbar::{Config, widget::Kind::*};
 
                 Config {

@@ -64,23 +64,23 @@ pub mod window {
     pub type Id = String;
 
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-    pub struct Config<InitWrapper>
+    pub struct Config<ConfigWrapper>
     where
-        InitWrapper: clap::Subcommand + std::fmt::Debug,
+        ConfigWrapper: clap::Subcommand + std::fmt::Debug,
     {
         pub id: Id,
 
         #[command(subcommand)]
-        pub init: InitWrapper,
+        pub config: ConfigWrapper,
 
         #[command(flatten)]
         pub layer_shell: Option<layer_shell::Config>,
     }
 }
 
-pub struct Config<Init>
+pub struct Config<ConfigWrapper>
 where
-    Init: clap::Subcommand + std::fmt::Debug,
+    ConfigWrapper: clap::Subcommand + std::fmt::Debug,
 {
-    pub windows: Vec<window::Config<Init>>,
+    pub windows: Vec<window::Config<ConfigWrapper>>,
 }

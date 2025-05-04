@@ -23,16 +23,16 @@ static SOCKET_NAME: &str = "azalea.sock";
 static LOG_NAME: &str = "AzaleaDesktopShell";
 static ID: &str = "usp.ime.AzaleaDesktopShell";
 
-pub trait Application<InitWrapper, WindowWrapper>
+pub trait Application<ConfigWrapper, WindowWrapper>
 where
-    InitWrapper: clap::Subcommand
+    ConfigWrapper: clap::Subcommand
         + serde::Serialize
         + serde::de::DeserializeOwned
         + std::fmt::Debug
         + 'static,
     Self: 'static + Sized,
 {
-    fn run(self, config: Option<Config<InitWrapper>>) {
+    fn run(self, config: Option<Config<ConfigWrapper>>) {
         let args = Arguments::parse();
         let mut gtk_args = vec![std::env::args().next().unwrap()];
         gtk_args.extend(args.gtk_options.clone());
@@ -55,7 +55,7 @@ where
         self,
         gtk_args: &Vec<String>,
         socket_path: String,
-        config: Option<Config<InitWrapper>>,
+        config: Option<Config<ConfigWrapper>>,
     ) {
         let app = gtk::Application::builder().application_id(ID).build();
 
@@ -116,7 +116,7 @@ where
         drop(pong_rx.try_recv());
     }
 
-    fn remote(self, command: Command<InitWrapper>, socket_path: String) {
+    fn remote(self, command: Command<ConfigWrapper>, socket_path: String) {
         match socket::sync::UnixStreamWrapper::connect(socket_path) {
             Ok(mut stream) => {
                 if let Err(e) = stream.write(&command) {
@@ -132,7 +132,7 @@ where
         }
     }
 
-    fn handle_command(&mut self, cmd: Command<InitWrapper>, app: &gtk::Application) {
+    fn handle_command(&mut self, cmd: Command<ConfigWrapper>, app: &gtk::Application) {
         match cmd {
             Command::Daemon(DaemonCommand::Start) => {
                 // TODO: Warning message;
@@ -145,10 +145,10 @@ where
 
     fn create_layer_shell(
         &mut self,
-        dto: &crate::config::window::Config<InitWrapper>,
+        dto: &crate::config::window::Config<ConfigWrapper>,
         app: &gtk::Application,
     ) {
-        let wrapped_window = self.create_window(&dto.init);
+        let wrapped_window = self.create_window(&dto.config);
         let window = Self::unwrap_window(&wrapped_window);
 
         window.set_title(Some(&dto.id));
@@ -171,7 +171,7 @@ where
         self.store_window(dto.id.clone(), wrapped_window);
     }
 
-    fn create_window(&self, dto: &InitWrapper) -> WindowWrapper;
+    fn create_window(&self, config: &ConfigWrapper) -> WindowWrapper;
     fn store_window(&mut self, id: config::window::Id, window: WindowWrapper);
     fn unwrap_window(window: &WindowWrapper) -> &gtk::Window;
 }
