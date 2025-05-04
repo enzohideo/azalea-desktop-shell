@@ -13,9 +13,18 @@ where
 
 impl<Model> Service<Model>
 where
-    Model: relm4::Worker,
+    Model: relm4::Worker<Input = ()> + relm4::Component<Root = (), Widgets = ()> + Send,
+    <Model as relm4::Component>::Input: Send,
+    <Model as relm4::Component>::Output: Send,
+    <Model as relm4::Component>::CommandOutput: Send,
 {
-    pub fn forward<X: 'static, F: (Fn(Model::Output) -> X) + 'static>(
+    pub fn new(init: <Model as relm4::Component>::Init) -> Self {
+        <Model as relm4::Component>::builder()
+            .detach_worker(init)
+            .into()
+    }
+
+    pub fn forward<X: 'static, F: (Fn(<Model as relm4::Worker>::Output) -> X) + 'static>(
         &self,
         sender: relm4::Sender<X>,
         transform: F,
