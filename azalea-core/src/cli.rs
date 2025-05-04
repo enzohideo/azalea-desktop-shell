@@ -40,6 +40,7 @@ where
     Init: clap::Subcommand + std::fmt::Debug,
 {
     Create(config::window::Config<Init>),
+    Toggle(config::window::Header),
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]

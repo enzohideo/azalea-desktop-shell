@@ -64,12 +64,18 @@ pub mod window {
     pub type Id = String;
 
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub struct Header {
+        pub id: Id,
+    }
+
+    #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
     #[group(skip)]
     pub struct Config<ConfigWrapper>
     where
         ConfigWrapper: clap::Subcommand + std::fmt::Debug,
     {
-        pub id: Id,
+        #[command(flatten)]
+        pub header: Header,
 
         #[command(subcommand)]
         pub config: ConfigWrapper,

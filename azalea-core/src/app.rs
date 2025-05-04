@@ -7,7 +7,7 @@ use gtk::{
         prelude::{ApplicationExt, ApplicationExtManual},
     },
     glib,
-    prelude::{GtkApplicationExt, GtkWindowExt},
+    prelude::{GtkApplicationExt, GtkWindowExt, WidgetExt},
 };
 use gtk4_layer_shell::LayerShell;
 
@@ -150,6 +150,13 @@ where
             }
             Command::Daemon(DaemonCommand::Stop) => app.quit(),
             Command::Window(WindowCommand::Create(dto)) => self.create_layer_shell(&dto, app),
+            Command::Window(WindowCommand::Toggle(header)) => {
+                let Some(wrapper) = self.retrieve_window(header.id) else {
+                    return;
+                };
+                let window = Self::unwrap_window(wrapper);
+                window.set_visible(!window.get_visible());
+            }
         }
     }
 
@@ -161,7 +168,7 @@ where
         let wrapped_window = self.create_window(&dto.config);
         let window = Self::unwrap_window(&wrapped_window);
 
-        window.set_title(Some(&dto.id));
+        window.set_title(Some(&dto.header.id));
 
         if let Some(layer_shell) = &dto.layer_shell {
             window.init_layer_shell();
@@ -178,10 +185,11 @@ where
         app.add_window(window);
         window.present();
 
-        self.store_window(dto.id.clone(), wrapped_window);
+        self.store_window(dto.header.id.clone(), wrapped_window);
     }
 
     fn create_window(&self, config: &ConfigWrapper) -> WindowWrapper;
     fn store_window(&mut self, id: config::window::Id, window: WindowWrapper);
+    fn retrieve_window(&mut self, id: config::window::Id) -> Option<&WindowWrapper>;
     fn unwrap_window(window: &WindowWrapper) -> &gtk::Window;
 }

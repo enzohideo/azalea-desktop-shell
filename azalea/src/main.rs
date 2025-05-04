@@ -55,12 +55,18 @@ impl app::Application<ConfigWrapper, WindowWrapper> for AzaleaDesktopShell {
             WindowWrapper::Taskbar(controller) => controller.widget(),
         }
     }
+
+    fn retrieve_window(&mut self, id: config::window::Id) -> Option<&WindowWrapper> {
+        self.windows.get(&id)
+    }
 }
 
 fn main() {
     let config = config::Config {
         windows: vec![config::window::Config {
-            id: format!("bottom-taskbar"),
+            header: config::window::Header {
+                id: format!("bottom-taskbar"),
+            },
 
             config: ConfigWrapper::Taskbar({
                 use taskbar::{Config, widget::Kind::*};
