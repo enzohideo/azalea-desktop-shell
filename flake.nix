@@ -32,6 +32,8 @@
 
               gtk4
               gtk4-layer-shell
+
+              cloc
             ];
           };
         }
