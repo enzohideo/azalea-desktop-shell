@@ -41,3 +41,9 @@ where
 {
     Create(config::window::Config<Init>),
 }
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub enum Response {
+    Success(String),
+    Error(String),
+}

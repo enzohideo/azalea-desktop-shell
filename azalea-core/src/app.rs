@@ -12,7 +12,7 @@ use gtk::{
 use gtk4_layer_shell::LayerShell;
 
 use crate::{
-    cli::{DaemonCommand, WindowCommand},
+    cli::{self, DaemonCommand, WindowCommand},
     config::{self, Config},
     log,
     socket::{self, r#async::UnixStreamWrapper},
@@ -96,13 +96,19 @@ where
                                 listener
                                     .loop_accept(async |mut stream: UnixStreamWrapper| {
                                         match stream.read().await {
-                                            Ok(cmd) => state.borrow_mut().handle_command(cmd, &app),
+                                            Ok(cmd) => {
+                                                state.borrow_mut().handle_command(cmd, &app);
+                                                // TODO: Allow commands with custom responses
+                                                let answer = cli::Response::Success(format!("Ok"));
+                                                drop(stream.write(answer).await);
+                                                return true;
+                                            }
                                             Err(e) => {
-                                                log::warning!("Failed to read command {e:?}");
+                                                let answer = cli::Response::Error(format!("{e:?}"));
+                                                drop(stream.write(answer).await);
                                                 return false;
                                             }
                                         };
-                                        return true;
                                     })
                                     .await;
                             }
@@ -124,8 +130,11 @@ where
                 if let Err(e) = stream.write(&command) {
                     log::warning!("failed to write {e:?}");
                 } else {
-                    match stream.read::<()>() {
-                        Ok(_) => println!("Received"),
+                    match stream.read::<cli::Response>() {
+                        Ok(response) => match response {
+                            cli::Response::Success(ans) => println!("{ans}"),
+                            cli::Response::Error(e) => log::warning!("{e:?}"),
+                        },
                         Err(e) => log::warning!("Failed to receive response: {e:?}"),
                     }
                 }
@@ -137,8 +146,7 @@ where
     fn handle_command(&mut self, cmd: Command<ConfigWrapper>, app: &gtk::Application) {
         match cmd {
             Command::Daemon(DaemonCommand::Start) => {
-                // TODO: Warning message;
-                todo!()
+                log::warning!("There's already an instance running")
             }
             Command::Daemon(DaemonCommand::Stop) => app.quit(),
             Command::Window(WindowCommand::Create(dto)) => self.create_layer_shell(&dto, app),
