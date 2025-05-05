@@ -4,7 +4,7 @@ use widget::{WidgetWrapper, build_widget};
 
 pub mod widget;
 
-#[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize, Default)]
 pub struct Config {
     #[clap(long)]
     pub start: Vec<widget::Kind>,
