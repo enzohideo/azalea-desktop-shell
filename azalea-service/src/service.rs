@@ -1,5 +1,11 @@
 use relm4::WorkerController;
 
+#[derive(Debug)]
+pub enum Input {
+    Start,
+    Stop,
+}
+
 pub struct Service<Model>
 where
     Model: relm4::Worker,
@@ -11,8 +17,9 @@ where
 
 impl<Model> Service<Model>
 where
-    Model: relm4::Worker<Input = ()> + relm4::Component<Root = (), Widgets = ()> + Send,
-    <Model as relm4::Component>::Input: Send,
+    Model: relm4::Worker<Input = Input>
+        + relm4::Component<Input = Input, Root = (), Widgets = ()>
+        + Send,
     <Model as relm4::Component>::Output: Send,
     <Model as relm4::Component>::CommandOutput: Send,
 {
@@ -20,6 +27,10 @@ where
         <Model as relm4::Component>::builder()
             .detach_worker(init)
             .into()
+    }
+
+    pub fn send(&self, message: Input) -> Result<(), Input> {
+        self.worker.sender().send(message)
     }
 
     pub fn forward<X: 'static, F: (Fn(<Model as relm4::Worker>::Output) -> X) + 'static>(
@@ -40,15 +51,13 @@ where
 
 impl<Model> From<relm4::WorkerHandle<Model>> for Service<Model>
 where
-    Model: relm4::Worker<Input = ()>,
+    Model: relm4::Worker,
 {
     fn from(value: relm4::WorkerHandle<Model>) -> Self {
         let (sender, receiver) = flume::unbounded();
 
         let sender: relm4::Sender<Model::Output> = sender.into();
         let worker = value.forward(&sender, |v| v);
-
-        let _ = worker.sender().send(());
 
         Self { worker, receiver }
     }

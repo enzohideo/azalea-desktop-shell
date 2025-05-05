@@ -9,17 +9,21 @@ pub struct Model {
 
 impl Worker for Model {
     type Init = std::time::Duration;
-    type Input = ();
+    type Input = crate::Input;
     type Output = Output;
 
     fn init(init: Self::Init, _sender: ComponentSender<Self>) -> Self {
         Self { duration: init }
     }
 
-    fn update(&mut self, _input: (), sender: ComponentSender<Self>) {
-        loop {
-            let _ = sender.output(chrono::Local::now());
-            std::thread::sleep(self.duration);
+    fn update(&mut self, input: Self::Input, sender: ComponentSender<Self>) {
+        // TODO: Use a Command instead of blocking here
+        match input {
+            crate::Input::Start => loop {
+                let _ = sender.output(chrono::Local::now());
+                std::thread::sleep(self.duration);
+            },
+            crate::Input::Stop => todo!(),
         }
     }
 }
