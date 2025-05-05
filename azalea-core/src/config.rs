@@ -85,6 +85,7 @@ pub mod window {
     }
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Config<ConfigWrapper>
 where
     ConfigWrapper: clap::Subcommand + std::fmt::Debug,
