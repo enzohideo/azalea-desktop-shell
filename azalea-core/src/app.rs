@@ -29,6 +29,7 @@ where
         + 'static,
     Self: 'static + Sized,
 {
+    const CONFIG_PATH: &str = "azalea/config.json";
     const SOCKET_NAME: &str = "azalea.sock";
     const APP_ID: &str = "br.usp.ime.Azalea";
 
@@ -46,9 +47,30 @@ where
 
         // TODO: Check if it's remote through dbus
         match args.command {
-            Command::Daemon(DaemonCommand::Start) => self.daemon(&gtk_args, socket_path, config),
+            Command::Daemon(DaemonCommand::Start {
+                config: config_path,
+            }) => {
+                let config_path = config_path
+                    .map(|p| std::path::PathBuf::from(&p))
+                    .unwrap_or(gtk::glib::user_config_dir().join(Self::CONFIG_PATH));
+                let config_from_file = Self::load_config(&config_path);
+                let config = match config_from_file {
+                    None => config,
+                    config => {
+                        log::message!("Loaded config from file {:?}", config_path);
+                        config
+                    }
+                };
+                self.daemon(&gtk_args, socket_path, config)
+            }
             cmd => self.remote(cmd, socket_path),
         }
+    }
+
+    fn load_config(path: &std::path::PathBuf) -> Option<Config<ConfigWrapper>> {
+        let file = std::fs::File::open(path).ok()?;
+        let reader = std::io::BufReader::new(file);
+        Some(serde_json::from_reader(reader).ok()?)
     }
 
     fn daemon(
@@ -145,7 +167,7 @@ where
 
     fn handle_command(&mut self, cmd: Command<ConfigWrapper>, app: &gtk::Application) {
         match cmd {
-            Command::Daemon(DaemonCommand::Start) => {
+            Command::Daemon(DaemonCommand::Start { config: _ }) => {
                 log::warning!("There's already an instance running")
             }
             Command::Daemon(DaemonCommand::Stop) => app.quit(),

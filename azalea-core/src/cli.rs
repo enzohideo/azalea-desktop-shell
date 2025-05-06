@@ -30,7 +30,10 @@ where
 
 #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
 pub enum DaemonCommand {
-    Start,
+    Start {
+        #[clap(long)]
+        config: Option<String>,
+    },
     Stop,
 }
 
