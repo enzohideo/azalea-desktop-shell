@@ -1,3 +1,4 @@
+use azalea_service::FromServices;
 use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
@@ -13,16 +14,32 @@ pub enum Message {
     Time(Time),
 }
 
-#[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {}
+
+pub struct Services {
+    time: Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>>,
+}
 
 impl crate::InitExt for Model {
     type Config = Config;
+    type Services = Services;
+}
+
+impl<ParentServices> FromServices<ParentServices> for Services
+where
+    ParentServices: azalea_service::HasService<azalea_service::time::Model>,
+{
+    fn inherit(value: &ParentServices) -> Self {
+        Self {
+            time: value.get_service(),
+        }
+    }
 }
 
 #[component(pub)]
 impl Component for Model {
-    type Init = crate::Init<Config>;
+    type Init = crate::Init<Self>;
     type Input = Message;
     type Output = ();
     type CommandOutput = Message;
@@ -44,7 +61,7 @@ impl Component for Model {
     }
 
     fn init(
-        _init: Self::Init,
+        init: Self::Init,
         _root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
@@ -53,17 +70,21 @@ impl Component for Model {
         };
         let widgets = view_output!();
 
-        sender.command(|out, shutdown| {
-            shutdown
-                .register(async move {
-                    loop {
-                        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                        let now = chrono::Local::now();
-                        out.send(Self::CommandOutput::Time(now)).unwrap();
-                    }
-                })
-                .drop_on_shutdown()
-        });
+        if let Some(time) = init.services.time {
+            time.forward(sender.input_sender().clone(), Message::Time);
+        } else {
+            sender.command(|out, shutdown| {
+                shutdown
+                    .register(async move {
+                        loop {
+                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                            let now = chrono::Local::now();
+                            out.send(Self::CommandOutput::Time(now)).unwrap();
+                        }
+                    })
+                    .drop_on_shutdown()
+            });
+        }
 
         ComponentParts { model, widgets }
     }

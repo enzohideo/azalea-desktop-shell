@@ -1,23 +1,25 @@
 pub mod taskbar;
 
 // TODO: Add service manager
-#[derive(Debug, Clone, Default)]
-pub struct Init<Config>
+#[derive(Debug, Clone)]
+pub struct Init<Model>
 where
-    Config: std::fmt::Debug + Clone + Default,
+    Model: InitExt,
 {
-    pub config: Config,
+    pub config: Model::Config,
+    pub services: Model::Services,
 }
 
-impl<Config> Init<Config>
+impl<Model> Init<Model>
 where
-    Config: std::fmt::Debug + Clone + Default,
+    Model: InitExt,
 {
-    fn new(config: Config) -> Self {
-        Self { config }
+    fn new(services: Model::Services, config: Model::Config) -> Self {
+        Self { services, config }
     }
 }
 
 pub trait InitExt {
     type Config;
+    type Services;
 }

@@ -1,10 +1,11 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use azalea::{
     core::{
         app::{self, Application},
         config,
     },
+    service::{self, HasService, IntoServices, Service},
     window::{self, taskbar},
 };
 use relm4::{Component, ComponentController};
@@ -21,8 +22,22 @@ pub enum WindowWrapper {
     Taskbar(relm4::component::Controller<taskbar::Model>),
 }
 
+#[derive(Clone)]
+pub struct Services {
+    time: std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>,
+}
+
+impl HasService<azalea_service::time::Model> for Services {
+    fn get_service(
+        &self,
+    ) -> Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>> {
+        Some(self.time.clone())
+    }
+}
+
 pub struct AzaleaDesktopShell {
     windows: HashMap<config::window::Id, WindowWrapper>,
+    services: Services,
 }
 
 impl app::Application<ConfigWrapper, WindowWrapper> for AzaleaDesktopShell {
@@ -36,8 +51,9 @@ impl app::Application<ConfigWrapper, WindowWrapper> for AzaleaDesktopShell {
             ConfigWrapper::Taskbar(config) => {
                 let builder = taskbar::Model::builder();
                 let controller = builder
-                    .launch(window::Init::<taskbar::Config> {
+                    .launch(window::Init::<taskbar::Model> {
                         config: config.clone(),
+                        services: self.services.strip(),
                     })
                     .detach();
                 WindowWrapper::Taskbar(controller)
@@ -91,8 +107,14 @@ fn main() {
         }],
     };
 
+    let time_service = Service::new(std::time::Duration::from_millis(1000));
+    drop(time_service.send(service::Input::Start));
+
     let app = AzaleaDesktopShell {
         windows: Default::default(),
+        services: Services {
+            time: Rc::new(time_service),
+        },
     };
 
     app.run(Some(config));

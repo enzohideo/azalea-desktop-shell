@@ -1,3 +1,4 @@
+use azalea_service::{FromServices, HasService};
 use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 use widget::{WidgetWrapper, build_widget};
@@ -19,8 +20,33 @@ pub struct Config {
     pub end: Vec<widget::Kind>,
 }
 
+#[derive(Clone)]
+pub struct Services {
+    time: Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>>,
+}
+
+impl HasService<azalea_service::time::Model> for Services {
+    fn get_service(
+        &self,
+    ) -> Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>> {
+        self.time.clone()
+    }
+}
+
+impl<ParentServices> FromServices<ParentServices> for Services
+where
+    ParentServices: azalea_service::HasService<azalea_service::time::Model>,
+{
+    fn inherit(value: &ParentServices) -> Self {
+        Self {
+            time: value.get_service(),
+        }
+    }
+}
+
 impl InitExt for Model {
     type Config = Config;
+    type Services = Services;
 }
 
 pub struct Model {
@@ -29,7 +55,7 @@ pub struct Model {
 
 #[component(pub)]
 impl SimpleComponent for Model {
-    type Init = crate::Init<Config>;
+    type Init = crate::Init<Self>;
     type Input = ();
     type Output = ();
 
@@ -67,19 +93,19 @@ impl SimpleComponent for Model {
         let widgets = view_output!();
 
         for widget_kind in init.config.start {
-            let (wrapper, widget) = build_widget(widget_kind);
+            let (wrapper, widget) = build_widget(&init.services, widget_kind);
             model.widgets.push(wrapper);
             widgets.start_widget.append(&widget);
         }
 
         for widget_kind in init.config.center {
-            let (wrapper, widget) = build_widget(widget_kind);
+            let (wrapper, widget) = build_widget(&init.services, widget_kind);
             model.widgets.push(wrapper);
             widgets.center_widget.append(&widget);
         }
 
         for widget_kind in init.config.end {
-            let (wrapper, widget) = build_widget(widget_kind);
+            let (wrapper, widget) = build_widget(&init.services, widget_kind);
             model.widgets.push(wrapper);
             widgets.end_widget.append(&widget);
         }
