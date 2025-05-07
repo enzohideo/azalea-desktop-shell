@@ -2,18 +2,25 @@ use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 use widget::{WidgetWrapper, build_widget};
 
+use crate::InitExt;
+
 pub mod widget;
 
 #[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize, Default)]
 pub struct Config {
-    #[clap(long)]
+    // TODO: Only allow windows defined in the config to be created / toggled
+    #[clap(skip)]
     pub start: Vec<widget::Kind>,
 
-    #[clap(long)]
+    #[clap(skip)]
     pub center: Vec<widget::Kind>,
 
-    #[clap(long)]
+    #[clap(skip)]
     pub end: Vec<widget::Kind>,
+}
+
+impl InitExt for Model {
+    type Config = Config;
 }
 
 pub struct Model {

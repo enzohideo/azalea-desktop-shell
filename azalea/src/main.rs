@@ -74,7 +74,7 @@ fn main() {
                 Config {
                     start: vec![],
                     center: vec![],
-                    end: vec![Time],
+                    end: vec![Time(taskbar::widget::time::Config {})],
                 }
             }),
 

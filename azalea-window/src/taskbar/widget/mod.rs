@@ -11,18 +11,20 @@ macro_rules! register_widgets {
         }
 
         #[allow(dead_code)]
-        #[derive(Debug, Clone, clap::ValueEnum, serde::Serialize, serde::Deserialize)]
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub enum Kind {
-            $($window),+
+            $($window(<$model as crate::InitExt>::Config)),+
         }
 
         #[allow(dead_code)]
         pub fn build_widget(dto: Kind) -> (WidgetWrapper, gtk::Widget) {
             match dto {
-                $(Kind::$window => {
+                $(Kind::$window(config) => {
                     let builder = <$model>::builder();
                     let widget = builder.root.clone();
-                    let wrapper = WidgetWrapper::$window(builder.launch(()));
+                    let wrapper = WidgetWrapper::$window(
+                        builder.launch($crate::Init::new(config))
+                    );
                     (wrapper, gtk::glib::object::Cast::upcast::<gtk::Widget>(widget))
                 },)+
             }

@@ -13,9 +13,16 @@ pub enum Message {
     Time(Time),
 }
 
+#[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Config {}
+
+impl crate::InitExt for Model {
+    type Config = Config;
+}
+
 #[component(pub)]
 impl Component for Model {
-    type Init = ();
+    type Init = crate::Init<Config>;
     type Input = Message;
     type Output = ();
     type CommandOutput = Message;
