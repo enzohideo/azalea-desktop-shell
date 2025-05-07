@@ -6,5 +6,7 @@ pub trait HasService<Model>
 where
     Model: relm4::Worker,
 {
-    fn get_service() -> Rc<Service<Model>>;
+    fn get_service(&self) -> Option<Rc<Service<Model>>> {
+        None
+    }
 }

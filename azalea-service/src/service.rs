@@ -54,6 +54,7 @@ where
     Model: relm4::Worker,
 {
     fn from(value: relm4::WorkerHandle<Model>) -> Self {
+        // FIXME: Use tokyo broadcast instead of flume
         let (sender, receiver) = flume::unbounded();
 
         let sender: relm4::Sender<Model::Output> = sender.into();
