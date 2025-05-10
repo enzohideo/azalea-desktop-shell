@@ -20,3 +20,4 @@ gtk4-layer-shell.workspace = true
 relm4.workspace = true
 
 flume = "0.11.1"
+tokio.workspace = true

@@ -12,7 +12,7 @@ where
 {
     #[allow(dead_code)]
     worker: WorkerController<Model>,
-    receiver: flume::Receiver<Model::Output>,
+    sender: tokio::sync::broadcast::Sender<Model::Output>,
 }
 
 impl<Model> Service<Model>
@@ -21,6 +21,7 @@ where
         + relm4::Component<Input = Input, Root = (), Widgets = ()>
         + Send,
     <Model as relm4::Component>::Output: Send,
+    <Model as relm4::Worker>::Output: Clone,
     <Model as relm4::Component>::CommandOutput: Send,
 {
     pub fn new(init: <Model as relm4::Component>::Init) -> Self {
@@ -38,9 +39,9 @@ where
         sender: relm4::Sender<X>,
         transform: F,
     ) {
-        let receiver = self.receiver.clone();
+        let mut receiver = self.sender.subscribe();
         relm4::spawn_local(async move {
-            while let Ok(event) = receiver.recv_async().await {
+            while let Ok(event) = receiver.recv().await {
                 if sender.send(transform(event)).is_err() {
                     return;
                 }
@@ -52,14 +53,25 @@ where
 impl<Model> From<relm4::WorkerHandle<Model>> for Service<Model>
 where
     Model: relm4::Worker,
+    <Model as relm4::Worker>::Output: Clone,
 {
     fn from(value: relm4::WorkerHandle<Model>) -> Self {
-        // FIXME: Use tokyo broadcast instead of flume
-        let (sender, receiver) = flume::unbounded();
+        let (flume_sender, flume_receiver) = flume::unbounded();
 
-        let sender: relm4::Sender<Model::Output> = sender.into();
-        let worker = value.forward(&sender, |v| v);
+        let flume_sender: relm4::Sender<Model::Output> = flume_sender.into();
+        let worker = value.forward(&flume_sender, |v| v);
 
-        Self { worker, receiver }
+        let (tokio_sender, _) = tokio::sync::broadcast::channel(1);
+        let sender = tokio_sender.clone();
+
+        relm4::spawn_local(async move {
+            while let Ok(event) = flume_receiver.recv_async().await {
+                if tokio_sender.send(event).is_err() {
+                    return;
+                }
+            }
+        });
+
+        Self { worker, sender }
     }
 }
