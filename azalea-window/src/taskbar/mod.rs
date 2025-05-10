@@ -1,4 +1,3 @@
-use azalea_service::{FromServices, HasService};
 use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 use widget::{WidgetWrapper, build_widget};
@@ -20,28 +19,8 @@ pub struct Config {
     pub end: Vec<widget::Kind>,
 }
 
-#[derive(Clone)]
-pub struct Services {
-    time: Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>>,
-}
-
-impl HasService<azalea_service::time::Model> for Services {
-    fn get_service(
-        &self,
-    ) -> Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>> {
-        self.time.clone()
-    }
-}
-
-impl<ParentServices> FromServices<ParentServices> for Services
-where
-    ParentServices: azalea_service::HasService<azalea_service::time::Model>,
-{
-    fn inherit(value: &ParentServices) -> Self {
-        Self {
-            time: value.get_service(),
-        }
-    }
+azalea_service::services! {
+    optional time: azalea_service::time::Model;
 }
 
 impl InitExt for Model {

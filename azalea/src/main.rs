@@ -5,7 +5,7 @@ use azalea::{
         app::{self, Application},
         config,
     },
-    service::{self, HasService, IntoServices, Service},
+    service::{self, IntoServices, Service},
     window::{self, taskbar},
 };
 use relm4::{Component, ComponentController};
@@ -22,17 +22,8 @@ pub enum WindowWrapper {
     Taskbar(relm4::component::Controller<taskbar::Model>),
 }
 
-#[derive(Clone)]
-pub struct Services {
-    time: std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>,
-}
-
-impl HasService<azalea_service::time::Model> for Services {
-    fn get_service(
-        &self,
-    ) -> Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>> {
-        Some(self.time.clone())
-    }
+azalea_service::services! {
+    require time: azalea_service::time::Model;
 }
 
 pub struct AzaleaDesktopShell {

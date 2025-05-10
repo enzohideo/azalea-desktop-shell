@@ -1,4 +1,3 @@
-use azalea_service::FromServices;
 use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
@@ -17,24 +16,13 @@ pub enum Message {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {}
 
-pub struct Services {
-    time: Option<std::rc::Rc<azalea_service::Service<azalea_service::time::Model>>>,
+azalea_service::services! {
+    optional time: azalea_service::time::Model;
 }
 
 impl crate::InitExt for Model {
     type Config = Config;
     type Services = Services;
-}
-
-impl<ParentServices> FromServices<ParentServices> for Services
-where
-    ParentServices: azalea_service::HasService<azalea_service::time::Model>,
-{
-    fn inherit(value: &ParentServices) -> Self {
-        Self {
-            time: value.get_service(),
-        }
-    }
 }
 
 #[component(pub)]
