@@ -2,39 +2,27 @@ use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 use widget::{WidgetWrapper, build_widget};
 
-use crate::InitExt;
-
 pub mod widget;
 
-#[derive(Debug, Clone, clap::Parser, serde::Serialize, serde::Deserialize, Default)]
-pub struct Config {
-    // TODO: Only allow windows defined in the config to be created / toggled
-    #[clap(skip)]
-    pub start: Vec<widget::Kind>,
+crate::init! {
+    Model {
+        widgets: Vec<WidgetWrapper>,
+    }
 
-    #[clap(skip)]
-    pub center: Vec<widget::Kind>,
+    Config {
+        pub start: Vec<widget::Kind>,
+        pub center: Vec<widget::Kind>,
+        pub end: Vec<widget::Kind>,
+    }
 
-    #[clap(skip)]
-    pub end: Vec<widget::Kind>,
-}
-
-azalea_service::services! {
-    optional time: azalea_service::time::Model;
-}
-
-impl InitExt for Model {
-    type Config = Config;
-    type Services = Services;
-}
-
-pub struct Model {
-    widgets: Vec<WidgetWrapper>,
+    Services {
+        time: azalea_service::time::Model,
+    }
 }
 
 #[component(pub)]
 impl SimpleComponent for Model {
-    type Init = crate::Init<Self>;
+    type Init = Init;
     type Input = ();
     type Output = ();
 

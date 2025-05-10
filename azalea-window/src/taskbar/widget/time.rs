@@ -3,31 +3,26 @@ use relm4::{Component, ComponentParts, ComponentSender, component};
 
 type Time = chrono::DateTime<chrono::Local>;
 
-pub struct Model {
-    time: Time,
+crate::init! {
+    Model {
+        time: Time,
+    }
+
+    Config {}
+
+    Services {
+        time: azalea_service::time::Model,
+    }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum Message {
     Time(Time),
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub struct Config {}
-
-azalea_service::services! {
-    optional time: azalea_service::time::Model;
-}
-
-impl crate::InitExt for Model {
-    type Config = Config;
-    type Services = Services;
-}
-
 #[component(pub)]
 impl Component for Model {
-    type Init = crate::Init<Self>;
+    type Init = Init;
     type Input = Message;
     type Output = ();
     type CommandOutput = Message;
