@@ -55,7 +55,14 @@ where
     fn load_config(path: &std::path::PathBuf) -> Option<Config<ConfigWrapper>> {
         let file = std::fs::File::open(path).ok()?;
         let reader = std::io::BufReader::new(file);
-        Some(serde_json::from_reader(reader).ok()?)
+
+        match serde_json::from_reader(reader) {
+            Ok(cfg) => Some(cfg),
+            Err(e) => {
+                log::warning!("Failed to parse config from file {path:?}\n{e}");
+                None
+            }
+        }
     }
 
     pub fn run(mut self) {
