@@ -4,12 +4,9 @@ use crate::config;
 
 #[derive(Parser, serde::Serialize)]
 #[command(version, about, long_about = None)]
-pub struct Arguments<Init>
-where
-    Init: clap::Subcommand + std::fmt::Debug,
-{
+pub struct Arguments {
     #[command(subcommand)]
-    pub command: Command<Init>,
+    pub command: Command,
 
     /// Unknown arguments or everything after -- gets passed through to GTK.
     #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
@@ -17,15 +14,13 @@ where
 }
 
 #[derive(Parser, serde::Serialize, serde::Deserialize)]
-pub enum Command<Init>
-where
-    Init: clap::Subcommand + std::fmt::Debug,
-{
+pub enum Command {
     #[command(subcommand)]
     Daemon(DaemonCommand),
 
     #[command(subcommand)]
-    Window(WindowCommand<Init>),
+    Window(WindowCommand),
+    // TODO: Extra subcommand given by the user?
 }
 
 #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
@@ -38,11 +33,8 @@ pub enum DaemonCommand {
 }
 
 #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-pub enum WindowCommand<Init>
-where
-    Init: clap::Subcommand + std::fmt::Debug,
-{
-    Create(config::window::Config<Init>),
+pub enum WindowCommand {
+    Create(config::window::Header),
     Toggle(config::window::Header),
 }
 

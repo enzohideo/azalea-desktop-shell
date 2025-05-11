@@ -20,9 +20,9 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
-pub struct Application<State, ConfigWrapper, WindowWrapper>
+pub struct Application<WM, ConfigWrapper, WindowWrapper>
 where
-    State: WindowManager<ConfigWrapper, WindowWrapper>,
+    WM: WindowManager<ConfigWrapper, WindowWrapper>,
     ConfigWrapper: clap::Subcommand
         + serde::Serialize
         + serde::de::DeserializeOwned
@@ -31,23 +31,23 @@ where
     Self: 'static + Sized,
 {
     config: config::Config<ConfigWrapper>,
-    state: State,
+    window_manager: WM,
     windows: HashMap<config::window::Id, WindowWrapper>,
 }
 
-impl<State, ConfigWrapper, WindowWrapper> Application<State, ConfigWrapper, WindowWrapper>
+impl<WM, ConfigWrapper, WindowWrapper> Application<WM, ConfigWrapper, WindowWrapper>
 where
-    State: WindowManager<ConfigWrapper, WindowWrapper>,
+    WM: WindowManager<ConfigWrapper, WindowWrapper>,
     ConfigWrapper: clap::Subcommand
         + serde::Serialize
         + serde::de::DeserializeOwned
         + std::fmt::Debug
         + 'static,
 {
-    pub fn new(state: State, config: config::Config<ConfigWrapper>) -> Self {
+    pub fn new(window_manager: WM, config: config::Config<ConfigWrapper>) -> Self {
         Self {
             config,
-            state,
+            window_manager,
             windows: Default::default(),
         }
     }
@@ -70,7 +70,7 @@ where
         let mut gtk_args = vec![std::env::args().next().unwrap()];
         gtk_args.extend(args.gtk_options.clone());
 
-        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), State::SOCKET_NAME);
+        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), WM::SOCKET_NAME);
 
         // TODO: Check if it's remote through dbus
         match args.command {
@@ -79,7 +79,7 @@ where
             }) => {
                 let config_path = config_path
                     .map(|p| std::path::PathBuf::from(&p))
-                    .unwrap_or(gtk::glib::user_config_dir().join(State::CONFIG_PATH));
+                    .unwrap_or(gtk::glib::user_config_dir().join(WM::CONFIG_PATH));
 
                 if let Some(config) = Self::load_config(&config_path) {
                     log::message!("Loaded config from file {:?}", config_path);
@@ -94,7 +94,7 @@ where
 
     fn daemon(self, gtk_args: &Vec<String>, socket_path: String) {
         let app = gtk::Application::builder()
-            .application_id(State::APP_ID)
+            .application_id(WM::APP_ID)
             .build();
 
         if let Err(error) = app.register(gio::Cancellable::NONE) {
@@ -114,10 +114,27 @@ where
 
                 pong_tx.send(app_guard).expect("Daemon could not pong!");
 
-                // FIXME: Remove Header, use HashMap instead of vector of windows
-                // for dto in &state.borrow().config.windows {
-                //     state.borrow_mut().create_layer_shell(&dto, app)
-                // }
+                {
+                    let config_window_ids: Vec<config::window::Id> = state
+                        .borrow()
+                        .config
+                        .windows
+                        .keys()
+                        .map(|v| v.to_owned())
+                        .collect();
+                    let mut state = state.borrow_mut();
+                    for id in config_window_ids {
+                        let Some(window_cfg) = state.config.windows.get(&id) else {
+                            continue;
+                        };
+
+                        if window_cfg.lazy {
+                            continue;
+                        }
+
+                        state.create_window(&id, app)
+                    }
+                }
 
                 match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
                     Ok(listener) => {
@@ -158,7 +175,7 @@ where
         drop(pong_rx.try_recv());
     }
 
-    fn remote(self, command: Command<ConfigWrapper>, socket_path: String) {
+    fn remote(self, command: Command, socket_path: String) {
         match socket::sync::UnixStreamWrapper::connect(socket_path) {
             Ok(mut stream) => {
                 if let Err(e) = stream.write(&command) {
@@ -177,34 +194,35 @@ where
         }
     }
 
-    fn handle_command(&mut self, cmd: Command<ConfigWrapper>, app: &gtk::Application) {
+    fn handle_command(&mut self, cmd: Command, app: &gtk::Application) {
         match cmd {
             Command::Daemon(DaemonCommand::Start { config: _ }) => {
                 log::warning!("There's already an instance running")
             }
             Command::Daemon(DaemonCommand::Stop) => app.quit(),
-            Command::Window(WindowCommand::Create(dto)) => self.create_layer_shell(&dto, app),
+            Command::Window(WindowCommand::Create(header)) => self.create_window(&header.id, app),
             Command::Window(WindowCommand::Toggle(header)) => {
                 let Some(wrapper) = self.windows.get(&header.id) else {
                     return;
                 };
-                let window = State::unwrap_window(wrapper);
+                let window = WM::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
             }
         }
     }
 
-    fn create_layer_shell(
-        &mut self,
-        dto: &crate::config::window::Config<ConfigWrapper>,
-        app: &gtk::Application,
-    ) {
-        let wrapped_window = self.state.create_window(&dto.config);
-        let window = State::unwrap_window(&wrapped_window);
+    fn create_window(&mut self, id: &config::window::Id, app: &gtk::Application) {
+        let Some(window_cfg) = self.config.windows.get(id) else {
+            log::warning!("Window configuration not found for id {}", id);
+            return;
+        };
+        // TODO: Check if window exists
+        let wrapped_window = self.window_manager.create_window(&window_cfg.config);
+        let window = WM::unwrap_window(&wrapped_window);
 
-        window.set_title(Some(&dto.header.id));
+        window.set_title(Some(&id));
 
-        if let Some(layer_shell) = &dto.layer_shell {
+        if let Some(layer_shell) = &window_cfg.layer_shell {
             window.init_layer_shell();
             window.set_namespace(layer_shell.namespace.as_deref());
             window.set_layer((&layer_shell.layer).into());
@@ -219,7 +237,7 @@ where
         app.add_window(window);
         window.present();
 
-        self.windows.insert(dto.header.id.clone(), wrapped_window);
+        self.windows.insert(id.clone(), wrapped_window);
     }
 }
 

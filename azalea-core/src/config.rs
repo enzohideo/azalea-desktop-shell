@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub mod layer_shell {
     use clap::Parser;
 
@@ -68,20 +70,14 @@ pub mod window {
         pub id: Id,
     }
 
-    #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-    #[group(skip)]
+    #[derive(serde::Serialize, serde::Deserialize, Debug)]
     pub struct Config<ConfigWrapper>
     where
         ConfigWrapper: clap::Subcommand + std::fmt::Debug,
     {
-        #[command(flatten)]
-        pub header: Header,
-
-        #[command(subcommand)]
         pub config: ConfigWrapper,
-
-        #[command(flatten)]
         pub layer_shell: Option<layer_shell::Config>,
+        pub lazy: bool,
     }
 }
 
@@ -90,5 +86,5 @@ pub struct Config<ConfigWrapper>
 where
     ConfigWrapper: clap::Subcommand + std::fmt::Debug,
 {
-    pub windows: Vec<window::Config<ConfigWrapper>>,
+    pub windows: HashMap<window::Id, window::Config<ConfigWrapper>>,
 }

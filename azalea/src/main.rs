@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 use azalea::{
     core::{
@@ -27,11 +27,11 @@ azalea_service::services! {
     require time: azalea_service::time::Model;
 }
 
-pub struct State {
+pub struct WindowManager {
     services: Services,
 }
 
-impl app::WindowManager<ConfigWrapper, WindowWrapper> for State {
+impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
     fn create_window(&self, init: &ConfigWrapper) -> WindowWrapper {
         match &init {
             ConfigWrapper::Default => {
@@ -64,18 +64,9 @@ fn main() {
     let time_service = Service::new(std::time::Duration::from_millis(1000));
     drop(time_service.send(service::Input::Start));
 
-    app::Application::new(
-        State {
-            services: Services {
-                time: Rc::new(time_service),
-            },
-        },
-        Config {
-            windows: vec![config::window::Config {
-                header: config::window::Header {
-                    id: format!("bottom-taskbar"),
-                },
-
+    relm4::view!(
+        mut windows = HashMap::new() {
+            insert: (format!("bottom-taskbar"), config::window::Config {
                 config: ConfigWrapper::Taskbar({
                     use taskbar::{Config, widget::Kind::*};
 
@@ -96,8 +87,19 @@ fn main() {
                         auto_exclusive_zone: true,
                     }
                 }),
-            }],
+
+                lazy: false,
+            }),
+        }
+    );
+
+    app::Application::new(
+        WindowManager {
+            services: Services {
+                time: Rc::new(time_service),
+            },
         },
+        Config { windows },
     )
     .run();
 }
