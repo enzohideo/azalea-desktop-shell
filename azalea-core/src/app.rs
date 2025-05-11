@@ -1,6 +1,5 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::mpsc};
 
-use clap::Parser;
 use gtk::{
     gio::{
         self,
@@ -66,7 +65,19 @@ where
     }
 
     pub fn run(mut self) {
-        let args = Arguments::parse();
+        let args = {
+            let arg_style = clap::builder::styling::Style::new().bold().underline();
+
+            Arguments::parse(format!(
+                "{}Window IDs:{} {}",
+                arg_style.render(),
+                arg_style.render_reset(),
+                self.config
+                    .windows
+                    .keys()
+                    .fold(format!(""), |acc, v| format!("{acc}\n  {v}"))
+            ))
+        };
         let mut gtk_args = vec![std::env::args().next().unwrap()];
         gtk_args.extend(args.gtk_options.clone());
 
