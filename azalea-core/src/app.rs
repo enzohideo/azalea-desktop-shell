@@ -84,8 +84,13 @@ where
         let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), WM::SOCKET_NAME);
 
         if let Some(dbus) = &self.dbus {
-            if dbus.name_has_owner(WM::APP_ID).unwrap_or(false) {
-                self.remote(args, socket_path);
+            if args.wait_for_daemon {
+                log::message!("Waiting for daemon to start");
+                drop(dbus.wait_for_name_owner(WM::APP_ID));
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                self.remote(args, socket_path, Some(std::time::Duration::from_secs(1)));
+            } else if dbus.name_has_owner(WM::APP_ID).unwrap_or(false) {
+                self.remote(args, socket_path, None);
             } else {
                 self.daemon(args, socket_path);
             }
@@ -196,22 +201,32 @@ where
         drop(pong_rx.try_recv());
     }
 
-    fn remote(self, args: Arguments, socket_path: String) {
-        match socket::sync::UnixStreamWrapper::connect(socket_path) {
-            Ok(mut stream) => {
-                if let Err(e) = stream.write(&args.command) {
-                    log::warning!("failed to write {e:?}");
-                } else {
-                    match stream.read::<cli::Response>() {
-                        Ok(response) => match response {
-                            cli::Response::Success(ans) => println!("{ans}"),
-                            cli::Response::Error(e) => log::warning!("{e:?}"),
-                        },
-                        Err(e) => log::warning!("Failed to receive response: {e:?}"),
+    fn remote(self, args: Arguments, socket_path: String, retry: Option<std::time::Duration>) {
+        loop {
+            match socket::sync::UnixStreamWrapper::connect(&socket_path) {
+                Ok(mut stream) => {
+                    if let Err(e) = stream.write(&args.command) {
+                        log::warning!("failed to write {e:?}");
+                    } else {
+                        match stream.read::<cli::Response>() {
+                            Ok(response) => match response {
+                                cli::Response::Success(ans) => println!("{ans}"),
+                                cli::Response::Error(e) => log::warning!("{e:?}"),
+                            },
+                            Err(e) => log::warning!("Failed to receive response: {e:?}"),
+                        }
+                    }
+                    return;
+                }
+                Err(e) => {
+                    log::warning!("failed to connect {e:?}");
+                    if let Some(duration) = retry {
+                        std::thread::sleep(duration);
+                    } else {
+                        return;
                     }
                 }
             }
-            Err(e) => log::warning!("failed to connect {e:?}"),
         }
     }
 

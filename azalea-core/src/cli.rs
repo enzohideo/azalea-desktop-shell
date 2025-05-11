@@ -8,7 +8,11 @@ pub struct Arguments {
     #[command(subcommand)]
     pub command: Command,
 
-    /// Unknown arguments or everything after -- gets passed through to GTK.
+    /// Wait for daemon to start
+    #[clap(short, long)]
+    pub wait_for_daemon: bool,
+
+    /// Arguments passed to GTK.
     #[arg(allow_hyphen_values = true, trailing_var_arg = true)]
     pub gtk_options: Vec<String>,
 }
