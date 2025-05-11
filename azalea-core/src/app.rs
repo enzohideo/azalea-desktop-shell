@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, sync::mpsc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::mpsc};
 
 use clap::Parser;
 use gtk::{
@@ -20,8 +20,9 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
-pub trait Application<ConfigWrapper, WindowWrapper>
+pub struct Application<State, ConfigWrapper, WindowWrapper>
 where
+    State: WindowManager<ConfigWrapper, WindowWrapper>,
     ConfigWrapper: clap::Subcommand
         + serde::Serialize
         + serde::de::DeserializeOwned
@@ -29,41 +30,25 @@ where
         + 'static,
     Self: 'static + Sized,
 {
-    const CONFIG_PATH: &str = "azalea/config.json";
-    const SOCKET_NAME: &str = "azalea.sock";
-    const APP_ID: &str = "br.usp.ime.Azalea";
+    config: config::Config<ConfigWrapper>,
+    state: State,
+    windows: HashMap<config::window::Id, WindowWrapper>,
+}
 
-    fn run(self, config: Option<Config<ConfigWrapper>>) {
-        let args = Arguments::parse();
-        let mut gtk_args = vec![std::env::args().next().unwrap()];
-        gtk_args.extend(args.gtk_options.clone());
-
-        // TODO: Parse config from file
-        // TODO: Get config filename from cli args
-        // TODO: Receive app name, so it can look into ~/.config/appname/settings.json
-        // TODO: Generate json schema
-
-        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), Self::SOCKET_NAME);
-
-        // TODO: Check if it's remote through dbus
-        match args.command {
-            Command::Daemon(DaemonCommand::Start {
-                config: config_path,
-            }) => {
-                let config_path = config_path
-                    .map(|p| std::path::PathBuf::from(&p))
-                    .unwrap_or(gtk::glib::user_config_dir().join(Self::CONFIG_PATH));
-                let config_from_file = Self::load_config(&config_path);
-                let config = match config_from_file {
-                    None => config,
-                    config => {
-                        log::message!("Loaded config from file {:?}", config_path);
-                        config
-                    }
-                };
-                self.daemon(&gtk_args, socket_path, config)
-            }
-            cmd => self.remote(cmd, socket_path),
+impl<State, ConfigWrapper, WindowWrapper> Application<State, ConfigWrapper, WindowWrapper>
+where
+    State: WindowManager<ConfigWrapper, WindowWrapper>,
+    ConfigWrapper: clap::Subcommand
+        + serde::Serialize
+        + serde::de::DeserializeOwned
+        + std::fmt::Debug
+        + 'static,
+{
+    pub fn new(state: State, config: config::Config<ConfigWrapper>) -> Self {
+        Self {
+            config,
+            state,
+            windows: Default::default(),
         }
     }
 
@@ -73,14 +58,36 @@ where
         Some(serde_json::from_reader(reader).ok()?)
     }
 
-    fn daemon(
-        self,
-        gtk_args: &Vec<String>,
-        socket_path: String,
-        config: Option<Config<ConfigWrapper>>,
-    ) {
+    pub fn run(mut self) {
+        let args = Arguments::parse();
+        let mut gtk_args = vec![std::env::args().next().unwrap()];
+        gtk_args.extend(args.gtk_options.clone());
+
+        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), State::SOCKET_NAME);
+
+        // TODO: Check if it's remote through dbus
+        match args.command {
+            Command::Daemon(DaemonCommand::Start {
+                config: config_path,
+            }) => {
+                let config_path = config_path
+                    .map(|p| std::path::PathBuf::from(&p))
+                    .unwrap_or(gtk::glib::user_config_dir().join(State::CONFIG_PATH));
+
+                if let Some(config) = Self::load_config(&config_path) {
+                    log::message!("Loaded config from file {:?}", config_path);
+                    self.config = config;
+                }
+
+                self.daemon(&gtk_args, socket_path)
+            }
+            cmd => self.remote(cmd, socket_path),
+        }
+    }
+
+    fn daemon(self, gtk_args: &Vec<String>, socket_path: String) {
         let app = gtk::Application::builder()
-            .application_id(Self::APP_ID)
+            .application_id(State::APP_ID)
             .build();
 
         if let Err(error) = app.register(gio::Cancellable::NONE) {
@@ -100,12 +107,10 @@ where
 
                 pong_tx.send(app_guard).expect("Daemon could not pong!");
 
-                if let Some(config) = &config {
-                    for dto in &config.windows {
-                        // TODO: Take ownership instead of borrow
-                        state.borrow_mut().create_layer_shell(&dto, app)
-                    }
-                }
+                // FIXME: Remove Header, use HashMap instead of vector of windows
+                // for dto in &state.borrow().config.windows {
+                //     state.borrow_mut().create_layer_shell(&dto, app)
+                // }
 
                 match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
                     Ok(listener) => {
@@ -173,10 +178,10 @@ where
             Command::Daemon(DaemonCommand::Stop) => app.quit(),
             Command::Window(WindowCommand::Create(dto)) => self.create_layer_shell(&dto, app),
             Command::Window(WindowCommand::Toggle(header)) => {
-                let Some(wrapper) = self.retrieve_window(header.id) else {
+                let Some(wrapper) = self.windows.get(&header.id) else {
                     return;
                 };
-                let window = Self::unwrap_window(wrapper);
+                let window = State::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
             }
         }
@@ -187,8 +192,8 @@ where
         dto: &crate::config::window::Config<ConfigWrapper>,
         app: &gtk::Application,
     ) {
-        let wrapped_window = self.create_window(&dto.config);
-        let window = Self::unwrap_window(&wrapped_window);
+        let wrapped_window = self.state.create_window(&dto.config);
+        let window = State::unwrap_window(&wrapped_window);
 
         window.set_title(Some(&dto.header.id));
 
@@ -207,11 +212,23 @@ where
         app.add_window(window);
         window.present();
 
-        self.store_window(dto.header.id.clone(), wrapped_window);
+        self.windows.insert(dto.header.id.clone(), wrapped_window);
     }
+}
+
+pub trait WindowManager<ConfigWrapper, WindowWrapper>
+where
+    ConfigWrapper: clap::Subcommand
+        + serde::Serialize
+        + serde::de::DeserializeOwned
+        + std::fmt::Debug
+        + 'static,
+    Self: 'static + Sized,
+{
+    const CONFIG_PATH: &str = "azalea/config.json";
+    const SOCKET_NAME: &str = "azalea.sock";
+    const APP_ID: &str = "br.usp.ime.Azalea";
 
     fn create_window(&self, config: &ConfigWrapper) -> WindowWrapper;
-    fn store_window(&mut self, id: config::window::Id, window: WindowWrapper);
-    fn retrieve_window(&mut self, id: config::window::Id) -> Option<&WindowWrapper>;
     fn unwrap_window(window: &WindowWrapper) -> &gtk::Window;
 }
