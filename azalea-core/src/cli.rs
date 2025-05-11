@@ -29,7 +29,7 @@ impl Arguments {
     }
 }
 
-#[derive(Parser, serde::Serialize, serde::Deserialize)]
+#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
 pub enum Command {
     #[command(subcommand)]
     Daemon(DaemonCommand),

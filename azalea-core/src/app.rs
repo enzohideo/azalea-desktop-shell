@@ -13,7 +13,7 @@ use gtk4_layer_shell::LayerShell;
 use crate::{
     cli::{self, DaemonCommand, WindowCommand},
     config::{self, Config},
-    log,
+    dbus, log,
     socket::{self, r#async::UnixStreamWrapper},
 };
 
@@ -30,6 +30,7 @@ where
     Self: 'static + Sized,
 {
     config: config::Config<ConfigWrapper>,
+    dbus: Option<dbus::DBusWrapper>,
     window_manager: WM,
     windows: HashMap<config::window::Id, WindowWrapper>,
 }
@@ -46,6 +47,7 @@ where
     pub fn new(window_manager: WM, config: config::Config<ConfigWrapper>) -> Self {
         Self {
             config,
+            dbus: dbus::DBusWrapper::new().ok(),
             window_manager,
             windows: Default::default(),
         }
@@ -64,7 +66,7 @@ where
         }
     }
 
-    pub fn run(mut self) {
+    pub fn run(self) {
         let args = {
             let arg_style = clap::builder::styling::Style::new().bold().underline();
 
@@ -78,32 +80,36 @@ where
                     .fold(format!(""), |acc, v| format!("{acc}\n  {v}"))
             ))
         };
-        let mut gtk_args = vec![std::env::args().next().unwrap()];
-        gtk_args.extend(args.gtk_options.clone());
 
         let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), WM::SOCKET_NAME);
 
-        // TODO: Check if it's remote through dbus
-        match args.command {
-            Command::Daemon(DaemonCommand::Start {
-                config: config_path,
-            }) => {
-                let config_path = config_path
-                    .map(|p| std::path::PathBuf::from(&p))
-                    .unwrap_or(gtk::glib::user_config_dir().join(WM::CONFIG_PATH));
-
-                if let Some(config) = Self::load_config(&config_path) {
-                    log::message!("Loaded config from file {:?}", config_path);
-                    self.config = config;
-                }
-
-                self.daemon(&gtk_args, socket_path)
+        if let Some(dbus) = &self.dbus {
+            if dbus.name_has_owner(WM::APP_ID).unwrap_or(false) {
+                self.remote(args, socket_path);
+            } else {
+                self.daemon(args, socket_path);
             }
-            cmd => self.remote(cmd, socket_path),
         }
     }
 
-    fn daemon(self, gtk_args: &Vec<String>, socket_path: String) {
+    fn daemon(mut self, args: Arguments, socket_path: String) {
+        if let Command::Daemon(DaemonCommand::Start {
+            config: config_path,
+        }) = args.command
+        {
+            let config_path = config_path
+                .map(|p| std::path::PathBuf::from(&p))
+                .unwrap_or(gtk::glib::user_config_dir().join(WM::CONFIG_PATH));
+
+            if let Some(config) = Self::load_config(&config_path) {
+                log::message!("Loaded config from file {:?}", config_path);
+                self.config = config;
+            }
+        } else {
+            log::error!("Daemon isn't running, invalid command: {:?}", args.command);
+            return;
+        }
+
         let app = gtk::Application::builder()
             .application_id(WM::APP_ID)
             .build();
@@ -181,15 +187,19 @@ where
             }
         });
 
-        app.run_with_args(gtk_args);
+        {
+            let mut gtk_args = vec![std::env::args().next().unwrap()];
+            gtk_args.extend(args.gtk_options.clone());
+            app.run_with_args(&gtk_args);
+        }
 
         drop(pong_rx.try_recv());
     }
 
-    fn remote(self, command: Command, socket_path: String) {
+    fn remote(self, args: Arguments, socket_path: String) {
         match socket::sync::UnixStreamWrapper::connect(socket_path) {
             Ok(mut stream) => {
-                if let Err(e) = stream.write(&command) {
+                if let Err(e) = stream.write(&args.command) {
                     log::warning!("failed to write {e:?}");
                 } else {
                     match stream.read::<cli::Response>() {
