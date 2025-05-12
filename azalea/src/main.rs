@@ -81,7 +81,7 @@ fn main() {
                     use config::layer_shell::{Anchor, Config, Layer};
 
                     Config {
-                        namespace: Some(format!("taskbar")),
+                        namespace: format!("taskbar"),
                         layer: Layer::Bottom,
                         anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
                         auto_exclusive_zone: true,

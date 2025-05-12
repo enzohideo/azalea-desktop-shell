@@ -40,6 +40,9 @@ pub enum Command {
 
     #[command(subcommand)]
     Window(WindowCommand),
+
+    #[command(subcommand)]
+    Layer(LayerCommand),
     // TODO: Extra subcommand given by the user?
 }
 
@@ -56,6 +59,11 @@ pub enum DaemonCommand {
 pub enum WindowCommand {
     Create(config::window::Header),
     Toggle(config::window::Header),
+}
+
+#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
+pub enum LayerCommand {
+    Toggle(config::layer_shell::Config),
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]

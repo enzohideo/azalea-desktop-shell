@@ -11,7 +11,7 @@ use gtk::{
 use gtk4_layer_shell::LayerShell;
 
 use crate::{
-    cli::{self, DaemonCommand, WindowCommand},
+    cli::{self, DaemonCommand, LayerCommand, WindowCommand},
     config::{self, Config},
     dbus, log,
     socket::{self, r#async::UnixStreamWrapper},
@@ -236,6 +236,9 @@ where
                 let window = WM::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
             }
+            Command::Layer(LayerCommand::Toggle(_layer_cfg)) => {
+                todo!();
+            }
         }
     }
 
@@ -257,7 +260,7 @@ where
 
         if let Some(layer_shell) = &window_cfg.layer_shell {
             window.init_layer_shell();
-            window.set_namespace(layer_shell.namespace.as_deref());
+            window.set_namespace(Some(&layer_shell.namespace));
             window.set_layer((&layer_shell.layer).into());
             for anchor in &layer_shell.anchors {
                 window.set_anchor(anchor.into(), true);

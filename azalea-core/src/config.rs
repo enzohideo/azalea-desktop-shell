@@ -45,7 +45,7 @@ pub mod layer_shell {
 
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub struct Config {
-        pub namespace: Option<Namespace>,
+        pub namespace: Namespace,
 
         #[clap(long)]
         pub layer: Layer,
@@ -87,4 +87,5 @@ where
     ConfigWrapper: std::fmt::Debug,
 {
     pub windows: HashMap<window::Id, window::Config<ConfigWrapper>>,
+    // TODO: Add different layouts (which windows are active)
 }
