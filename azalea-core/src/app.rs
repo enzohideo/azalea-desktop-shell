@@ -242,6 +242,7 @@ where
                 .map(|win| WM::unwrap_window(win))
                 .filter(|win| arg.cmp(win))
                 .for_each(|win| win.set_visible(!win.get_visible())),
+            Command::Config(cli::config::Command::View { json: _ }) => todo!(),
         }
     }
 
