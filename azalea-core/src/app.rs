@@ -84,13 +84,13 @@ where
         let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), WM::SOCKET_NAME);
 
         if let Some(dbus) = &self.dbus {
-            if args.wait_for_daemon {
+            if dbus.name_has_owner(WM::APP_ID).unwrap_or(false) {
+                self.remote(args, socket_path, Some(std::time::Duration::from_secs(1)));
+            } else if args.wait_for_daemon {
                 log::message!("Waiting for daemon to start");
                 drop(dbus.wait_for_name_owner(WM::APP_ID));
                 std::thread::sleep(std::time::Duration::from_secs(1));
                 self.remote(args, socket_path, Some(std::time::Duration::from_secs(1)));
-            } else if dbus.name_has_owner(WM::APP_ID).unwrap_or(false) {
-                self.remote(args, socket_path, None);
             } else {
                 self.daemon(args, socket_path);
             }
@@ -219,10 +219,10 @@ where
                     return;
                 }
                 Err(e) => {
-                    log::warning!("failed to connect {e:?}");
                     if let Some(duration) = retry {
                         std::thread::sleep(duration);
                     } else {
+                        log::warning!("failed to connect {e:?}");
                         return;
                     }
                 }
