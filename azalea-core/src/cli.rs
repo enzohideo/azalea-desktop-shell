@@ -71,6 +71,8 @@ pub mod window {
 }
 
 pub mod layer_shell {
+    use crate::config::layer_shell::{Anchor, Layer};
+
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
     pub enum Command {
         Toggle(Arguments),
@@ -78,7 +80,22 @@ pub mod layer_shell {
 
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
     pub struct Arguments {
-        pub id: crate::config::layer_shell::Namespace,
+        pub namespace: crate::config::layer_shell::Namespace,
+
+        #[clap(long)]
+        pub layer_opt: Option<Layer>,
+
+        #[clap(flatten)]
+        pub anchors_opt: AnchorsOption,
+    }
+
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub struct AnchorsOption {
+        #[clap(long = "overft_anchors")]
+        pub overfit: bool,
+
+        #[clap(long = "anchors")]
+        pub value: Vec<Anchor>,
     }
 }
 
