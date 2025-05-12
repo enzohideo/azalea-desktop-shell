@@ -71,6 +71,8 @@ pub mod window {
 }
 
 pub mod layer_shell {
+    use gtk4_layer_shell::LayerShell;
+
     use crate::config::layer_shell::{Anchor, Layer};
 
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
@@ -87,6 +89,34 @@ pub mod layer_shell {
 
         #[clap(long)]
         pub anchors: Vec<Anchor>,
+    }
+
+    impl Arguments {
+        pub fn cmp(&self, window: &gtk::Window) -> bool {
+            let Some(namespace) = window.namespace() else {
+                return false;
+            };
+            if self.namespace != namespace {
+                return false;
+            }
+
+            if let Some(layer) = &self.layer {
+                let Some(win_layer) = window.layer() else {
+                    return false;
+                };
+                if Into::<gtk4_layer_shell::Layer>::into(layer) != win_layer {
+                    return false;
+                }
+            }
+
+            for anchor in &self.anchors {
+                if !window.is_anchor(anchor.into()) {
+                    return false;
+                };
+            }
+
+            return true;
+        }
     }
 }
 

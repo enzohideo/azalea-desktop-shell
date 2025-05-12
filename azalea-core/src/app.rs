@@ -236,35 +236,12 @@ where
                 let window = WM::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
             }
-            Command::Layer(cli::layer_shell::Command::Toggle(arg)) => {
-                for wrapper in self.windows.values() {
-                    let window = WM::unwrap_window(wrapper);
-
-                    let Some(namespace) = window.namespace() else {
-                        return;
-                    };
-                    if arg.namespace != namespace {
-                        return;
-                    }
-
-                    if let Some(layer) = &arg.layer {
-                        let Some(win_layer) = window.layer() else {
-                            return;
-                        };
-                        if Into::<gtk4_layer_shell::Layer>::into(layer) != win_layer {
-                            return;
-                        }
-                    }
-
-                    for anchor in &arg.anchors {
-                        if !window.is_anchor(anchor.into()) {
-                            return;
-                        };
-                    }
-
-                    window.set_visible(!window.get_visible());
-                }
-            }
+            Command::Layer(cli::layer_shell::Command::Toggle(arg)) => self
+                .windows
+                .values()
+                .map(|win| WM::unwrap_window(win))
+                .filter(|win| arg.cmp(win))
+                .for_each(|win| win.set_visible(!win.get_visible())),
         }
     }
 
