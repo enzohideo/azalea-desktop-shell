@@ -12,7 +12,7 @@ use azalea_core::config::Config;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
-#[derive(clap::Subcommand, serde::Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum ConfigWrapper {
     Default,
     Taskbar(taskbar::Config),

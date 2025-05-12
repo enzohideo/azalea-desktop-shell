@@ -43,11 +43,9 @@ macro_rules! init {
             $($model_vis $model_name: $model_type,)*
         }
 
-        // TODO: Remove clap parser from config
-        #[derive(clap::Parser, Clone, Debug, serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
         pub struct Config {
             $(
-                #[clap(skip)]
                 $config_vis $config_name: $config_type,
             )*
         }

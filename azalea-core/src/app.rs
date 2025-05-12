@@ -22,11 +22,7 @@ use super::cli::{Arguments, Command};
 pub struct Application<WM, ConfigWrapper, WindowWrapper>
 where
     WM: WindowManager<ConfigWrapper, WindowWrapper>,
-    ConfigWrapper: clap::Subcommand
-        + serde::Serialize
-        + serde::de::DeserializeOwned
-        + std::fmt::Debug
-        + 'static,
+    ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
     Self: 'static + Sized,
 {
     config: config::Config<ConfigWrapper>,
@@ -38,11 +34,7 @@ where
 impl<WM, ConfigWrapper, WindowWrapper> Application<WM, ConfigWrapper, WindowWrapper>
 where
     WM: WindowManager<ConfigWrapper, WindowWrapper>,
-    ConfigWrapper: clap::Subcommand
-        + serde::Serialize
-        + serde::de::DeserializeOwned
-        + std::fmt::Debug
-        + 'static,
+    ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
 {
     pub fn new(window_manager: WM, config: config::Config<ConfigWrapper>) -> Self {
         Self {
@@ -284,11 +276,7 @@ where
 
 pub trait WindowManager<ConfigWrapper, WindowWrapper>
 where
-    ConfigWrapper: clap::Subcommand
-        + serde::Serialize
-        + serde::de::DeserializeOwned
-        + std::fmt::Debug
-        + 'static,
+    ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
     Self: 'static + Sized,
 {
     const CONFIG_PATH: &str = "azalea/config.json";

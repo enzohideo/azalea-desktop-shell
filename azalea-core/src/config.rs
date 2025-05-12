@@ -73,7 +73,7 @@ pub mod window {
     #[derive(serde::Serialize, serde::Deserialize, Debug)]
     pub struct Config<ConfigWrapper>
     where
-        ConfigWrapper: clap::Subcommand + std::fmt::Debug,
+        ConfigWrapper: std::fmt::Debug,
     {
         pub config: ConfigWrapper,
         pub layer_shell: Option<layer_shell::Config>,
@@ -84,7 +84,7 @@ pub mod window {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config<ConfigWrapper>
 where
-    ConfigWrapper: clap::Subcommand + std::fmt::Debug,
+    ConfigWrapper: std::fmt::Debug,
 {
     pub windows: HashMap<window::Id, window::Config<ConfigWrapper>>,
 }
