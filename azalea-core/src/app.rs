@@ -252,7 +252,12 @@ where
             log::warning!("Window configuration not found for id {}", id);
             return;
         };
-        // TODO: Check if window exists
+
+        if let Some(_) = self.windows.get(id) {
+            log::warning!("Window already exists with id {}", id);
+            return;
+        }
+
         let wrapped_window = self.window_manager.create_window(&window_cfg.config);
         let window = WM::unwrap_window(&wrapped_window);
 
