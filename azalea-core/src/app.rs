@@ -228,18 +228,42 @@ where
                 log::warning!("There's already an instance running")
             }
             Command::Daemon(cli::daemon::Command::Stop) => app.quit(),
-            Command::Window(cli::window::Command::Create(header)) => {
-                self.create_window(&header.id, app)
-            }
-            Command::Window(cli::window::Command::Toggle(header)) => {
-                let Some(wrapper) = self.windows.get(&header.id) else {
+            Command::Window(cli::window::Command::Create(arg)) => self.create_window(&arg.id, app),
+            Command::Window(cli::window::Command::Toggle(arg)) => {
+                let Some(wrapper) = self.windows.get(&arg.id) else {
                     return;
                 };
                 let window = WM::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
             }
-            Command::Layer(cli::layer_shell::Command::Toggle(_layer_cfg)) => {
-                todo!();
+            Command::Layer(cli::layer_shell::Command::Toggle(arg)) => {
+                for wrapper in self.windows.values() {
+                    let window = WM::unwrap_window(wrapper);
+
+                    let Some(namespace) = window.namespace() else {
+                        return;
+                    };
+                    if arg.namespace != namespace {
+                        return;
+                    }
+
+                    if let Some(layer) = &arg.layer {
+                        let Some(win_layer) = window.layer() else {
+                            return;
+                        };
+                        if Into::<gtk4_layer_shell::Layer>::into(layer) != win_layer {
+                            return;
+                        }
+                    }
+
+                    for anchor in &arg.anchors {
+                        if !window.is_anchor(anchor.into()) {
+                            return;
+                        };
+                    }
+
+                    window.set_visible(!window.get_visible());
+                }
             }
         }
     }

@@ -83,19 +83,10 @@ pub mod layer_shell {
         pub namespace: crate::config::layer_shell::Namespace,
 
         #[clap(long)]
-        pub layer_opt: Option<Layer>,
+        pub layer: Option<Layer>,
 
-        #[clap(flatten)]
-        pub anchors_opt: AnchorsOption,
-    }
-
-    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
-    pub struct AnchorsOption {
-        #[clap(long = "overft_anchors")]
-        pub overfit: bool,
-
-        #[clap(long = "anchors")]
-        pub value: Vec<Anchor>,
+        #[clap(long)]
+        pub anchors: Vec<Anchor>,
     }
 }
 
