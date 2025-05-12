@@ -1,6 +1,6 @@
 use clap::{Parser, arg, command};
 
-use crate::{config, log};
+use crate::log;
 
 #[derive(clap::Parser, serde::Serialize)]
 #[command(version, about, long_about = None)]
@@ -36,34 +36,50 @@ impl Arguments {
 #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
 pub enum Command {
     #[command(subcommand)]
-    Daemon(DaemonCommand),
+    Daemon(daemon::Command),
 
     #[command(subcommand)]
-    Window(WindowCommand),
+    Window(window::Command),
 
     #[command(subcommand)]
-    Layer(LayerCommand),
+    Layer(layer_shell::Command),
     // TODO: Extra subcommand given by the user?
 }
 
-#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-pub enum DaemonCommand {
-    Start {
-        #[clap(long)]
-        config: Option<String>,
-    },
-    Stop,
+pub mod daemon {
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub enum Command {
+        Start {
+            #[clap(long)]
+            config: Option<String>,
+        },
+        Stop,
+    }
 }
 
-#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-pub enum WindowCommand {
-    Create(config::window::Header),
-    Toggle(config::window::Header),
+pub mod window {
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub enum Command {
+        Create(Arguments),
+        Toggle(Arguments),
+    }
+
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub struct Arguments {
+        pub id: crate::config::window::Id,
+    }
 }
 
-#[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-pub enum LayerCommand {
-    Toggle(config::layer_shell::Config),
+pub mod layer_shell {
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub enum Command {
+        Toggle(Arguments),
+    }
+
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub struct Arguments {
+        pub id: crate::config::layer_shell::Namespace,
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]

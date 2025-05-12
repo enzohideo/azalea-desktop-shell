@@ -11,7 +11,7 @@ use gtk::{
 use gtk4_layer_shell::LayerShell;
 
 use crate::{
-    cli::{self, DaemonCommand, LayerCommand, WindowCommand},
+    cli,
     config::{self, Config},
     dbus, log,
     socket::{self, r#async::UnixStreamWrapper},
@@ -90,7 +90,7 @@ where
     }
 
     fn daemon(mut self, args: Arguments, socket_path: String) {
-        if let Command::Daemon(DaemonCommand::Start {
+        if let Command::Daemon(cli::daemon::Command::Start {
             config: config_path,
         }) = args.command
         {
@@ -224,19 +224,21 @@ where
 
     fn handle_command(&mut self, cmd: Command, app: &gtk::Application) {
         match cmd {
-            Command::Daemon(DaemonCommand::Start { config: _ }) => {
+            Command::Daemon(cli::daemon::Command::Start { config: _ }) => {
                 log::warning!("There's already an instance running")
             }
-            Command::Daemon(DaemonCommand::Stop) => app.quit(),
-            Command::Window(WindowCommand::Create(header)) => self.create_window(&header.id, app),
-            Command::Window(WindowCommand::Toggle(header)) => {
+            Command::Daemon(cli::daemon::Command::Stop) => app.quit(),
+            Command::Window(cli::window::Command::Create(header)) => {
+                self.create_window(&header.id, app)
+            }
+            Command::Window(cli::window::Command::Toggle(header)) => {
                 let Some(wrapper) = self.windows.get(&header.id) else {
                     return;
                 };
                 let window = WM::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
             }
-            Command::Layer(LayerCommand::Toggle(_layer_cfg)) => {
+            Command::Layer(cli::layer_shell::Command::Toggle(_layer_cfg)) => {
                 todo!();
             }
         }

@@ -59,16 +59,9 @@ pub mod layer_shell {
 }
 
 pub mod window {
-    use clap::Parser;
-
     use super::layer_shell;
 
     pub type Id = String;
-
-    #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
-    pub struct Header {
-        pub id: Id,
-    }
 
     #[derive(serde::Serialize, serde::Deserialize, Debug)]
     pub struct Config<ConfigWrapper>
