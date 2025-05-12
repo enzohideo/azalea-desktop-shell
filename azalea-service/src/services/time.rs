@@ -1,45 +1,27 @@
-use std::sync::mpsc;
+use relm4::ComponentSender;
 
-use relm4::{ComponentSender, Worker};
-
-use crate::Input;
+use super::WorkerExt;
 
 pub type Output = chrono::DateTime<chrono::Local>;
 
-#[derive(Debug)]
-pub struct Model {
-    sender: mpsc::Sender<Input>,
+// TODO: macro to create this and the type aliases
+pub struct State {
+    duration: std::time::Duration,
 }
+pub type Model = super::Model<State>;
+pub type Service = crate::Service<Model>;
 
-// Add WorkerExt and impl Worker for WorkerExt
-impl Worker for Model {
+// TODO: Maybe apply this trait to Model directly
+impl WorkerExt<Model> for State {
     type Init = std::time::Duration;
-    type Input = Input;
     type Output = Output;
 
-    fn init(init: Self::Init, sender: ComponentSender<Self>) -> Self {
-        let (tx, rx) = mpsc::channel();
-        let output = sender.output_sender().clone();
-
-        sender.oneshot_command(async move {
-            while let Ok(input) = rx.recv() {
-                match input {
-                    Input::Start => loop {
-                        if let Ok(Input::Stop) = rx.try_recv() {
-                            break;
-                        }
-                        let _ = output.send(chrono::Local::now());
-                        tokio::time::sleep(init).await;
-                    },
-                    Input::Stop => continue,
-                }
-            }
-        });
-
-        Self { sender: tx }
+    fn new(init: Self::Init) -> Self {
+        Self { duration: init }
     }
 
-    fn update(&mut self, input: Self::Input, _sender: ComponentSender<Self>) {
-        drop(self.sender.send(input));
+    async fn update(&mut self, sender: &ComponentSender<Model>) {
+        sender.output(chrono::Local::now()).unwrap_or(());
+        tokio::time::sleep(self.duration).await;
     }
 }
