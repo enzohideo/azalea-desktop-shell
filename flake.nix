@@ -30,6 +30,9 @@
               rust-analyzer
               pkg-config
 
+              clang
+              mold-wrapped
+
               gtk4
               gtk4-layer-shell
 
