@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::mpsc};
+use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc, sync::mpsc};
 
 use gtk::{
     gio::{
@@ -45,7 +45,7 @@ where
         }
     }
 
-    fn load_config(path: &std::path::PathBuf) -> Option<Config<ConfigWrapper>> {
+    fn load_config(path: &PathBuf) -> Option<Config<ConfigWrapper>> {
         let file = std::fs::File::open(path).ok()?;
         let reader = std::io::BufReader::new(file);
 
@@ -73,7 +73,7 @@ where
             ))
         };
 
-        let socket_path = format!("{}/{}", env!("XDG_RUNTIME_DIR"), WM::SOCKET_NAME);
+        let socket_path = glib::user_runtime_dir().join(WM::SOCKET_NAME);
 
         if let Some(dbus) = &self.dbus {
             if dbus.name_has_owner(WM::APP_ID).unwrap_or(false) {
@@ -89,13 +89,13 @@ where
         }
     }
 
-    fn daemon(mut self, args: Arguments, socket_path: String) {
+    fn daemon(mut self, args: Arguments, socket_path: PathBuf) {
         if let Command::Daemon(cli::daemon::Command::Start {
             config: config_path,
         }) = args.command
         {
             let config_path = config_path
-                .map(|p| std::path::PathBuf::from(&p))
+                .map(|p| PathBuf::from(&p))
                 .unwrap_or(gtk::glib::user_config_dir().join(WM::CONFIG_PATH));
 
             if let Some(config) = Self::load_config(&config_path) {
@@ -193,7 +193,7 @@ where
         drop(pong_rx.try_recv());
     }
 
-    fn remote(self, args: Arguments, socket_path: String, retry: Option<std::time::Duration>) {
+    fn remote(self, args: Arguments, socket_path: PathBuf, retry: Option<std::time::Duration>) {
         loop {
             match socket::sync::UnixStreamWrapper::connect(&socket_path) {
                 Ok(mut stream) => {
