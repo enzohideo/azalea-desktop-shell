@@ -14,6 +14,10 @@
       name = "azalea-desktop-shell";
     in
     {
+      packages = forEachSystem (system: {
+        default = pkgsFor.${system}.callPackage ./nix/package.nix { };
+      });
+
       devShells = forEachSystem (
         system:
         let
