@@ -3,6 +3,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       systems,
       ...
@@ -14,9 +15,17 @@
       name = "azalea-desktop-shell";
     in
     {
-      packages = forEachSystem (system: {
-        default = pkgsFor.${system}.callPackage ./nix/package.nix { };
-      });
+      packages = forEachSystem (
+        system:
+        let
+          pkgs = pkgsFor.${system};
+          azalea = self.packages.${system}.azalea;
+        in
+        {
+          default = self.packages.${system}.azalea;
+          azalea = pkgs.callPackage ./nix/package.nix { };
+        }
+      );
 
       devShells = forEachSystem (
         system:

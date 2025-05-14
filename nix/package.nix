@@ -1,5 +1,6 @@
 {
   lib,
+  nix-gitignore,
   rustPlatform,
   pkg-config,
   wrapGAppsHook4,
@@ -16,7 +17,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   useFetchCargoVendor = true;
   cargoHash = "sha256-OdWVBjiW91+9UpuQHmp8Ut5gp7prBdsW37UizJBZOfI=";
 
-  src = lib.cleanSource ../.;
+  src = nix-gitignore.gitignoreSource [
+    "flake.*\n"
+    "nix\n"
+  ] (lib.cleanSource ../.);
 
   nativeBuildInputs = [
     rustPlatform.bindgenHook
