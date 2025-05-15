@@ -22,6 +22,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
     "nix\n"
   ] (lib.cleanSource ../.);
 
+  NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+
   nativeBuildInputs = [
     rustPlatform.bindgenHook
     pkg-config
