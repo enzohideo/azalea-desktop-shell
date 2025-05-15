@@ -21,9 +21,17 @@
         system:
         let
           pkgs = pkgsFor.${system};
+          azalea = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
         in
         {
-          default = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
+          default = azalea;
+          inherit azalea;
+
+          tests = {
+            hyprland = pkgsFor.${system}.callPackage ./nix/tests/hyprland.nix {
+              inherit azalea;
+            };
+          };
         }
       );
 

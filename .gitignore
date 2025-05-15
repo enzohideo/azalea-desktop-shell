@@ -1,2 +1,4 @@
 target
 result
+.nixos-test-history
+*.png
