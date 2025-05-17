@@ -26,6 +26,11 @@ testers.runNixOSTest {
       kitty
     ];
 
+    virtualisation.qemu.options = [
+      "-device virtio-vga-gl"
+      "-display gtk,gl=on"
+    ];
+
     systemd.user.services.azalea = {
       enable = true;
 
