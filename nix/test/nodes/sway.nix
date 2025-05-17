@@ -2,6 +2,8 @@
 let
   # FIXME: Transparent kitty background
   cfg = pkgs.writeText "azalea-sway.conf" ''
+    include /etc/sway/config.d/*
+    exec kitty
   '';
 in
 {
@@ -15,7 +17,7 @@ in
 
   programs.bash.loginShellInit = ''
     if [ "$(tty)" = "/dev/tty1" ]; then
-      exec sway --config ${cfg}
+      exec dbus-run-session -- sway --config ${cfg}
     fi
   '';
 }

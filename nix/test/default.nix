@@ -27,11 +27,15 @@ testers.runNixOSTest {
       enable = lib.mkDefault false;
 
       description = "Azalea Daemon";
+
       after = [ "graphical-session.target" ];
       wantedBy = [ "graphical-session.target" ];
+      bindsTo = [ "graphical-session.target" ];
+
       unitConfig = {
         ConditionEnvironment = "WAYLAND_DISPLAY";
       };
+
       serviceConfig = {
         ExecStart = "${azalea}/bin/azalea daemon start";
         Restart = "on-failure";
