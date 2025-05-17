@@ -7,8 +7,8 @@
 testers.runNixOSTest {
   name = "azalea-integration-test";
 
-  interactive.nodes.hyprland = import ./nodes/hyprland.nix;
-  interactive.nodes.sway = import ./nodes/sway.nix;
+  nodes.hyprland = import ./nodes/hyprland.nix;
+  nodes.sway = import ./nodes/sway.nix;
 
   defaults = {
     services.getty.autologinUser = "alice";
