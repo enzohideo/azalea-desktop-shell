@@ -1,8 +1,11 @@
 { pkgs, ... }:
 let
-  # FIXME: Transparent kitty background
   cfg = pkgs.writeText "azalea-sway.conf" ''
     include /etc/sway/config.d/*
+
+    output * bg /run/current-system/sw/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+    for_window [class="^.*"] opacity 0.7
+
     exec kitty
   '';
 in
@@ -10,10 +13,6 @@ in
   programs.sway.enable = true;
 
   systemd.user.services.azalea.enable = true;
-
-  environment.systemPackages = [
-    pkgs.swaybg
-  ];
 
   programs.bash.loginShellInit = ''
     if [ "$(tty)" = "/dev/tty1" ]; then
