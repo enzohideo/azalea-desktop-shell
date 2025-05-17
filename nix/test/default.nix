@@ -1,4 +1,5 @@
 {
+  lib,
   azalea,
   testers,
   kitty,
@@ -7,11 +8,7 @@ testers.runNixOSTest {
   name = "azalea-integration-test";
 
   interactive.nodes.hyprland = import ./nodes/hyprland.nix;
-
-  # FIXME: Random backdoor.service failure
-  # related: https://github.com/NixOS/nixpkgs/issues/399245
-  #
-  # interactive.nodes.sway = import ./nodes/sway.nix;
+  interactive.nodes.sway = import ./nodes/sway.nix;
 
   defaults = {
     services.getty.autologinUser = "alice";
@@ -32,7 +29,7 @@ testers.runNixOSTest {
     ];
 
     systemd.user.services.azalea = {
-      enable = true;
+      enable = lib.mkDefault false;
 
       description = "Azalea Daemon";
       after = [ "graphical-session.target" ];
@@ -51,10 +48,11 @@ testers.runNixOSTest {
   testScript = ''
     def test(machine):
       machine.start()
+
       machine.wait_for_unit("multi-user.target")
       machine.wait_for_file("/run/user/1000/wayland-1")
-      machine.wait_until_succeeds("pgrep -x '.azalea-wrapped'")
-      machine.sleep(3)
+      machine.wait_until_succeeds("pgrep azalea")
+      machine.sleep(6)
 
       with subtest(f"{machine.name}: default"):
         machine.screenshot(f"{machine.name}-default")

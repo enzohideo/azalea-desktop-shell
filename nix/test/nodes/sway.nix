@@ -1,10 +1,21 @@
-{ ... }:
+{ pkgs, ... }:
+let
+  # FIXME: Transparent kitty background
+  cfg = pkgs.writeText "azalea-sway.conf" ''
+  '';
+in
 {
   programs.sway.enable = true;
 
+  systemd.user.services.azalea.enable = true;
+
+  environment.systemPackages = [
+    pkgs.swaybg
+  ];
+
   programs.bash.loginShellInit = ''
-    mkdir -p ~/.config/sway
-    sed s/foot/kitty/ /etc/sway/config > ~/.config/sway/config
-    exec sway
+    if [ "$(tty)" = "/dev/tty1" ]; then
+      exec sway --config ${cfg}
+    fi
   '';
 }
