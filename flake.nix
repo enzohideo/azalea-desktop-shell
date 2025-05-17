@@ -27,10 +27,8 @@
           default = azalea;
           inherit azalea;
 
-          tests = {
-            hyprland = pkgsFor.${system}.callPackage ./nix/tests/hyprland.nix {
-              inherit azalea;
-            };
+          test = pkgsFor.${system}.callPackage ./nix/test {
+            inherit azalea;
           };
         }
       );
