@@ -35,13 +35,21 @@ testers.runNixOSTest {
     };
   };
 
-  # TODO: Automate this, possibly RunCommand if necessary
+  # TODO: Build package with all screenshots, possibly RunCommand if necessary
   testScript = ''
-    hyprland.start()
-    hyprland.wait_for_unit("multi-user.target")
-    hyprland.wait_until_succeeds("pgrep -x '.azalea-wrapped'")
-    hyprland.sleep(3)
-    hyprland.screenshot("hyprland-default")
-    hyprland.shutdown()
+    def test(machine):
+      machine.start()
+      machine.wait_for_unit("multi-user.target")
+      machine.wait_until_succeeds("pgrep -x '.azalea-wrapped'")
+      machine.sleep(3)
+
+      with subtest(f"{machine.name}: default"):
+        machine.screenshot(f"{machine.name}-default")
+
+      machine.shutdown()
+
+    for machine in machines:
+      with subtest(machine.name):
+        test(machine)
   '';
 }
