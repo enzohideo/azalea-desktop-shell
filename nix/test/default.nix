@@ -1,11 +1,17 @@
 {
-  testers,
   azalea,
+  testers,
+  kitty,
 }:
 testers.runNixOSTest {
   name = "azalea-integration-test";
 
   interactive.nodes.hyprland = import ./nodes/hyprland.nix;
+
+  # FIXME: Random backdoor.service failure
+  # related: https://github.com/NixOS/nixpkgs/issues/399245
+  #
+  # interactive.nodes.sway = import ./nodes/sway.nix;
 
   defaults = {
     services.getty.autologinUser = "alice";
@@ -17,6 +23,7 @@ testers.runNixOSTest {
 
     environment.systemPackages = [
       azalea
+      kitty
     ];
 
     systemd.user.services.azalea = {
@@ -40,6 +47,7 @@ testers.runNixOSTest {
     def test(machine):
       machine.start()
       machine.wait_for_unit("multi-user.target")
+      machine.wait_for_file("/run/user/1000/wayland-1")
       machine.wait_until_succeeds("pgrep -x '.azalea-wrapped'")
       machine.sleep(3)
 
