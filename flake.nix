@@ -1,10 +1,13 @@
 {
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    crane.url = "github:ipetkov/crane";
+  };
 
   outputs =
     {
-      self,
       nixpkgs,
+      crane,
       systems,
       ...
     }:
@@ -12,18 +15,15 @@
       inherit (nixpkgs) lib;
       forEachSystem = lib.genAttrs (import systems);
       pkgsFor = forEachSystem (system: nixpkgs.legacyPackages.${system});
-      name = "azalea-desktop-shell";
     in
     {
       packages = forEachSystem (
         system:
         let
           pkgs = pkgsFor.${system};
-          azalea = self.packages.${system}.azalea;
         in
         {
-          default = self.packages.${system}.azalea;
-          azalea = pkgs.callPackage ./nix/package.nix { };
+          default = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
         }
       );
 

@@ -1,6 +1,6 @@
 {
   lib,
-  nix-gitignore,
+  craneLib,
   rustPlatform,
   pkg-config,
   wrapGAppsHook4,
@@ -10,35 +10,60 @@
   mold-wrapped,
 }:
 
-rustPlatform.buildRustPackage (finalAttrs: {
-  pname = "azalea";
-  version = "v0.0.0";
+let
+  src = craneLib.cleanCargoSource ../.;
 
-  useFetchCargoVendor = true;
-  cargoHash = "sha256-OdWVBjiW91+9UpuQHmp8Ut5gp7prBdsW37UizJBZOfI=";
+  commonArgs = {
+    inherit src;
+    strictDeps = true;
 
-  src = nix-gitignore.gitignoreSource [
-    "flake.*\n"
-    "nix\n"
-  ] (lib.cleanSource ../.);
+    nativeBuildInputs = [
+      rustPlatform.bindgenHook
+      pkg-config
+      wrapGAppsHook4
+      clang
+      mold-wrapped
+    ];
 
-  NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
+    buildInputs = [
+      gtk4
+      gtk4-layer-shell
+    ];
 
-  nativeBuildInputs = [
-    rustPlatform.bindgenHook
-    pkg-config
-    wrapGAppsHook4
-    clang
-    mold-wrapped
-  ];
-
-  buildInputs = [
-    gtk4
-    gtk4-layer-shell
-  ];
-
-  meta = with lib; {
-    mainProgram = finalAttrs.pname;
-    maintainers = with maintainers; [ enzohideo ];
+    NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
   };
-})
+
+  cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+
+  individualCrateArgs = commonArgs // {
+    inherit cargoArtifacts;
+    inherit (craneLib.crateNameFromCargoToml { inherit src; }) version;
+    doCheck = false;
+  };
+
+  fileSetForCrate =
+    crate:
+    lib.fileset.toSource {
+      root = ../.;
+      fileset = lib.fileset.unions [
+        ../Cargo.toml
+        ../Cargo.lock
+        (craneLib.fileset.commonCargoSources ../azalea-core)
+        (craneLib.fileset.commonCargoSources ../azalea-service)
+        (craneLib.fileset.commonCargoSources ../azalea-window)
+        (craneLib.fileset.commonCargoSources crate)
+      ];
+    };
+in
+craneLib.buildPackage (
+  individualCrateArgs
+  // rec {
+    pname = "azalea";
+    cargoExtraArgs = "-p azalea";
+    src = fileSetForCrate ../azalea;
+    meta = with lib; {
+      mainProgram = pname;
+      maintainers = with maintainers; [ enzohideo ];
+    };
+  }
+)

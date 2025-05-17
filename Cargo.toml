@@ -1,16 +1,14 @@
 [workspace]
 resolver = "2"
-members = [
-  "azalea",
-  "azalea-core",
-  "azalea-service",
-  "azalea-window",
-]
+members = [ "azalea*" ]
 
 [workspace.package]
 version = "0.0.0"
 edition = "2024"
 authors = ["enzohideo"]
+
+[workspace.metadata.crane]
+name = "azalea"
 
 [workspace.dependencies]
 azalea-core = { path = "azalea-core" }
