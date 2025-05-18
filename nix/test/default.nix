@@ -41,9 +41,11 @@ testers.runNixOSTest {
         Restart = "on-failure";
       };
     };
+
+    virtualisation.memorySize = 8192;
+    virtualisation.writableStore = true;
   };
 
-  # TODO: Build package with all screenshots, possibly RunCommand if necessary
   testScript = ''
     def test(machine):
       machine.start()
