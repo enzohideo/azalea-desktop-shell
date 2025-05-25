@@ -11,7 +11,7 @@ crate::init! {
     Config {}
 
     Services {
-        time: azalea_service::time::Model,
+        time: azalea_service::services::time::Service,
     }
 }
 
@@ -54,7 +54,22 @@ impl Component for Model {
         let widgets = view_output!();
 
         if let Some(time) = init.services.time {
-            time.forward(sender.input_sender().clone(), Message::Time);
+            // TODO: Add forward_with_filter
+            let input = sender.input_sender().clone();
+            time.listen(move |out| {
+                use azalea_service::services::time::Output;
+
+                drop(match out {
+                    // TODO: Only send if format contains S
+                    Output::Second(date_time) => input.send(Message::Time(date_time)),
+                    // TODO: Only send if format contains M
+                    Output::Minute(date_time) => input.send(Message::Time(date_time)),
+                    // TODO: Only send if format contains H
+                    Output::Hour(date_time) => input.send(Message::Time(date_time)),
+                });
+
+                true
+            });
         } else {
             sender.command(|out, shutdown| {
                 shutdown

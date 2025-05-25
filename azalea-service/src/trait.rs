@@ -1,12 +1,12 @@
 use std::rc::Rc;
 
-use crate::Service;
+use crate::{Handler, Service};
 
-pub trait HasService<Model>
+pub trait HasService<ServiceKind>
 where
-    Model: relm4::Worker,
+    ServiceKind: Service,
 {
-    fn get_service(&self) -> Option<Rc<Service<Model>>> {
+    fn get_service(&self) -> Option<Rc<Handler<ServiceKind>>> {
         None
     }
 }

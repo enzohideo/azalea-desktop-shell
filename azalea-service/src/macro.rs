@@ -6,14 +6,14 @@ macro_rules! services {
     ) => {
         #[derive(Clone)]
         pub struct Services {
-            $($name: std::rc::Rc<$crate::Service<$service>>),*
-            $($name_option: Option<std::rc::Rc<$crate::Service<$service_option>>>),*
+            $($name: std::rc::Rc<$crate::Handler<$service>>),*
+            $($name_option: Option<std::rc::Rc<$crate::Handler<$service_option>>>),*
         }
 
         $(impl $crate::HasService<$service> for Services {
             fn get_service(
                 &self,
-            ) -> Option<std::rc::Rc<$crate::Service<$service>>> {
+            ) -> Option<std::rc::Rc<$crate::Handler<$service>>> {
                 Some(self.$name.clone())
             }
         })*
@@ -21,7 +21,7 @@ macro_rules! services {
         $(impl $crate::HasService<$service_option> for Services {
             fn get_service(
                 &self,
-            ) -> Option<std::rc::Rc<$crate::Service<$service_option>>> {
+            ) -> Option<std::rc::Rc<$crate::Handler<$service_option>>> {
                 self.$name_option.clone()
             }
         })*

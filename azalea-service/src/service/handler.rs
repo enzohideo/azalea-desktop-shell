@@ -1,51 +1,6 @@
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::broadcast;
 
-pub enum Status<S>
-where
-    S: Service,
-{
-    Started(mpsc::Sender<S::Input>, relm4::JoinHandle<()>),
-    Stopped,
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error("Service handled with success")]
-    Success,
-    #[error("Service failed to handle")]
-    Failure
-}
-
-impl<T> From<broadcast::error::SendError<T>> for Error {
-    fn from(_value: broadcast::error::SendError<T>) -> Self {
-        Self::Failure
-    }
-}
-
-impl From<broadcast::error::RecvError> for Error {
-    fn from(_value: broadcast::error::RecvError) -> Self {
-        Self::Failure
-    }
-}
-
-pub trait Service
-where
-    Self: Sized + Send + 'static,
-{
-    type Init: Clone + Send;
-    type Input: Clone + Send;
-    type Output: Clone + 'static + Send;
-
-    fn new(init: Self::Init) -> Self;
-    fn handler(init: Self::Init) -> Handler<Self> {
-        Handler::new(init)
-    }
-    fn message(&self, input: Self::Input, output: &broadcast::Sender<Self::Output>);
-    fn iteration(
-        &mut self,
-        output: &broadcast::Sender<Self::Output>,
-    ) -> impl std::future::Future<Output = Result<(), Error>> + Send;
-}
+use super::{Service, Status};
 
 pub struct Handler<S>
 where

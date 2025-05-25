@@ -16,7 +16,7 @@ crate::init! {
     }
 
     Services {
-        time: azalea_service::time::Model,
+        time: azalea_service::services::time::Service,
     }
 }
 

@@ -5,10 +5,11 @@ use azalea::{
         app::{self},
         config,
     },
-    service::{self, IntoServices, Service},
+    service::{IntoServices, Service},
     window::{self, taskbar},
 };
 use azalea_core::config::Config;
+use azalea_service::services;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
@@ -24,7 +25,7 @@ pub enum WindowWrapper {
 }
 
 azalea_service::services! {
-    require time: azalea_service::time::Model;
+    require time: azalea_service::services::time::Service;
 }
 
 pub struct WindowManager {
@@ -61,8 +62,8 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
 }
 
 fn main() {
-    let time_service = Service::new(std::time::Duration::from_millis(1000));
-    drop(time_service.send(service::Input::Start));
+    let mut time_service = services::time::Service::handler(std::time::Duration::from_millis(1000));
+    time_service.start(); // TODO: Start automatically with application
 
     relm4::view!(
         mut windows = HashMap::new() {
