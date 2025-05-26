@@ -56,19 +56,19 @@ where
         self.stop();
         let input_sender = self.input.clone();
         let mut input = self.input.subscribe();
-        let output = self.output.clone();
+        let output_sender = self.output.clone();
         let init = self.init.clone();
         // TODO: Receive number of channels
         let mut cancellation_receiver = self.cancellation.subscribe();
         let status = self.status.clone();
 
         relm4::spawn(async move {
-            let mut service = S::new(init, input_sender).await;
+            let mut service = S::new(init, input_sender, output_sender.clone()).await;
 
             loop {
                 tokio::select! {
-                    _ = service.iteration(&output) => (),
-                    Ok(msg) = input.recv() => service.message(msg, &output).await,
+                    _ = service.iteration(&output_sender) => (),
+                    Ok(msg) = input.recv() => service.message(msg, &output_sender).await,
                     _ = cancellation_receiver.recv() => break,
                     else => continue,
                 };

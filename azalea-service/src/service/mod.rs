@@ -17,6 +17,7 @@ where
     fn new(
         init: Self::Init,
         input_sender: broadcast::Sender<Self::Input>,
+        output_sender: broadcast::Sender<Self::Output>,
     ) -> impl std::future::Future<Output = Self> + Send;
     fn handler(init: Self::Init) -> Handler<Self> {
         Handler::new(init)
@@ -24,10 +25,10 @@ where
     fn message(
         &mut self,
         input: Self::Input,
-        output: &broadcast::Sender<Self::Output>,
+        output_sender: &broadcast::Sender<Self::Output>,
     ) -> impl std::future::Future<Output = ()> + Send;
     fn iteration(
         &mut self,
-        output: &broadcast::Sender<Self::Output>,
+        output_sender: &broadcast::Sender<Self::Output>,
     ) -> impl std::future::Future<Output = Result<(), error::Error>> + Send;
 }

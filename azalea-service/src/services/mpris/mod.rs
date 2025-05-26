@@ -6,7 +6,7 @@ use tokio::sync::broadcast;
 use zbus::fdo::DBusProxy;
 use zbus_names::OwnedBusName;
 
-mod dbus;
+pub mod dbus;
 use crate::error;
 
 pub struct Service {
@@ -36,7 +36,11 @@ impl crate::Service for Service {
     type Input = Input;
     type Output = Output;
 
-    async fn new(connection: Self::Init, input_sender: broadcast::Sender<Self::Input>) -> Self {
+    async fn new(
+        connection: Self::Init,
+        input_sender: broadcast::Sender<Self::Input>,
+        _: broadcast::Sender<Self::Output>,
+    ) -> Self {
         let connection = connection.unwrap_or(zbus::Connection::session().await.unwrap());
         let proxy = DBusProxy::new(&connection).await.unwrap();
 
@@ -66,7 +70,11 @@ impl crate::Service for Service {
         }
     }
 
-    async fn message(&mut self, input: Self::Input, _output: &broadcast::Sender<Self::Output>) {
+    async fn message(
+        &mut self,
+        input: Self::Input,
+        _output_sender: &broadcast::Sender<Self::Output>,
+    ) {
         match input {
             Input::NewObject(bus_name) => {
                 let proxy =

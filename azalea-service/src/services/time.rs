@@ -22,38 +22,46 @@ impl crate::Service for Service {
     type Input = String;
     type Output = Output;
 
-    async fn new(duration: Self::Init, _: broadcast::Sender<Self::Input>) -> Self {
+    async fn new(
+        duration: Self::Init,
+        _: broadcast::Sender<Self::Input>,
+        _: broadcast::Sender<Self::Output>,
+    ) -> Self {
         Self {
             duration,
             ..Default::default()
         }
     }
 
-    async fn message(&mut self, input: Self::Input, _output: &broadcast::Sender<Self::Output>) {
+    async fn message(
+        &mut self,
+        input: Self::Input,
+        _output_sender: &broadcast::Sender<Self::Output>,
+    ) {
         println!("Received input {input:?}");
     }
 
     async fn iteration(
         &mut self,
-        output: &tokio::sync::broadcast::Sender<Self::Output>,
+        output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> Result<(), error::Error> {
         tokio::time::sleep(self.duration).await;
 
         let time = chrono::Local::now();
 
-        output.send(Output::Second(time))?;
+        output_sender.send(Output::Second(time))?;
 
         {
             let minute = time.minute();
 
             if self.minute != minute {
                 self.minute = minute;
-                output.send(Output::Minute(time))?;
+                output_sender.send(Output::Minute(time))?;
 
                 let hour = time.hour();
                 if self.hour != hour {
                     self.hour = hour;
-                    output.send(Output::Hour(time))?;
+                    output_sender.send(Output::Hour(time))?;
                 }
             }
         }
