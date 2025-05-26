@@ -88,6 +88,17 @@ where
         sender: relm4::Sender<X>,
         transform: F,
     ) {
-        self.listen(move |event| sender.send(transform(event)).is_err())
+        self.listen(move |event| sender.send(transform(event)).is_ok())
+    }
+
+    pub fn filtered_forward<X: 'static, F: (Fn(S::Output) -> Option<X>) + 'static>(
+        &self,
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) {
+        self.listen(move |event| match transform(event) {
+            Some(data) => sender.send(data).is_ok(),
+            None => true,
+        })
     }
 }
