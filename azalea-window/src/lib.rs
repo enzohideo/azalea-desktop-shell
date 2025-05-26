@@ -32,7 +32,7 @@ macro_rules! init {
         }
 
         Config {
-            $($config_vis: vis $config_name: ident: $config_type: ty,)*
+            $($config_name: ident: $config_type: ty,)*
         }
 
         Services {
@@ -46,7 +46,7 @@ macro_rules! init {
         #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
         pub struct Config {
             $(
-                $config_vis $config_name: $config_type,
+                pub $config_name: $config_type,
             )*
         }
 

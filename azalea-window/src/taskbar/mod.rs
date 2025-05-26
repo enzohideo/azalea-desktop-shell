@@ -10,9 +10,9 @@ crate::init! {
     }
 
     Config {
-        pub start: Vec<widget::Kind>,
-        pub center: Vec<widget::Kind>,
-        pub end: Vec<widget::Kind>,
+        start: Vec<widget::Kind>,
+        center: Vec<widget::Kind>,
+        end: Vec<widget::Kind>,
     }
 
     Services {
