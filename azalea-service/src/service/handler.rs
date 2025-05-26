@@ -38,8 +38,9 @@ where
     S: Service + 'static,
 {
     pub fn new(init: S::Init) -> Self {
-        let (input_sender, _) = broadcast::channel(1);
-        let (output_sender, _) = broadcast::channel(1);
+        // TODO: Receive channel limits (somehow)
+        let (input_sender, _) = broadcast::channel(10);
+        let (output_sender, _) = broadcast::channel(10);
         let (cancellation_sender, _) = broadcast::channel(1);
 
         Self {
@@ -53,6 +54,7 @@ where
 
     pub fn start(&mut self) {
         self.stop();
+        let input_sender = self.input.clone();
         let mut input = self.input.subscribe();
         let output = self.output.clone();
         let init = self.init.clone();
@@ -61,12 +63,12 @@ where
         let status = self.status.clone();
 
         relm4::spawn(async move {
-            let mut service = S::new(init);
+            let mut service = S::new(init, input_sender).await;
 
             loop {
                 tokio::select! {
                     _ = service.iteration(&output) => (),
-                    Ok(msg) = input.recv() => service.message(msg, &output),
+                    Ok(msg) = input.recv() => service.message(msg, &output).await,
                     _ = cancellation_receiver.recv() => break,
                     else => continue,
                 };

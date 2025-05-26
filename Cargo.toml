@@ -27,7 +27,7 @@ ron = "0.10.1"
 
 chrono = "0.4.41"
 tokio = { version = "1.44.2", features = ["time", "macros"] }
-zbus = { version = "5.6.0", features = ["tokio"] }
+zbus = { version = "5.7.1", features = ["tokio"] }
 zbus_names = "4.2.0"
 
 gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }

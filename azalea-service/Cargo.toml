@@ -14,8 +14,10 @@ clap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
+futures-lite.workspace = true
 chrono.workspace = true
 zbus.workspace = true
+zbus_names.workspace = true
 
 gtk.workspace = true
 gtk4-layer-shell.workspace = true

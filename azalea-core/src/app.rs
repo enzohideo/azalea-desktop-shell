@@ -106,18 +106,19 @@ where
                         log::message!("Config loaded from {:?}", config_path);
                         self.config = config;
                     }
-                    Err(err) => {
-                        match err {
-                            error::ConfigError::Io(_) => {
-                                log::message!("Config not found at {:?}, using default config", config_path)
-                            }
-                            error => log::warning!(
-                                "Config could not be loaded from {:?}, using default config.\n{:?}",
-                                config_path,
-                                error
-                            ),
+                    Err(err) => match err {
+                        error::ConfigError::Io(_) => {
+                            log::message!(
+                                "Config not found at {:?}, using default config",
+                                config_path
+                            )
                         }
-                    }
+                        error => log::warning!(
+                            "Config could not be loaded from {:?}, using default config.\n{:?}",
+                            config_path,
+                            error
+                        ),
+                    },
                 }
             }
             Command::Config(cli::config::Command::View { json }) => {

@@ -22,14 +22,14 @@ impl crate::Service for Service {
     type Input = String;
     type Output = Output;
 
-    fn new(duration: Self::Init) -> Self {
+    async fn new(duration: Self::Init, _: broadcast::Sender<Self::Input>) -> Self {
         Self {
             duration,
             ..Default::default()
         }
     }
 
-    fn message(&self, input: Self::Input, _output: &broadcast::Sender<Self::Output>) {
+    async fn message(&mut self, input: Self::Input, _output: &broadcast::Sender<Self::Output>) {
         println!("Received input {input:?}");
     }
 
