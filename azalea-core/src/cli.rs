@@ -126,7 +126,10 @@ pub mod layer_shell {
 pub mod config {
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
     pub enum Command {
-        View { json: bool },
+        View {
+            #[clap(long)]
+            json: bool,
+        },
     }
 }
 

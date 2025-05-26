@@ -83,7 +83,7 @@ where
             *status = Status::Started;
         };
 
-        log::message!("Service has started: {}", std::any::type_name::<S>());
+        log::message!("Service started: {}", std::any::type_name::<S>());
     }
 
     pub fn stop(&mut self) {

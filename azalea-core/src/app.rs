@@ -13,7 +13,7 @@ use gtk4_layer_shell::LayerShell;
 use crate::{
     cli,
     config::{self, Config},
-    dbus, log,
+    dbus, error, log,
     socket::{self, r#async::UnixStreamWrapper},
 };
 
@@ -45,17 +45,20 @@ where
         }
     }
 
-    fn load_config(path: &PathBuf) -> Option<Config<ConfigWrapper>> {
-        let file = std::fs::File::open(path).ok()?;
+    fn load_config(path: &PathBuf) -> Result<Config<ConfigWrapper>, error::ConfigError> {
+        let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
+        let ext = path
+            .extension()
+            .ok_or(error::ConfigError::MissingExtension)?;
 
-        match serde_json::from_reader(reader) {
-            Ok(cfg) => Some(cfg),
-            Err(e) => {
-                log::warning!("Failed to parse config from file {path:?}\n{e}");
-                None
-            }
-        }
+        Ok(if ext == "json" {
+            serde_json::from_reader(reader)
+                .map_err(|e| error::ConfigError::ParsingError(e.to_string()))?
+        } else {
+            ron::de::from_reader(reader)
+                .map_err(|e| error::ConfigError::ParsingError(e.to_string()))?
+        })
     }
 
     pub fn run(self) {
@@ -90,21 +93,55 @@ where
     }
 
     fn daemon(mut self, args: Arguments, socket_path: PathBuf) {
-        if let Command::Daemon(cli::daemon::Command::Start {
-            config: config_path,
-        }) = args.command
-        {
-            let config_path = config_path
-                .map(|p| PathBuf::from(&p))
-                .unwrap_or(gtk::glib::user_config_dir().join(WM::CONFIG_PATH));
+        match args.command {
+            Command::Daemon(cli::daemon::Command::Start {
+                config: config_path,
+            }) => {
+                let config_path = config_path
+                    .map(|p| PathBuf::from(&p))
+                    .unwrap_or(gtk::glib::user_config_dir().join(WM::CONFIG_PATH));
 
-            if let Some(config) = Self::load_config(&config_path) {
-                log::message!("Loaded config from file {:?}", config_path);
-                self.config = config;
+                match Self::load_config(&config_path) {
+                    Ok(config) => {
+                        log::message!("Config loaded from {:?}", config_path);
+                        self.config = config;
+                    }
+                    Err(err) => {
+                        match err {
+                            error::ConfigError::Io(_) => {
+                                log::message!("Config not found at {:?}, using default config", config_path)
+                            }
+                            error => log::warning!(
+                                "Config could not be loaded from {:?}, using default config.\n{:?}",
+                                config_path,
+                                error
+                            ),
+                        }
+                    }
+                }
             }
-        } else {
-            log::error!("Daemon isn't running, invalid command: {:?}", args.command);
-            return;
+            Command::Config(cli::config::Command::View { json }) => {
+                println!(
+                    "{}",
+                    if json {
+                        serde_json::to_string_pretty(&self.config).unwrap()
+                    } else {
+                        use ron::extensions::Extensions;
+                        ron::ser::to_string_pretty(
+                            &self.config,
+                            ron::ser::PrettyConfig::default().extensions(
+                                Extensions::IMPLICIT_SOME | Extensions::UNWRAP_VARIANT_NEWTYPES,
+                            ),
+                        )
+                        .unwrap()
+                    },
+                );
+                return;
+            }
+            _ => {
+                log::error!("Daemon isn't running, invalid command: {:?}", args.command);
+                return;
+            }
         }
 
         let app = gtk::Application::builder()
@@ -124,7 +161,7 @@ where
 
         app.connect_activate(move |app| {
             if let Ok(app_guard) = ping_rx.try_recv() {
-                log::message!("Daemon has started");
+                log::message!("Daemon started");
 
                 pong_tx.send(app_guard).expect("Daemon could not pong!");
 
@@ -286,7 +323,7 @@ where
     ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
     Self: 'static + Sized,
 {
-    const CONFIG_PATH: &str = "azalea/config.json";
+    const CONFIG_PATH: &str = "azalea/config.ron";
     const SOCKET_NAME: &str = "azalea.sock";
     const APP_ID: &str = "br.usp.ime.Azalea";
 
