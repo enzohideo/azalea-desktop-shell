@@ -6,9 +6,12 @@ type Time = chrono::DateTime<chrono::Local>;
 crate::init! {
     Model {
         time: Time,
+        format: String,
     }
 
-    Config {}
+    Config {
+        format: String,
+    }
 
     Services {
         time: azalea_service::services::time::Service,
@@ -33,12 +36,7 @@ impl Component for Model {
 
             gtk::Label {
                 #[watch]
-                set_label: &format!("{}", model.time.format("%d/%m/%y"))
-            },
-
-            gtk::Label {
-                #[watch]
-                set_label: &format!("{}", model.time.format("%H:%M:%S"))
+                set_label: &format!("{}", model.time.format(&model.format))
             },
         },
     }
@@ -49,26 +47,31 @@ impl Component for Model {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
+            format: init.config.format.clone(),
             time: chrono::Local::now(),
         };
         let widgets = view_output!();
 
         if let Some(time) = init.services.time {
-            // TODO: Add forward_with_filter
-            let input = sender.input_sender().clone();
-            time.listen(move |out| {
+            let format = init.config.format;
+
+            time.filtered_forward(sender.input_sender().clone(), move |event| {
                 use azalea_service::services::time::Output;
 
-                drop(match out {
-                    // TODO: Only send if format contains S
-                    Output::Second(date_time) => input.send(Message::Time(date_time)),
-                    // TODO: Only send if format contains M
-                    Output::Minute(date_time) => input.send(Message::Time(date_time)),
-                    // TODO: Only send if format contains H
-                    Output::Hour(date_time) => input.send(Message::Time(date_time)),
-                });
+                let format_contains_time =
+                    |date_time: chrono::DateTime<chrono::Local>, time: &str| -> Option<Message> {
+                        if format.contains(time) {
+                            Some(Message::Time(date_time))
+                        } else {
+                            None
+                        }
+                    };
 
-                true
+                match event {
+                    Output::Second(date_time) => format_contains_time(date_time, "%S"),
+                    Output::Minute(date_time) => format_contains_time(date_time, "%M"),
+                    Output::Hour(date_time) => format_contains_time(date_time, "%H"),
+                }
             });
         } else {
             sender.command(|out, shutdown| {

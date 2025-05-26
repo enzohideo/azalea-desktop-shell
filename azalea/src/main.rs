@@ -74,7 +74,14 @@ fn main() {
                     Config {
                         start: vec![],
                         center: vec![],
-                        end: vec![Time(taskbar::widget::time::Config {})],
+                        end: vec![
+                            Time(taskbar::widget::time::Config {
+                                format: format!("%d/%m/%y")
+                            }),
+                            Time(taskbar::widget::time::Config {
+                                format: format!("%H:%M:%S")
+                            })
+                        ],
                     }
                 }),
 
