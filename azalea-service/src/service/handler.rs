@@ -1,15 +1,23 @@
-use std::rc::Rc;
+use std::{
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 
 use azalea_core::log;
 use tokio::sync::broadcast;
 
 use super::{Service, Status};
 
-// TODO: Use channel to send "pause/stop" request when all handles are dropped
-pub struct ListenerHandle(Rc<()>, gtk::glib::JoinHandle<()>);
+pub struct ListenerHandle(Rc<broadcast::Sender<()>>, gtk::glib::JoinHandle<()>);
 
 impl Drop for ListenerHandle {
     fn drop(&mut self) {
+        let cancellation_sender = &self.0;
+
+        if Rc::strong_count(&cancellation_sender) == 2 {
+            drop(cancellation_sender.send(()));
+        }
+
         self.1.abort();
     }
 }
@@ -18,10 +26,11 @@ pub struct Handler<S>
 where
     S: Service,
 {
+    input: broadcast::Sender<S::Input>,
     output: broadcast::Sender<S::Output>,
-    listeners: Rc<()>,
+    cancellation: Rc<broadcast::Sender<()>>,
     init: S::Init,
-    status: Status<S>,
+    status: Arc<Mutex<Status>>,
 }
 
 impl<S> Handler<S>
@@ -29,71 +38,81 @@ where
     S: Service + 'static,
 {
     pub fn new(init: S::Init) -> Self {
+        let (input_sender, _) = broadcast::channel(1);
         let (output_sender, _) = broadcast::channel(1);
+        let (cancellation_sender, _) = broadcast::channel(1);
 
         Self {
+            input: input_sender,
             output: output_sender,
             init,
-            listeners: Rc::new(()),
-            status: Status::Stopped,
+            cancellation: Rc::new(cancellation_sender),
+            status: Arc::new(Mutex::new(Status::Stopped)),
         }
     }
 
     pub fn start(&mut self) {
         self.stop();
+        let mut input = self.input.subscribe();
         let output = self.output.clone();
         let init = self.init.clone();
         // TODO: Receive number of channels
-        let (input_sender, mut input_receiver) = tokio::sync::mpsc::channel(1);
-        let join_handler = relm4::spawn(async move {
+        let mut cancellation_receiver = self.cancellation.subscribe();
+        let status = self.status.clone();
+
+        relm4::spawn(async move {
             let mut service = S::new(init);
+
             loop {
                 tokio::select! {
                     _ = service.iteration(&output) => (),
-                    Some(msg) = input_receiver.recv() => service.message(msg, &output),
+                    Ok(msg) = input.recv() => service.message(msg, &output),
+                    _ = cancellation_receiver.recv() => break,
                     else => continue,
                 };
             }
+
+            if let Ok(mut status) = status.lock() {
+                *status = Status::Stopped;
+            };
+
+            log::message!("Service was stopped: {}", std::any::type_name::<S>());
         });
-        self.status = Status::Started(input_sender, join_handler);
+
+        if let Ok(mut status) = self.status.lock() {
+            *status = Status::Started;
+        };
+
         log::message!("Service has started: {}", std::any::type_name::<S>());
     }
 
     pub fn stop(&mut self) {
-        if let Status::Started(_, join_handler) = &self.status {
-            join_handler.abort();
-            self.status = Status::Stopped;
-            log::message!("Service was stopped: {}", std::any::type_name::<S>());
+        if let Status::Started = *(self.status.lock().unwrap()) {
+            drop(self.cancellation.send(()));
         }
     }
 
-    pub fn status(&self) -> &Status<S> {
-        &self.status
+    pub fn status(&self) -> Status {
+        (*self.status.lock().unwrap()).clone()
     }
 
     pub fn send(&mut self, message: S::Input) {
-        let Status::Started(input, _) = &self.status else {
-            return;
-        };
-        let tx = input.clone();
-        relm4::spawn(async move {
-            drop(tx.send(message).await);
-        });
+        drop(self.input.send(message));
     }
 
     pub fn listen<F: (Fn(S::Output) -> bool) + 'static>(&mut self, transform: F) -> ListenerHandle {
-        let mut output_receiver = self.output.subscribe();
+        let mut output = self.output.subscribe();
 
-        if Rc::strong_count(&self.listeners) == 1 {
+        if Rc::strong_count(&self.cancellation) == 1 {
             self.start();
         }
 
         ListenerHandle(
-            self.listeners.clone(),
+            self.cancellation.clone(),
             relm4::spawn_local(async move {
                 use tokio::sync::broadcast::error::RecvError;
                 loop {
-                    if match output_receiver.recv().await {
+                    if match output.recv().await {
                         Err(RecvError::Closed) => false,
                         Err(RecvError::Lagged(_)) => true,
                         Ok(event) => transform(event),
