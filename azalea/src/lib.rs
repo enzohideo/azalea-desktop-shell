@@ -1,6 +1,9 @@
 pub mod core {
     pub use azalea_core::*;
 }
+pub mod log {
+    pub use azalea_log::*;
+}
 pub mod window {
     pub use azalea_window::*;
 }

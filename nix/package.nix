@@ -49,6 +49,7 @@ let
         ../Cargo.toml
         ../Cargo.lock
         (craneLib.fileset.commonCargoSources ../azalea-core)
+        (craneLib.fileset.commonCargoSources ../azalea-log)
         (craneLib.fileset.commonCargoSources ../azalea-service)
         (craneLib.fileset.commonCargoSources ../azalea-window)
         (craneLib.fileset.commonCargoSources crate)

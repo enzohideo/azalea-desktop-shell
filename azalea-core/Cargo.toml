@@ -8,6 +8,8 @@ authors.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+azalea-log.workspace = true
+
 clap.workspace = true
 
 async-net.workspace = true

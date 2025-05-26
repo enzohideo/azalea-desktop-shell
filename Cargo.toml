@@ -12,6 +12,7 @@ name = "azalea"
 
 [workspace.dependencies]
 azalea-core = { path = "azalea-core" }
+azalea-log = { path = "azalea-log" }
 azalea-window = { path = "azalea-window" }
 azalea-service = { path = "azalea-service" }
 
@@ -31,6 +32,7 @@ zbus_names = "4.2.0"
 
 gtk = { version = "0.9.6", package = "gtk4", features = ["v4_16"] }
 gtk4-layer-shell = "0.5.0"
+glib = { version = "0.20.10", features = ["log"] }
 relm4 = "0.9.1"
 
 thiserror = "2.0.12"

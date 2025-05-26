@@ -1,0 +1,11 @@
+[package]
+name = "azalea-log"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+glib.workspace = true

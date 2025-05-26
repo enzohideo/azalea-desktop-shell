@@ -243,6 +243,7 @@ name = "azalea"
 version = "0.0.0"
 dependencies = [
  "azalea-core",
+ "azalea-log",
  "azalea-service",
  "azalea-window",
  "clap",
@@ -258,6 +259,7 @@ name = "azalea-core"
 version = "0.0.0"
 dependencies = [
  "async-net",
+ "azalea-log",
  "clap",
  "futures-lite",
  "gtk4",
@@ -271,10 +273,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "azalea-log"
+version = "0.0.0"
+dependencies = [
+ "glib",
+]
+
+[[package]]
 name = "azalea-service"
 version = "0.0.0"
 dependencies = [
- "azalea-core",
+ "azalea-log",
  "chrono",
  "clap",
  "flume",
@@ -834,9 +843,9 @@ dependencies = [
 
 [[package]]
 name = "glib"
-version = "0.20.9"
+version = "0.20.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "707b819af8059ee5395a2de9f2317d87a53dbad8846a2f089f0bb44703f37686"
+checksum = "c501c495842c2b23cdacead803a5a343ca2a5d7a7ddaff14cc5f6cf22cfb92c2"
 dependencies = [
  "bitflags",
  "futures-channel",
@@ -849,6 +858,7 @@ dependencies = [
  "glib-sys",
  "gobject-sys",
  "libc",
+ "log",
  "memchr",
  "smallvec",
 ]

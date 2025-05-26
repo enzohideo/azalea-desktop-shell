@@ -3,7 +3,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use azalea_core::log;
+use azalea_log as log;
 use tokio::sync::broadcast;
 
 use super::{Service, Status};
