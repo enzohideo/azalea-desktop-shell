@@ -1,8 +1,8 @@
 #[macro_export]
 macro_rules! services {
     (
-        $(require $name: ident: $service: ty;)*
-        $(optional $name_option: ident: $service_option:ty;)*
+        $(use $name: ident: $service: ty;)*
+        $(use_option $name_option: ident: $service_option:ty;)*
     ) => {
         #[derive(Clone)]
         pub struct Services {

@@ -51,7 +51,7 @@ macro_rules! init {
         }
 
         azalea_service::services! {
-            $(optional $service_name: $service_model;)*
+            $(use_option $service_name: $service_model;)*
         }
 
         impl $crate::InitExt for Model {

@@ -25,7 +25,7 @@ pub enum WindowWrapper {
 }
 
 azalea_service::services! {
-    require time: azalea_service::services::time::Service;
+    use time: azalea_service::services::time::Service;
 }
 
 pub struct WindowManager {
