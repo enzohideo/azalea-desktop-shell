@@ -1,12 +1,25 @@
+use std::rc::Rc;
+
+use azalea_core::log;
 use tokio::sync::broadcast;
 
 use super::{Service, Status};
+
+// TODO: Use channel to send "pause/stop" request when all handles are dropped
+pub struct ListenerHandle(Rc<()>, gtk::glib::JoinHandle<()>);
+
+impl Drop for ListenerHandle {
+    fn drop(&mut self) {
+        self.1.abort();
+    }
+}
 
 pub struct Handler<S>
 where
     S: Service,
 {
     output: broadcast::Sender<S::Output>,
+    listeners: Rc<()>,
     init: S::Init,
     status: Status<S>,
 }
@@ -21,6 +34,7 @@ where
         Self {
             output: output_sender,
             init,
+            listeners: Rc::new(()),
             status: Status::Stopped,
         }
     }
@@ -42,12 +56,14 @@ where
             }
         });
         self.status = Status::Started(input_sender, join_handler);
+        log::message!("Service has started: {}", std::any::type_name::<S>());
     }
 
     pub fn stop(&mut self) {
         if let Status::Started(_, join_handler) = &self.status {
             join_handler.abort();
             self.status = Status::Stopped;
+            log::message!("Service was stopped: {}", std::any::type_name::<S>());
         }
     }
 
@@ -65,37 +81,45 @@ where
         });
     }
 
-    pub fn listen<F: (Fn(S::Output) -> bool) + 'static>(&self, transform: F) {
+    pub fn listen<F: (Fn(S::Output) -> bool) + 'static>(&mut self, transform: F) -> ListenerHandle {
         let mut output_receiver = self.output.subscribe();
-        relm4::spawn_local(async move {
-            use tokio::sync::broadcast::error::RecvError;
-            loop {
-                match output_receiver.recv().await {
-                    Err(RecvError::Closed) => break,
-                    Err(RecvError::Lagged(_)) => continue,
-                    Ok(event) => {
-                        if !transform(event) {
-                            break;
-                        }
+
+        if Rc::strong_count(&self.listeners) == 1 {
+            self.start();
+        }
+
+        ListenerHandle(
+            self.listeners.clone(),
+            relm4::spawn_local(async move {
+                use tokio::sync::broadcast::error::RecvError;
+                loop {
+                    if match output_receiver.recv().await {
+                        Err(RecvError::Closed) => false,
+                        Err(RecvError::Lagged(_)) => true,
+                        Ok(event) => transform(event),
+                    } {
+                        continue;
+                    } else {
+                        break;
                     }
-                };
-            }
-        });
+                }
+            }),
+        )
     }
 
     pub fn forward<X: 'static, F: (Fn(S::Output) -> X) + 'static>(
-        &self,
+        &mut self,
         sender: relm4::Sender<X>,
         transform: F,
-    ) {
+    ) -> ListenerHandle {
         self.listen(move |event| sender.send(transform(event)).is_ok())
     }
 
     pub fn filtered_forward<X: 'static, F: (Fn(S::Output) -> Option<X>) + 'static>(
-        &self,
+        &mut self,
         sender: relm4::Sender<X>,
         transform: F,
-    ) {
+    ) -> ListenerHandle {
         self.listen(move |event| match transform(event) {
             Some(data) => sender.send(data).is_ok(),
             None => true,

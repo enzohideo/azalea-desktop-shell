@@ -4,16 +4,18 @@ macro_rules! services {
         $(use $name: ident: $service: ty;)*
         $(use_option $name_option: ident: $service_option:ty;)*
     ) => {
+        use std::cell::RefCell;
+
         #[derive(Clone)]
         pub struct Services {
-            $($name: std::rc::Rc<$crate::Handler<$service>>),*
-            $($name_option: Option<std::rc::Rc<$crate::Handler<$service_option>>>),*
+            $($name: std::rc::Rc<RefCell<$crate::Handler<$service>>>),*
+            $($name_option: Option<std::rc::Rc<RefCell<$crate::Handler<$service_option>>>>),*
         }
 
         $(impl $crate::HasService<$service> for Services {
             fn get_service(
                 &self,
-            ) -> Option<std::rc::Rc<$crate::Handler<$service>>> {
+            ) -> Option<std::rc::Rc<RefCell<$crate::Handler<$service>>>> {
                 Some(self.$name.clone())
             }
         })*
@@ -21,7 +23,7 @@ macro_rules! services {
         $(impl $crate::HasService<$service_option> for Services {
             fn get_service(
                 &self,
-            ) -> Option<std::rc::Rc<$crate::Handler<$service_option>>> {
+            ) -> Option<std::rc::Rc<RefCell<$crate::Handler<$service_option>>>> {
                 self.$name_option.clone()
             }
         })*

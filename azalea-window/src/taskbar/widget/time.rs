@@ -1,3 +1,4 @@
+use azalea_service::{ListenerHandle, services};
 use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
@@ -7,6 +8,7 @@ crate::init! {
     Model {
         time: Time,
         format: String,
+        time_handle: Option<ListenerHandle>,
     }
 
     Config {
@@ -14,7 +16,7 @@ crate::init! {
     }
 
     Services {
-        time: azalea_service::services::time::Service,
+        time: services::time::Service,
     }
 }
 
@@ -46,20 +48,24 @@ impl Component for Model {
         _root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let model = Model {
+        let mut model = Model {
             format: init.config.format.clone(),
             time: chrono::Local::now(),
+            time_handle: None,
         };
         let widgets = view_output!();
 
         if let Some(time) = init.services.time {
             let format = init.config.format;
 
-            time.filtered_forward(sender.input_sender().clone(), move |event| {
-                use azalea_service::services::time::Output;
+            model.time_handle = Some(time.borrow_mut().filtered_forward(
+                sender.input_sender().clone(),
+                move |event| {
+                    use azalea_service::services::time::Output;
 
-                let format_contains_time =
-                    |date_time: chrono::DateTime<chrono::Local>, time: &str| -> Option<Message> {
+                    let format_contains_time = |date_time: chrono::DateTime<chrono::Local>,
+                                                time: &str|
+                     -> Option<Message> {
                         if format.contains(time) {
                             Some(Message::Time(date_time))
                         } else {
@@ -67,12 +73,13 @@ impl Component for Model {
                         }
                     };
 
-                match event {
-                    Output::Second(date_time) => format_contains_time(date_time, "%S"),
-                    Output::Minute(date_time) => format_contains_time(date_time, "%M"),
-                    Output::Hour(date_time) => format_contains_time(date_time, "%H"),
-                }
-            });
+                    match event {
+                        Output::Second(date_time) => format_contains_time(date_time, "%S"),
+                        Output::Minute(date_time) => format_contains_time(date_time, "%M"),
+                        Output::Hour(date_time) => format_contains_time(date_time, "%H"),
+                    }
+                },
+            ));
         } else {
             sender.command(|out, shutdown| {
                 shutdown

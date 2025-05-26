@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{Handler, Service};
 
@@ -6,7 +6,7 @@ pub trait HasService<ServiceKind>
 where
     ServiceKind: Service,
 {
-    fn get_service(&self) -> Option<Rc<Handler<ServiceKind>>> {
+    fn get_service(&self) -> Option<Rc<RefCell<Handler<ServiceKind>>>> {
         None
     }
 }

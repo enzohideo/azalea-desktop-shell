@@ -62,9 +62,6 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
 }
 
 fn main() {
-    let mut time_service = services::time::Service::handler(std::time::Duration::from_millis(1000));
-    time_service.start(); // TODO: Start automatically with application
-
     relm4::view!(
         mut windows = HashMap::new() {
             insert: (format!("bottom-taskbar"), config::window::Config {
@@ -104,7 +101,9 @@ fn main() {
     app::Application::new(
         WindowManager {
             services: Services {
-                time: Rc::new(time_service),
+                time: Rc::new(RefCell::new(services::time::Service::handler(
+                    std::time::Duration::from_millis(1000),
+                ))),
             },
         },
         Config { windows },
