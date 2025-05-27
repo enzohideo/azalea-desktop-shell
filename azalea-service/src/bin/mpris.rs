@@ -11,19 +11,25 @@ fn main() {
         drop(tx.send(zbus::Connection::session().await.unwrap()));
     });
 
-    let (keep_alive, keep_alive_recv) = std::sync::mpsc::channel();
+    let (keep_alive_listener, keep_alive_listener_recv) = std::sync::mpsc::channel();
     relm4::spawn_local(async move {
-        let mut handler = services::mpris::Service::handler(Some(rx.recv().unwrap()));
+        let connection = rx.recv().unwrap();
+        let dbus_handler = services::dbus::Service::handler(Some(connection.clone()));
 
-        let _keep_service_alive = handler.listen(|out| {
-            println!("hey there {out:?}");
+        let mut mpris_handler = services::mpris::Service::handler(services::mpris::Init {
+            dbus_service: Some(dbus_handler),
+            dbus_connection: Some(connection),
+        });
+
+        let _keep_service_alive = mpris_handler.listen(|out| {
+            azalea_log::message!("mpris service output: {out:#?}");
             true
         });
 
-        drop(keep_alive.send(_keep_service_alive));
+        drop(keep_alive_listener.send(_keep_service_alive));
     });
 
     app.connect_activate(|_| {});
     app.run();
-    drop(keep_alive_recv.recv());
+    drop(keep_alive_listener_recv.recv());
 }

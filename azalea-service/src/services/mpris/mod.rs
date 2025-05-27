@@ -3,69 +3,81 @@ use std::collections::HashMap;
 use dbus::media_player2::{Metadata, PlayerProxy};
 use futures_lite::stream::StreamExt;
 use tokio::sync::broadcast;
-use zbus::fdo::DBusProxy;
 use zbus_names::OwnedBusName;
 
 pub mod dbus;
-use crate::error;
+use crate::{ListenerHandle, error};
 
-#[derive(Clone)]
 pub struct Service {
     connection: zbus::Connection,
     players: HashMap<OwnedBusName, PlayerProxy<'static>>,
+    _listener_handle: Option<ListenerHandle>,
+}
+
+#[derive(Clone)]
+pub struct Init {
+    pub dbus_connection: Option<zbus::Connection>,
+    pub dbus_service: Option<crate::Handler<super::dbus::Service>>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Input {
-    NewObject(OwnedBusName),
+    ObjectCreated(OwnedBusName),
+    ObjectDeleted(OwnedBusName),
 }
 
 #[derive(Clone, Debug)]
 pub enum Event {
     Volume(f64),
     Metadata(Metadata),
+    Position(i64),
 }
 
 #[derive(Clone, Debug)]
 pub struct Output {
-    name: OwnedBusName,
-    event: Event,
+    pub name: OwnedBusName,
+    pub event: Event,
 }
 
 impl crate::Service for Service {
-    type Init = Option<zbus::Connection>;
+    type Init = Init;
     type Input = Input;
     type Output = Output;
 
     async fn new(
-        connection: Self::Init,
+        init: Self::Init,
         input_sender: broadcast::Sender<Self::Input>,
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
-        let connection = connection.unwrap_or(zbus::Connection::session().await.unwrap());
-        let proxy = DBusProxy::new(&connection).await.unwrap();
+        let connection = init
+            .dbus_connection
+            .unwrap_or(zbus::Connection::session().await.unwrap());
 
-        for name in proxy.list_names().await.unwrap() {
-            if name.contains("mpris") {
-                println!("{name:?}");
-                drop(input_sender.send(Input::NewObject(name)));
-            }
-        }
+        let listener_handle = if let Some(mut dbus_service) = init.dbus_service {
+            Some(dbus_service.listen(move |output| {
+                use super::dbus::Output;
 
-        relm4::spawn(async move {
-            let mut name_stream = proxy.receive_name_owner_changed().await.unwrap();
-            while let Some(msg) = name_stream.next().await {
-                if let Ok(args) = msg.args() {
-                    if let zbus_names::BusName::WellKnown(name) = &args.name {
-                        if name.contains("mpris") {
-                            drop(input_sender.send(Input::NewObject(args.name.into())));
+                match output {
+                    Output::ObjectCreated(owned_bus_name) => {
+                        if owned_bus_name.contains("org.mpris.MediaPlayer2") {
+                            drop(input_sender.send(Input::ObjectCreated(owned_bus_name)));
                         }
                     }
-                }
-            }
-        });
+                    Output::ObjectDeleted(owned_bus_name) => {
+                        if owned_bus_name.contains("org.mpris.MediaPlayer2") {
+                            drop(input_sender.send(Input::ObjectDeleted(owned_bus_name)));
+                        }
+                    }
+                };
+
+                true
+            }))
+        } else {
+            None
+        };
 
         Self {
+            _listener_handle: listener_handle,
             connection,
             players: Default::default(),
         }
@@ -77,12 +89,17 @@ impl crate::Service for Service {
         _output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
-            Input::NewObject(bus_name) => {
+            Input::ObjectCreated(bus_name) => {
+                azalea_log::debug!("[MPRIS] Object created: {}", bus_name);
                 let proxy =
                     dbus::media_player2::PlayerProxy::new(&self.connection, bus_name.clone())
                         .await
                         .unwrap();
                 self.players.insert(bus_name, proxy);
+            }
+            Input::ObjectDeleted(bus_name) => {
+                azalea_log::debug!("[MPRIS] Object deleted: {}", bus_name);
+                self.players.remove(&bus_name);
             }
         }
     }
@@ -112,22 +129,44 @@ async fn listen_to_player<'a>(
 ) {
     let mut volume = player.receive_volume_changed().await;
     let mut metadata = player.receive_metadata_changed().await;
+
     loop {
         tokio::select! {
             Some(prop) = volume.next() => {
+                let volume = prop.get().await.unwrap();
+                azalea_log::debug!("[MPRIS] Volume changed for object {}: {}", name, volume);
                 drop(output_sender.send(Output {
                     name: name.clone(),
-                    event: Event::Volume(prop.get().await.unwrap()),
+                    event: Event::Volume(volume),
                 }));
             },
             Some(prop) = metadata.next() => {
                 let metadata = prop.get().await.unwrap();
-                println!("{:#?}", metadata);
+                azalea_log::debug!("[MPRIS] Metadata changed for object {}: {:#?}", name, metadata);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::Metadata(metadata),
                 }));
             },
+            () = async {
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                while let Ok(playback_status) = player.playback_status().await {
+                    use dbus::media_player2::PlaybackStatus;
+                    match playback_status {
+                        PlaybackStatus::Playing => {
+                            azalea_log::debug!("Playback status {:?}", playback_status);
+                            drop(output_sender.send(Output {
+                                name: name.clone(),
+                                event: Event::Position(player.position().await.unwrap()),
+                            }));
+                        },
+                        PlaybackStatus::Paused | PlaybackStatus::Stopped => {
+                            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+                        },
+                    }
+                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                }
+            } => (),
             else => continue
         }
     }
