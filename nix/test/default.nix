@@ -2,7 +2,7 @@
   lib,
   azalea,
   testers,
-  kitty,
+  foot,
 }:
 testers.runNixOSTest {
   name = "azalea-integration-test";
@@ -20,7 +20,7 @@ testers.runNixOSTest {
 
     environment.systemPackages = [
       azalea
-      kitty
+      foot
     ];
 
     systemd.user.services.azalea = {

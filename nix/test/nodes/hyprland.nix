@@ -2,7 +2,7 @@
 let
   cfg = pkgs.writeText "azalea-hyprland.conf" ''
     exec-once = systemctl --user start azalea.service
-    exec-once = kitty
+    exec-once = foot
 
     decoration {
       blur {

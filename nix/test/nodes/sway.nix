@@ -6,7 +6,7 @@ let
     output * bg /run/current-system/sw/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
     for_window [class="^.*"] opacity 0.7
 
-    exec kitty
+    exec foot
   '';
 in
 {
