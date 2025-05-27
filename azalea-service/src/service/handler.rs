@@ -1,20 +1,17 @@
-use std::{
-    rc::Rc,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use azalea_log as log;
 use tokio::sync::broadcast;
 
 use super::{Service, Status};
 
-pub struct ListenerHandle(Rc<broadcast::Sender<()>>, gtk::glib::JoinHandle<()>);
+pub struct ListenerHandle(Arc<broadcast::Sender<()>>, gtk::glib::JoinHandle<()>);
 
 impl Drop for ListenerHandle {
     fn drop(&mut self) {
         let cancellation_sender = &self.0;
 
-        if Rc::strong_count(&cancellation_sender) == 2 {
+        if Arc::strong_count(&cancellation_sender) == 2 {
             drop(cancellation_sender.send(()));
         }
 
@@ -28,7 +25,7 @@ where
 {
     input: broadcast::Sender<S::Input>,
     output: broadcast::Sender<S::Output>,
-    cancellation: Rc<broadcast::Sender<()>>,
+    cancellation: Arc<broadcast::Sender<()>>,
     init: S::Init,
     status: Arc<Mutex<Status>>,
 }
@@ -47,7 +44,7 @@ where
             input: input_sender,
             output: output_sender,
             init,
-            cancellation: Rc::new(cancellation_sender),
+            cancellation: Arc::new(cancellation_sender),
             status: Arc::new(Mutex::new(Status::Stopped)),
         }
     }
@@ -105,7 +102,7 @@ where
     pub fn listen<F: (Fn(S::Output) -> bool) + 'static>(&mut self, transform: F) -> ListenerHandle {
         let mut output = self.output.subscribe();
 
-        if Rc::strong_count(&self.cancellation) == 1 {
+        if Arc::strong_count(&self.cancellation) == 1 {
             self.start();
         }
 

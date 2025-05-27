@@ -9,6 +9,7 @@ use zbus_names::OwnedBusName;
 pub mod dbus;
 use crate::error;
 
+#[derive(Clone)]
 pub struct Service {
     connection: zbus::Connection,
     players: HashMap<OwnedBusName, PlayerProxy<'static>>,
