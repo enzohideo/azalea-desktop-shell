@@ -12,12 +12,12 @@ macro_rules! error {
 }
 
 #[macro_export]
-macro_rules! info {
+macro_rules! critical {
     ($format:literal, $($arg:expr),* $(,)?) => {{
-        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Info, $format, $($arg),*);
+        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Critical, $format, $($arg),*);
     }};
     ($format:literal $(,)?) => {{
-        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Info, $format);
+        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Critical, $format);
     }};
 }
 
@@ -38,5 +38,25 @@ macro_rules! message {
     }};
     ($format:literal $(,)?) => {{
         $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Message, $format);
+    }};
+}
+
+#[macro_export]
+macro_rules! info {
+    ($format:literal, $($arg:expr),* $(,)?) => {{
+        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Info, $format, $($arg),*);
+    }};
+    ($format:literal $(,)?) => {{
+        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Info, $format);
+    }};
+}
+
+#[macro_export]
+macro_rules! debug {
+    ($format:literal, $($arg:expr),* $(,)?) => {{
+        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Debug, $format, $($arg),*);
+    }};
+    ($format:literal $(,)?) => {{
+        $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Debug, $format);
     }};
 }
