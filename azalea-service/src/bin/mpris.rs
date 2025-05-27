@@ -14,7 +14,7 @@ fn main() {
     let (keep_alive_listener, keep_alive_listener_recv) = std::sync::mpsc::channel();
     relm4::spawn_local(async move {
         let connection = rx.recv().unwrap();
-        let dbus_handler = services::dbus::Service::handler(Some(connection.clone()));
+        let dbus_handler = services::dbus::discovery::Service::handler(Some(connection.clone()));
 
         let mut mpris_handler = services::mpris::Service::handler(services::mpris::Init {
             dbus_service: Some(dbus_handler),

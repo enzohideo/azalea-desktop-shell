@@ -18,7 +18,7 @@ pub struct Service {
 #[derive(Clone)]
 pub struct Init {
     pub dbus_connection: Option<zbus::Connection>,
-    pub dbus_service: Option<crate::Handler<super::dbus::Service>>,
+    pub dbus_service: Option<crate::Handler<super::dbus::discovery::Service>>,
 }
 
 #[derive(Clone, Debug)]
@@ -56,7 +56,7 @@ impl crate::Service for Service {
 
         let listener_handle = if let Some(mut dbus_service) = init.dbus_service {
             Some(dbus_service.listen(move |output| {
-                use super::dbus::Output;
+                use super::dbus::discovery::Output;
 
                 match output {
                     Output::ObjectCreated(owned_bus_name) => {
@@ -149,6 +149,7 @@ async fn listen_to_player<'a>(
                 }));
             },
             () = async {
+                // TODO: Check if it's better/easier to use Rate on widget client or just poll here
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 while let Ok(playback_status) = player.playback_status().await {
                     match playback_status {
