@@ -198,7 +198,7 @@ where
         self.listen_local(move |event| sender.send(transform(event)).is_ok())
     }
 
-    pub fn filtered_forward_local<X: 'static, F: (Fn(S::Output) -> Option<X>) +  'static>(
+    pub fn filtered_forward_local<X: 'static, F: (Fn(S::Output) -> Option<X>) + 'static>(
         &mut self,
         sender: relm4::Sender<X>,
         transform: F,

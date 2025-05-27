@@ -1,4 +1,4 @@
-use azalea_service::{ListenerHandle, services};
+use azalea_service::{LocalListenerHandle, services};
 use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
@@ -8,7 +8,7 @@ crate::init! {
     Model {
         time: Time,
         format: String,
-        time_handle: Option<ListenerHandle>,
+        time_handle: Option<LocalListenerHandle>,
     }
 
     Config {
@@ -58,7 +58,7 @@ impl Component for Model {
         if let Some(time) = init.services.time {
             let format = init.config.format;
 
-            model.time_handle = Some(time.borrow_mut().filtered_forward(
+            model.time_handle = Some(time.borrow_mut().filtered_forward_local(
                 sender.input_sender().clone(),
                 move |event| {
                     use azalea_service::services::time::Output;
