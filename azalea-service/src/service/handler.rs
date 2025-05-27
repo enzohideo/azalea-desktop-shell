@@ -64,7 +64,10 @@ where
     }
 
     pub fn start(&mut self) {
-        self.stop();
+        if let Status::Started = *(self.status.lock().unwrap()) {
+            return;
+        }
+
         let input_sender = self.input.clone();
         let mut input = self.input.subscribe();
         let output_sender = self.output.clone();
@@ -117,11 +120,9 @@ where
         &mut self,
         transform: F,
     ) -> ListenerHandle {
-        let mut output = self.output.subscribe();
+        self.start();
 
-        if Arc::strong_count(&self.cancellation) == 1 {
-            self.start();
-        }
+        let mut output = self.output.subscribe();
 
         ListenerHandle(
             self.cancellation.clone(),
@@ -165,11 +166,9 @@ where
         &mut self,
         transform: F,
     ) -> LocalListenerHandle {
-        let mut output = self.output.subscribe();
+        self.start();
 
-        if Arc::strong_count(&self.cancellation) == 1 {
-            self.start();
-        }
+        let mut output = self.output.subscribe();
 
         LocalListenerHandle(
             self.cancellation.clone(),
