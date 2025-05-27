@@ -89,7 +89,7 @@ where
                 *status = Status::Stopped;
             };
 
-            log::message!("Service was stopped: {}", std::any::type_name::<S>());
+            log::message!("Service stopped: {}", std::any::type_name::<S>());
         });
 
         if let Ok(mut status) = self.status.lock() {
