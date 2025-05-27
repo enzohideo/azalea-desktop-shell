@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
-use dbus::media_player2::{Metadata, PlayerProxy};
 use futures_lite::stream::StreamExt;
 use tokio::sync::broadcast;
 use zbus_names::OwnedBusName;
 
-pub mod dbus;
-use crate::{ListenerHandle, error};
+use crate::{
+    ListenerHandle, error,
+    dbus::media_player2::{Metadata, PlaybackStatus, PlayerProxy},
+};
 
 pub struct Service {
     connection: zbus::Connection,
@@ -91,10 +92,9 @@ impl crate::Service for Service {
         match input {
             Input::ObjectCreated(bus_name) => {
                 azalea_log::debug!("[MPRIS] Object created: {}", bus_name);
-                let proxy =
-                    dbus::media_player2::PlayerProxy::new(&self.connection, bus_name.clone())
-                        .await
-                        .unwrap();
+                let proxy = PlayerProxy::new(&self.connection, bus_name.clone())
+                    .await
+                    .unwrap();
                 self.players.insert(bus_name, proxy);
             }
             Input::ObjectDeleted(bus_name) => {
@@ -151,7 +151,6 @@ async fn listen_to_player<'a>(
             () = async {
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                 while let Ok(playback_status) = player.playback_status().await {
-                    use dbus::media_player2::PlaybackStatus;
                     match playback_status {
                         PlaybackStatus::Playing => {
                             azalea_log::debug!("Playback status {:?}", playback_status);
