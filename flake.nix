@@ -41,6 +41,7 @@
         {
           default = pkgs.mkShell {
             name = "azalea-devshell";
+            G_MESSAGES_DEBUG = "Azalea";
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             buildInputs = with pkgs; [
               cargo
