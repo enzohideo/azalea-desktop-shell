@@ -44,6 +44,8 @@
             G_MESSAGES_DEBUG = "Azalea";
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             buildInputs = with pkgs; [
+              nixfmt-tree
+
               cargo
               rustc
               rustfmt
@@ -61,5 +63,7 @@
           };
         }
       );
+
+      formatter = forEachSystem (system: pkgsFor.${system}.nixfmt-tree);
     };
 }
