@@ -5,7 +5,8 @@ use tokio::sync::broadcast;
 
 use super::{Service, Status};
 
-pub struct ListenerHandle(Arc<broadcast::Sender<()>>, gtk::glib::JoinHandle<()>);
+pub struct ListenerHandle(Arc<broadcast::Sender<()>>, tokio::task::JoinHandle<()>);
+pub struct LocalListenerHandle(Arc<broadcast::Sender<()>>, gtk::glib::JoinHandle<()>);
 
 impl Drop for ListenerHandle {
     fn drop(&mut self) {
@@ -19,6 +20,19 @@ impl Drop for ListenerHandle {
     }
 }
 
+impl Drop for LocalListenerHandle {
+    fn drop(&mut self) {
+        let cancellation_sender = &self.0;
+
+        if Arc::strong_count(&cancellation_sender) == 2 {
+            drop(cancellation_sender.send(()));
+        }
+
+        self.1.abort();
+    }
+}
+
+#[derive(Clone)]
 pub struct Handler<S>
 where
     S: Service,
@@ -99,7 +113,10 @@ where
         drop(self.input.send(message));
     }
 
-    pub fn listen<F: (Fn(S::Output) -> bool) + 'static>(&mut self, transform: F) -> ListenerHandle {
+    pub fn listen<F: (Fn(S::Output) -> bool) + Send + 'static>(
+        &mut self,
+        transform: F,
+    ) -> ListenerHandle {
         let mut output = self.output.subscribe();
 
         if Arc::strong_count(&self.cancellation) == 1 {
@@ -107,6 +124,54 @@ where
         }
 
         ListenerHandle(
+            self.cancellation.clone(),
+            relm4::spawn(async move {
+                use tokio::sync::broadcast::error::RecvError;
+                loop {
+                    if match output.recv().await {
+                        Err(RecvError::Closed) => false,
+                        Err(RecvError::Lagged(_)) => true,
+                        Ok(event) => transform(event),
+                    } {
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
+            }),
+        )
+    }
+
+    pub fn forward<X: Send + 'static, F: (Fn(S::Output) -> X) + Send + 'static>(
+        &mut self,
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> ListenerHandle {
+        self.listen(move |event| sender.send(transform(event)).is_ok())
+    }
+
+    pub fn filtered_forward<X: Send + 'static, F: (Fn(S::Output) -> Option<X>) + Send + 'static>(
+        &mut self,
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> ListenerHandle {
+        self.listen(move |event| match transform(event) {
+            Some(data) => sender.send(data).is_ok(),
+            None => true,
+        })
+    }
+
+    pub fn listen_local<F: (Fn(S::Output) -> bool) + 'static>(
+        &mut self,
+        transform: F,
+    ) -> LocalListenerHandle {
+        let mut output = self.output.subscribe();
+
+        if Arc::strong_count(&self.cancellation) == 1 {
+            self.start();
+        }
+
+        LocalListenerHandle(
             self.cancellation.clone(),
             relm4::spawn_local(async move {
                 use tokio::sync::broadcast::error::RecvError;
@@ -125,20 +190,20 @@ where
         )
     }
 
-    pub fn forward<X: 'static, F: (Fn(S::Output) -> X) + 'static>(
+    pub fn forward_local<X: 'static, F: (Fn(S::Output) -> X) + 'static>(
         &mut self,
         sender: relm4::Sender<X>,
         transform: F,
-    ) -> ListenerHandle {
-        self.listen(move |event| sender.send(transform(event)).is_ok())
+    ) -> LocalListenerHandle {
+        self.listen_local(move |event| sender.send(transform(event)).is_ok())
     }
 
-    pub fn filtered_forward<X: 'static, F: (Fn(S::Output) -> Option<X>) + 'static>(
+    pub fn filtered_forward_local<X: 'static, F: (Fn(S::Output) -> Option<X>) +  'static>(
         &mut self,
         sender: relm4::Sender<X>,
         transform: F,
-    ) -> ListenerHandle {
-        self.listen(move |event| match transform(event) {
+    ) -> LocalListenerHandle {
+        self.listen_local(move |event| match transform(event) {
             Some(data) => sender.send(data).is_ok(),
             None => true,
         })
