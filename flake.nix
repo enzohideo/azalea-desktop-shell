@@ -13,11 +13,11 @@
     }:
     let
       inherit (nixpkgs) lib;
-      forEachSystem = lib.genAttrs (import systems);
-      pkgsFor = forEachSystem (system: nixpkgs.legacyPackages.${system});
+      forAllSystems = lib.genAttrs (import systems);
+      pkgsFor = forAllSystems (system: nixpkgs.legacyPackages.${system});
     in
     {
-      packages = forEachSystem (
+      packages = forAllSystems (
         system:
         let
           pkgs = pkgsFor.${system};
@@ -33,7 +33,7 @@
         }
       );
 
-      devShells = forEachSystem (
+      devShells = forAllSystems (
         system:
         let
           pkgs = pkgsFor.${system};
@@ -64,6 +64,6 @@
         }
       );
 
-      formatter = forEachSystem (system: pkgsFor.${system}.nixfmt-tree);
+      formatter = forAllSystems (system: pkgsFor.${system}.nixfmt-tree);
     };
 }
