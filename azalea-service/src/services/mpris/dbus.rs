@@ -1,3 +1,4 @@
+// TODO: Move this to super::dbus
 pub mod media_player2 {
     use std::collections::HashMap;
 
@@ -20,7 +21,7 @@ pub mod media_player2 {
         fn open_uri(&self, uri: &str) -> zbus::Result<()>;
 
         #[zbus(property)]
-        fn playback_status(&self) -> zbus::fdo::Result<String>;
+        fn playback_status(&self) -> zbus::fdo::Result<PlaybackStatus>;
 
         #[zbus(property)]
         fn metadata(&self) -> zbus::Result<Metadata>;
@@ -35,5 +36,12 @@ pub mod media_player2 {
         fn seeked(&self, position: i64) -> zbus::Result<()>;
     }
 
+    #[derive(Debug, serde::Serialize, serde::Deserialize, OwnedValue)]
+    #[zvariant(signature = "s")]
+    pub enum PlaybackStatus {
+        Playing,
+        Paused,
+        Stopped,
+    }
     pub type Metadata = HashMap<String, OwnedValue>;
 }
