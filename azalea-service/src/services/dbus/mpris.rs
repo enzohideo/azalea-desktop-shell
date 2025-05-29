@@ -6,7 +6,7 @@ use zbus_names::OwnedBusName;
 
 use crate::{
     ListenerHandle, StaticHandler,
-    dbus::media_player2::{Metadata, PlaybackStatus, PlayerProxy},
+    dbus::mpris::media_player2::{Metadata, PlaybackStatus, PlayerProxy},
     error,
 };
 
