@@ -15,11 +15,11 @@ fn main() {
     relm4::spawn_local(async move {
         let connection = rx.recv().unwrap();
 
-        services::mpris::Service::init(services::mpris::Init {
+        services::dbus::mpris::Service::init(services::dbus::mpris::Init {
             dbus_connection: Some(connection),
         });
 
-        let _keep_service_alive = services::mpris::Service::listen(|out| {
+        let _keep_service_alive = services::dbus::mpris::Service::listen(|out| {
             azalea_log::message!("mpris service output: {out:#?}");
             true
         });

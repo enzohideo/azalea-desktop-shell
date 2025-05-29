@@ -54,8 +54,8 @@ impl crate::Service for Service {
             .dbus_connection
             .unwrap_or(zbus::Connection::session().await.unwrap());
 
-        let listener_handle = super::dbus::discovery::Service::listen(move |output| {
-            use super::dbus::discovery::Output;
+        let listener_handle = super::discovery::Service::listen(move |output| {
+            use super::discovery::Output;
 
             match output {
                 Output::ObjectCreated(owned_bus_name) => {
