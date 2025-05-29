@@ -13,9 +13,20 @@ pub struct ListenerHandle(
     Arc<broadcast::Sender<()>>,
     Option<tokio::task::JoinHandle<()>>,
 );
-pub struct LocalListenerHandle(Arc<broadcast::Sender<()>>, gtk::glib::JoinHandle<()>);
+pub struct LocalListenerHandle(
+    Arc<broadcast::Sender<()>>,
+    Option<gtk::glib::JoinHandle<()>>,
+);
 
 impl ListenerHandle {
+    pub async fn join(mut self) {
+        if let Some(handle) = self.1.take() {
+            drop(handle.await);
+        }
+    }
+}
+
+impl LocalListenerHandle {
     pub async fn join(mut self) {
         if let Some(handle) = self.1.take() {
             drop(handle.await);
@@ -45,7 +56,9 @@ impl Drop for LocalListenerHandle {
             drop(cancellation_sender.send(()));
         }
 
-        self.1.abort();
+        if let Some(handle) = &self.1 {
+            handle.abort();
+        }
     }
 }
 
@@ -189,7 +202,7 @@ where
 
         LocalListenerHandle(
             self.cancellation.clone(),
-            relm4::spawn_local(async move {
+            Some(relm4::spawn_local(async move {
                 use tokio::sync::broadcast::error::RecvError;
                 loop {
                     if match output.recv().await {
@@ -202,7 +215,7 @@ where
                         break;
                     }
                 }
-            }),
+            })),
         )
     }
 
