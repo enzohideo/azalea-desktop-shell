@@ -1,4 +1,8 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    cell::RefCell,
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 
 use azalea_log as log;
 use tokio::sync::broadcast;
@@ -206,5 +210,102 @@ where
             Some(data) => sender.send(data).is_ok(),
             None => true,
         })
+    }
+}
+
+pub trait StaticHandler
+where
+    Self: Service,
+{
+    fn static_handler() -> Rc<RefCell<crate::Handler<Self>>>;
+
+    fn init(init: Self::Init) {
+        Self::static_handler().borrow_mut().init = init
+    }
+
+    fn start() {
+        Self::static_handler().borrow_mut().start()
+    }
+
+    fn stop() {
+        Self::static_handler().borrow_mut().stop()
+    }
+
+    fn status() -> crate::Status {
+        Self::static_handler().borrow().status()
+    }
+
+    fn send(message: Self::Input) {
+        Self::static_handler().borrow_mut().send(message)
+    }
+
+    fn listen<F: (Fn(Self::Output) -> bool) + Send + 'static>(
+        transform: F,
+    ) -> crate::ListenerHandle {
+        Self::static_handler().borrow_mut().listen(transform)
+    }
+
+    fn forward<X: Send + 'static, F: (Fn(Self::Output) -> X) + Send + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::ListenerHandle {
+        Self::static_handler()
+            .borrow_mut()
+            .forward(sender, transform)
+    }
+
+    fn filtered_forward<X: Send + 'static, F: (Fn(Self::Output) -> Option<X>) + Send + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::ListenerHandle {
+        Self::static_handler()
+            .borrow_mut()
+            .filtered_forward(sender, transform)
+    }
+
+    fn listen_local<F: (Fn(Self::Output) -> bool) + 'static>(
+        transform: F,
+    ) -> crate::LocalListenerHandle {
+        Self::static_handler().borrow_mut().listen_local(transform)
+    }
+
+    fn forward_local<X: 'static, F: (Fn(Self::Output) -> X) + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::LocalListenerHandle {
+        Self::static_handler()
+            .borrow_mut()
+            .forward_local(sender, transform)
+    }
+
+    fn filtered_forward_local<X: 'static, F: (Fn(Self::Output) -> Option<X>) + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::LocalListenerHandle {
+        Self::static_handler()
+            .borrow_mut()
+            .filtered_forward_local(sender, transform)
+    }
+}
+
+#[macro_export]
+macro_rules! impl_static_handler {
+    ($service:ty) => {
+        impl crate::StaticHandler for $service {
+            fn static_handler() -> Rc<RefCell<crate::Handler<Self>>> {
+                thread_local! {
+                    static HANDLER: OnceLock<Rc<RefCell<crate::Handler<$service>>>> = OnceLock::new();
+                }
+                HANDLER.with(|handler| {
+                    handler
+                        .get_or_init(move || {
+                            Rc::new(RefCell::new(<Self as crate::Service>::handler(
+                                Default::default(),
+                            )))
+                        })
+                        .clone()
+                })
+            }
+        }
     }
 }
