@@ -292,10 +292,13 @@ where
 macro_rules! impl_static_handler {
     ($service:ty) => {
         impl crate::StaticHandler for $service {
-            fn static_handler() -> Rc<RefCell<crate::Handler<Self>>> {
+            fn static_handler() -> std::rc::Rc<std::cell::RefCell<crate::Handler<Self>>> {
+                use std::{cell::RefCell, rc::Rc, sync::OnceLock};
+
                 thread_local! {
                     static HANDLER: OnceLock<Rc<RefCell<crate::Handler<$service>>>> = OnceLock::new();
                 }
+
                 HANDLER.with(|handler| {
                     handler
                         .get_or_init(move || {

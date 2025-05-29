@@ -1,11 +1,13 @@
-use azalea_service::{Service, services};
+use azalea_service::{StaticHandler, services};
 use gtk::gio::prelude::{ApplicationExt, ApplicationExtManual};
 
 fn main() {
-    let mut handler = services::time::Service::handler(std::time::Duration::from_secs(1));
+    // TODO: Use struct with named members, then implement Default
+    services::time::Service::init(std::time::Duration::from_secs(1));
+
     let app = relm4::main_application();
 
-    let _keep_service_alive = handler.listen(|out| {
+    let _keep_service_alive = services::time::Service::listen(|out| {
         println!("hey there {out:?}");
         true
     });
