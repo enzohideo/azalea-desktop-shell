@@ -7,7 +7,20 @@ use crate::error;
 pub struct Service {
     minute: u32,
     hour: u32,
-    duration: std::time::Duration,
+    interval_duration: std::time::Duration,
+}
+
+#[derive(Clone)]
+pub struct Init {
+    interval_duration: std::time::Duration,
+}
+
+impl Default for Init {
+    fn default() -> Self {
+        Self {
+            interval_duration: std::time::Duration::from_secs(1),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -18,17 +31,17 @@ pub enum Output {
 }
 
 impl crate::Service for Service {
-    type Init = std::time::Duration;
+    type Init = Init;
     type Input = String;
     type Output = Output;
 
     async fn new(
-        duration: Self::Init,
+        init: Self::Init,
         _: broadcast::Sender<Self::Input>,
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
         Self {
-            duration,
+            interval_duration: init.interval_duration,
             ..Default::default()
         }
     }
@@ -45,7 +58,7 @@ impl crate::Service for Service {
         &mut self,
         output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> Result<(), error::Error> {
-        tokio::time::sleep(self.duration).await;
+        tokio::time::sleep(self.interval_duration).await;
 
         let time = chrono::Local::now();
 
