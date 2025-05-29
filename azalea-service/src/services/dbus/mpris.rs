@@ -45,6 +45,10 @@ impl crate::Service for Service {
     type Input = Input;
     type Output = Output;
 
+    fn handler(init: Self::Init) -> crate::Handler<Self> {
+        crate::Handler::new(init, 1, 8)
+    }
+
     async fn new(
         init: Self::Init,
         input_sender: broadcast::Sender<Self::Input>,

@@ -78,10 +78,10 @@ impl<S> Handler<S>
 where
     S: Service + 'static,
 {
-    pub fn new(init: S::Init) -> Self {
+    pub fn new(init: S::Init, input_capacity: usize, output_capacity: usize) -> Self {
         // TODO: Receive channel limits (somehow)
-        let (input_sender, _) = broadcast::channel(10);
-        let (output_sender, _) = broadcast::channel(10);
+        let (input_sender, _) = broadcast::channel(input_capacity);
+        let (output_sender, _) = broadcast::channel(output_capacity);
         let (cancellation_sender, _) = broadcast::channel(1);
 
         Self {
@@ -102,7 +102,6 @@ where
         let mut input = self.input.subscribe();
         let output_sender = self.output.clone();
         let init = self.init.clone();
-        // TODO: Receive number of channels
         let mut cancellation_receiver = self.cancellation.subscribe();
         let status = self.status.clone();
 

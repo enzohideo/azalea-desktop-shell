@@ -26,7 +26,7 @@ where
         output_sender: broadcast::Sender<Self::Output>,
     ) -> impl std::future::Future<Output = Self> + Send;
     fn handler(init: Self::Init) -> Handler<Self> {
-        Handler::new(init)
+        Handler::new(init, 1, 1)
     }
     fn message(
         &mut self,
