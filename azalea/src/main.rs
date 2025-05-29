@@ -1,15 +1,13 @@
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 use azalea::{
     core::{
         app::{self},
         config,
     },
-    service::{IntoServices, Service},
     window::{self, taskbar},
 };
 use azalea_core::config::Config;
-use azalea_service::services;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
@@ -24,13 +22,7 @@ pub enum WindowWrapper {
     Taskbar(relm4::component::Controller<taskbar::Model>),
 }
 
-azalea_service::services! {
-    use time: azalea_service::services::time::Service;
-}
-
-pub struct WindowManager {
-    services: Services,
-}
+pub struct WindowManager {}
 
 impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
     fn create_window(&self, init: &ConfigWrapper) -> WindowWrapper {
@@ -45,7 +37,6 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
                 let controller = builder
                     .launch(window::Init::<taskbar::Model> {
                         config: config.clone(),
-                        services: self.services.strip(),
                     })
                     .detach();
                 WindowWrapper::Taskbar(controller)
@@ -98,15 +89,5 @@ fn main() {
         }
     );
 
-    app::Application::new(
-        WindowManager {
-            services: Services {
-                time: Rc::new(RefCell::new(services::time::Service::handler(
-                    std::time::Duration::from_millis(1000),
-                ))),
-            },
-        },
-        Config { windows },
-    )
-    .run();
+    app::Application::new(WindowManager {}, Config { windows }).run();
 }

@@ -14,10 +14,6 @@ crate::init! {
         center: Vec<widget::Kind>,
         end: Vec<widget::Kind>,
     }
-
-    Services {
-        time: azalea_service::services::time::Service,
-    }
 }
 
 #[component(pub)]
@@ -60,19 +56,19 @@ impl SimpleComponent for Model {
         let widgets = view_output!();
 
         for widget_kind in init.config.start {
-            let (wrapper, widget) = build_widget(&init.services, widget_kind);
+            let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.start_widget.append(&widget);
         }
 
         for widget_kind in init.config.center {
-            let (wrapper, widget) = build_widget(&init.services, widget_kind);
+            let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
-            widgets.center_widget.append(&widget);
+            widgets.center_widget.append(&widget)
         }
 
         for widget_kind in init.config.end {
-            let (wrapper, widget) = build_widget(&init.services, widget_kind);
+            let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.end_widget.append(&widget);
         }

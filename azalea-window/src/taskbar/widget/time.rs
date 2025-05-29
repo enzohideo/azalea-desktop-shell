@@ -1,4 +1,4 @@
-use azalea_service::{LocalListenerHandle, services};
+use azalea_service::{LocalListenerHandle, StaticHandler, services};
 use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
@@ -8,15 +8,11 @@ crate::init! {
     Model {
         time: Time,
         format: String,
-        time_handle: Option<LocalListenerHandle>,
+        _time_handle: LocalListenerHandle,
     }
 
     Config {
         format: String,
-    }
-
-    Services {
-        time: services::time::Service,
     }
 }
 
@@ -48,17 +44,12 @@ impl Component for Model {
         _root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let mut model = Model {
-            format: init.config.format.clone(),
+        let format = init.config.format;
+
+        let model = Model {
+            format: format.clone(),
             time: chrono::Local::now(),
-            time_handle: None,
-        };
-        let widgets = view_output!();
-
-        if let Some(time) = init.services.time {
-            let format = init.config.format;
-
-            model.time_handle = Some(time.borrow_mut().filtered_forward_local(
+            _time_handle: services::time::Service::filtered_forward_local(
                 sender.input_sender().clone(),
                 move |event| {
                     use azalea_service::services::time::Output;
@@ -79,20 +70,10 @@ impl Component for Model {
                         Output::Hour(date_time) => format_contains_time(date_time, "%H"),
                     }
                 },
-            ));
-        } else {
-            sender.command(|out, shutdown| {
-                shutdown
-                    .register(async move {
-                        loop {
-                            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                            let now = chrono::Local::now();
-                            out.send(Self::CommandOutput::Time(now)).unwrap();
-                        }
-                    })
-                    .drop_on_shutdown()
-            });
-        }
+            ),
+        };
+
+        let widgets = view_output!();
 
         ComponentParts { model, widgets }
     }

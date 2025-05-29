@@ -7,21 +7,19 @@ where
     Model: InitExt,
 {
     pub config: Model::Config,
-    pub services: Model::Services,
 }
 
 impl<Model> Init<Model>
 where
     Model: InitExt,
 {
-    fn new(services: Model::Services, config: Model::Config) -> Self {
-        Self { services, config }
+    fn new(config: Model::Config) -> Self {
+        Self { config }
     }
 }
 
 pub trait InitExt {
     type Config;
-    type Services;
 }
 
 #[macro_export]
@@ -33,10 +31,6 @@ macro_rules! init {
 
         Config {
             $($config_name: ident: $config_type: ty,)*
-        }
-
-        Services {
-            $($service_name: ident: $service_model:ty,)*
         }
     ) => {
         pub struct Model {
@@ -50,13 +44,8 @@ macro_rules! init {
             )*
         }
 
-        azalea_service::services! {
-            $(use_option $service_name: $service_model;)*
-        }
-
         impl $crate::InitExt for Model {
             type Config = Config;
-            type Services = Services;
         }
 
         pub type Init = $crate::Init<Model>;
