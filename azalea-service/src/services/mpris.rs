@@ -5,20 +5,20 @@ use tokio::sync::broadcast;
 use zbus_names::OwnedBusName;
 
 use crate::{
-    ListenerHandle, error,
+    ListenerHandle, StaticHandler,
     dbus::media_player2::{Metadata, PlaybackStatus, PlayerProxy},
+    error,
 };
 
 pub struct Service {
     connection: zbus::Connection,
     players: HashMap<OwnedBusName, PlayerProxy<'static>>,
-    _listener_handle: Option<ListenerHandle>,
+    _listener_handle: ListenerHandle,
 }
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct Init {
     pub dbus_connection: Option<zbus::Connection>,
-    pub dbus_service: Option<crate::Handler<super::dbus::discovery::Service>>,
 }
 
 #[derive(Clone, Debug)]
@@ -54,28 +54,24 @@ impl crate::Service for Service {
             .dbus_connection
             .unwrap_or(zbus::Connection::session().await.unwrap());
 
-        let listener_handle = if let Some(mut dbus_service) = init.dbus_service {
-            Some(dbus_service.listen(move |output| {
-                use super::dbus::discovery::Output;
+        let listener_handle = super::dbus::discovery::Service::listen(move |output| {
+            use super::dbus::discovery::Output;
 
-                match output {
-                    Output::ObjectCreated(owned_bus_name) => {
-                        if owned_bus_name.contains("org.mpris.MediaPlayer2") {
-                            drop(input_sender.send(Input::ObjectCreated(owned_bus_name)));
-                        }
+            match output {
+                Output::ObjectCreated(owned_bus_name) => {
+                    if owned_bus_name.contains("org.mpris.MediaPlayer2") {
+                        drop(input_sender.send(Input::ObjectCreated(owned_bus_name)));
                     }
-                    Output::ObjectDeleted(owned_bus_name) => {
-                        if owned_bus_name.contains("org.mpris.MediaPlayer2") {
-                            drop(input_sender.send(Input::ObjectDeleted(owned_bus_name)));
-                        }
+                }
+                Output::ObjectDeleted(owned_bus_name) => {
+                    if owned_bus_name.contains("org.mpris.MediaPlayer2") {
+                        drop(input_sender.send(Input::ObjectDeleted(owned_bus_name)));
                     }
-                };
+                }
+            };
 
-                true
-            }))
-        } else {
-            None
-        };
+            true
+        });
 
         Self {
             _listener_handle: listener_handle,
@@ -171,3 +167,5 @@ async fn listen_to_player<'a>(
         }
     }
 }
+
+crate::impl_static_handler!(Service);

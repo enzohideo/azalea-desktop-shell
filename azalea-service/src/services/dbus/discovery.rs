@@ -74,3 +74,5 @@ impl crate::Service for Service {
         Ok(())
     }
 }
+
+crate::impl_static_handler!(Service);

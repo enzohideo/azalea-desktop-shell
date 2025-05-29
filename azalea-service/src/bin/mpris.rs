@@ -1,4 +1,4 @@
-use azalea_service::{Service, services};
+use azalea_service::{StaticHandler, services};
 use gtk::gio::prelude::{ApplicationExt, ApplicationExtManual};
 
 fn main() {
@@ -14,14 +14,12 @@ fn main() {
     let (keep_alive_listener, keep_alive_listener_recv) = std::sync::mpsc::channel();
     relm4::spawn_local(async move {
         let connection = rx.recv().unwrap();
-        let dbus_handler = services::dbus::discovery::Service::handler(Some(connection.clone()));
 
-        let mut mpris_handler = services::mpris::Service::handler(services::mpris::Init {
-            dbus_service: Some(dbus_handler),
+        services::mpris::Service::init(services::mpris::Init {
             dbus_connection: Some(connection),
         });
 
-        let _keep_service_alive = mpris_handler.listen(|out| {
+        let _keep_service_alive = services::mpris::Service::listen(|out| {
             azalea_log::message!("mpris service output: {out:#?}");
             true
         });

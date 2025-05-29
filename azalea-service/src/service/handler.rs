@@ -96,14 +96,14 @@ where
                 *status = Status::Stopped;
             };
 
-            log::message!("Service stopped: {}", std::any::type_name::<S>());
+            log::info!("Service stopped: {}", std::any::type_name::<S>());
         });
 
         if let Ok(mut status) = self.status.lock() {
             *status = Status::Started;
         };
 
-        log::message!("Service started: {}", std::any::type_name::<S>());
+        log::info!("Service started: {}", std::any::type_name::<S>());
     }
 
     pub fn stop(&mut self) {
@@ -302,6 +302,7 @@ macro_rules! impl_static_handler {
                 HANDLER.with(|handler| {
                     handler
                         .get_or_init(move || {
+                            azalea_log::info!("Service initialized: {}", std::any::type_name::<$service>());
                             Rc::new(RefCell::new(<Self as crate::Service>::handler(
                                 Default::default(),
                             )))
