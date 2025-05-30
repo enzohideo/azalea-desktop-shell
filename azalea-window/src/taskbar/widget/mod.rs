@@ -1,3 +1,4 @@
+pub mod mpris;
 pub mod time;
 
 macro_rules! register_widgets {
@@ -34,4 +35,5 @@ macro_rules! register_widgets {
 
 register_widgets!(
     Time, time::Model;
+    Mpris, mpris::Model;
 );

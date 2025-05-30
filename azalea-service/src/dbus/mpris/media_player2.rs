@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use zbus::proxy;
-use zbus::zvariant::as_value::optional;
 use zbus::zvariant::OwnedValue;
+use zbus::zvariant::as_value::optional;
 
 #[proxy(
     interface = "org.mpris.MediaPlayer2.Player",

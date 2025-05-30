@@ -61,7 +61,9 @@ fn main() {
 
                     Config {
                         start: vec![],
-                        center: vec![],
+                        center: vec![
+                            Mpris(taskbar::widget::mpris::Config {})
+                        ],
                         end: vec![
                             Time(taskbar::widget::time::Config {
                                 format: format!("%d/%m/%y")
