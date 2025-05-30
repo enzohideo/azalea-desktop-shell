@@ -174,7 +174,7 @@ async fn listen_to_player<'a>(
             },
             Some(prop) = playback_status.next() => {
                 let Ok(value) = prop.get().await else { continue; };
-                azalea_log::debug!("[MPRIS] PlaybaclStatus changed for object {}: {:#?}", name, value);
+                azalea_log::debug!("[MPRIS] PlaybackStatus changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::PlaybackStatus(value),
@@ -186,7 +186,6 @@ async fn listen_to_player<'a>(
                 while let Ok(playback_status) = player.playback_status().await {
                     match playback_status {
                         PlaybackStatus::Playing => {
-                            azalea_log::debug!("Playback status {:?}", playback_status);
                             drop(output_sender.send(Output {
                                 name: name.clone(),
                                 event: Event::Position(player.position().await.unwrap()),
