@@ -91,6 +91,9 @@ impl crate::Service for Service {
     ) {
         match input {
             Input::ObjectCreated(bus_name) => {
+                if self.players.contains_key(&bus_name) {
+                    return;
+                }
                 azalea_log::debug!("[MPRIS] Object created: {}", bus_name);
                 let proxy = PlayerProxy::new(&self.connection, bus_name.clone())
                     .await
