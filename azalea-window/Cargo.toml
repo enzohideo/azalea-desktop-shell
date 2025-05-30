@@ -20,3 +20,5 @@ tokio.workspace = true
 gtk.workspace = true
 gtk4-layer-shell.workspace = true
 relm4.workspace = true
+
+reqwest = "0.12.18"

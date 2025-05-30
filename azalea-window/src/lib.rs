@@ -1,3 +1,4 @@
+pub mod component;
 pub mod taskbar;
 
 // TODO: Add service manager
