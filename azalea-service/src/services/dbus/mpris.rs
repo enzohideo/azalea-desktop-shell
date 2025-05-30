@@ -32,6 +32,7 @@ pub enum Event {
     Volume(f64),
     Metadata(Metadata),
     Position(i64),
+    PlaybackStatus(PlaybackStatus),
 }
 
 #[derive(Clone, Debug)]
@@ -151,23 +152,32 @@ async fn listen_to_player<'a>(
 ) {
     let mut volume = player.receive_volume_changed().await;
     let mut metadata = player.receive_metadata_changed().await;
+    let mut playback_status = player.receive_playback_status_changed().await;
 
     loop {
         tokio::select! {
             Some(prop) = volume.next() => {
-                let volume = prop.get().await.unwrap();
-                azalea_log::debug!("[MPRIS] Volume changed for object {}: {}", name, volume);
+                let Ok(value) = prop.get().await else { continue; };
+                azalea_log::debug!("[MPRIS] Volume changed for object {}: {}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
-                    event: Event::Volume(volume),
+                    event: Event::Volume(value),
                 }));
             },
             Some(prop) = metadata.next() => {
-                let metadata = prop.get().await.unwrap();
-                azalea_log::debug!("[MPRIS] Metadata changed for object {}: {:#?}", name, metadata);
+                let Ok(value) = prop.get().await else { continue; };
+                azalea_log::debug!("[MPRIS] Metadata changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
-                    event: Event::Metadata(metadata),
+                    event: Event::Metadata(value),
+                }));
+            },
+            Some(prop) = playback_status.next() => {
+                let Ok(value) = prop.get().await else { continue; };
+                azalea_log::debug!("[MPRIS] PlaybaclStatus changed for object {}: {:#?}", name, value);
+                drop(output_sender.send(Output {
+                    name: name.clone(),
+                    event: Event::PlaybackStatus(value),
                 }));
             },
             () = async {

@@ -34,7 +34,7 @@ pub trait Player {
     fn seeked(&self, position: i64) -> zbus::Result<()>;
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, OwnedValue)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, OwnedValue)]
 #[zvariant(signature = "s")]
 pub enum PlaybackStatus {
     Playing,
