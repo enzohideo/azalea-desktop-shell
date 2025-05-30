@@ -1,20 +1,16 @@
+use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::Read;
+use std::rc::Rc;
+use std::sync::OnceLock;
 
 use relm4::gtk::prelude::{FrameExt, WidgetExt};
 use relm4::gtk::{gdk, gdk_pixbuf};
 use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt};
 
-#[derive(Debug, Clone)]
-pub struct Model {
-    // TODO: Shared lazy static cache
-    // thread_local! {
-    //     static CACHE: OnceLock<Rc<RefCell<HashMap<String, gdk_pixbuf::Pixbuf>>>> = OnceLock::new();
-    // }
-    cache: HashMap<String, gdk_pixbuf::Pixbuf>,
-}
+pub struct Model {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Input {
@@ -47,9 +43,7 @@ impl Component for Model {
         let widget = gtk::Box::default();
         root.set_child(Some(&widget));
 
-        let model = Self {
-            cache: Default::default(),
-        };
+        let model = Self {};
         model.set_spinner(&root);
 
         ComponentParts { model, widgets: () }
@@ -58,10 +52,16 @@ impl Component for Model {
     fn update(&mut self, input: Self::Input, sender: ComponentSender<Self>, root: &Self::Root) {
         match input {
             Input::LoadImage(url) => {
-                sender.oneshot_command(async move {
-                    let image = Self::load_image(&url).await;
-                    CommandOutput::LoadedImage(url, image)
-                });
+                if let Some(pixbuf) = Self::cache().borrow().get(&url) {
+                    azalea_log::info!("[IMAGE] Loaded image (cache hit): {url}");
+                    self.set_image(root, &pixbuf);
+                } else {
+                    sender.oneshot_command(async move {
+                        let image = Self::load_image(&url).await;
+                        azalea_log::info!("[IMAGE] Loaded image (cache miss): {url}");
+                        CommandOutput::LoadedImage(url, image)
+                    });
+                }
             }
             Input::Unload => self.set_spinner(root),
         }
@@ -74,12 +74,14 @@ impl Component for Model {
         root: &Self::Root,
     ) {
         match message {
-            CommandOutput::LoadedImage(key, Some(data)) => {
+            CommandOutput::LoadedImage(url, Some(data)) => {
                 let pixbuf = gdk_pixbuf::Pixbuf::from_read(data).unwrap();
                 self.set_image(root, &pixbuf);
-                self.cache.insert(key, pixbuf);
+                Self::cache().borrow_mut().insert(url, pixbuf);
             }
-            CommandOutput::LoadedImage(_key, None) => todo!(),
+            CommandOutput::LoadedImage(url, None) => {
+                azalea_log::warning!("Failed to load image: {url}")
+            }
         }
     }
 }
@@ -127,6 +129,20 @@ impl Model {
                     .ok()?;
                 buffer.into()
             }
+        })
+    }
+
+    fn cache() -> Rc<RefCell<HashMap<String, gdk_pixbuf::Pixbuf>>> {
+        // TODO: Set max capacity, add basic timestamp (updated on every touch) and remove oldest
+        // if max capacity reached
+        thread_local! {
+            static CACHE: OnceLock<Rc<RefCell<HashMap<String, gdk_pixbuf::Pixbuf>>>> = OnceLock::new();
+        }
+
+        CACHE.with(|cache| {
+            cache
+                .get_or_init(move || Rc::new(RefCell::new(Default::default())))
+                .clone()
         })
     }
 }
