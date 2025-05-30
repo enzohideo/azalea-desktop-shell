@@ -6,7 +6,7 @@ use zbus_names::OwnedBusName;
 
 use crate::{
     ListenerHandle, StaticHandler,
-    dbus::mpris::media_player2::{Metadata, PlaybackStatus, PlayerProxy},
+    dbus::mpris::media_player2::{Metadata, PlaybackRate, PlaybackStatus, PlayerProxy},
     error,
 };
 
@@ -32,6 +32,7 @@ pub enum Event {
     Volume(f64),
     Metadata(Metadata),
     PlaybackStatus(PlaybackStatus),
+    PlaybackRate(PlaybackRate),
 }
 
 #[derive(Clone, Debug)]
@@ -152,6 +153,7 @@ async fn listen_to_player<'a>(
     let mut volume = player.receive_volume_changed().await;
     let mut metadata = player.receive_metadata_changed().await;
     let mut playback_status = player.receive_playback_status_changed().await;
+    let mut playback_rate = player.receive_rate_changed().await;
 
     loop {
         tokio::select! {
@@ -177,6 +179,14 @@ async fn listen_to_player<'a>(
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::PlaybackStatus(value),
+                }));
+            },
+            Some(prop) = playback_rate.next() => {
+                let Ok(value) = prop.get().await else { continue; };
+                azalea_log::debug!("[MPRIS] PlaybackRate changed for object {}: {:#?}", name, value);
+                drop(output_sender.send(Output {
+                    name: name.clone(),
+                    event: Event::PlaybackRate(value),
                 }));
             },
             else => continue

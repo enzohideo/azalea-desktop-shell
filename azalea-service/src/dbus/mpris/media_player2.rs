@@ -23,6 +23,9 @@ pub trait Player {
     fn playback_status(&self) -> zbus::fdo::Result<PlaybackStatus>;
 
     #[zbus(property)]
+    fn rate(&self) -> zbus::fdo::Result<PlaybackRate>;
+
+    #[zbus(property)]
     fn metadata(&self) -> zbus::Result<Metadata>;
 
     #[zbus(property)]
@@ -42,6 +45,8 @@ pub enum PlaybackStatus {
     Paused,
     Stopped,
 }
+
+pub type PlaybackRate = f64;
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, zbus::zvariant::Type)]
 #[zvariant(signature = "dict")]
