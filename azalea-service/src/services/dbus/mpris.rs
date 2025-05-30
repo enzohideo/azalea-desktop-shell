@@ -31,7 +31,6 @@ pub enum Input {
 pub enum Event {
     Volume(f64),
     Metadata(Metadata),
-    Position(i64),
     PlaybackStatus(PlaybackStatus),
 }
 
@@ -180,24 +179,6 @@ async fn listen_to_player<'a>(
                     event: Event::PlaybackStatus(value),
                 }));
             },
-            () = async {
-                // TODO: Check if it's better/easier to use Rate on widget client or just poll here
-                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-                while let Ok(playback_status) = player.playback_status().await {
-                    match playback_status {
-                        PlaybackStatus::Playing => {
-                            drop(output_sender.send(Output {
-                                name: name.clone(),
-                                event: Event::Position(player.position().await.unwrap()),
-                            }));
-                        },
-                        PlaybackStatus::Paused | PlaybackStatus::Stopped => {
-                            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
-                        },
-                    }
-                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-                }
-            } => (),
             else => continue
         }
     }
