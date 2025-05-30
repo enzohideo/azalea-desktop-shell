@@ -6,6 +6,7 @@
   wrapGAppsHook4,
   gtk4,
   gtk4-layer-shell,
+  openssl,
   clang,
   mold-wrapped,
 }:
@@ -28,6 +29,7 @@ let
     buildInputs = [
       gtk4
       gtk4-layer-shell
+      openssl
     ];
 
     NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";

@@ -57,6 +57,7 @@
 
               gtk4
               gtk4-layer-shell
+              openssl # reqwest
 
               cloc
             ];
