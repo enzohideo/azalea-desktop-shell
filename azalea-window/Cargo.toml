@@ -8,6 +8,7 @@ authors.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+azalea-log.workspace = true
 azalea-service.workspace = true
 
 clap.workspace = true
