@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use zbus::proxy;
+use zbus::zvariant::as_value::optional;
 use zbus::zvariant::OwnedValue;
 
 #[proxy(
@@ -41,4 +42,73 @@ pub enum PlaybackStatus {
     Paused,
     Stopped,
 }
-pub type Metadata = HashMap<String, OwnedValue>;
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, zbus::zvariant::Type)]
+#[zvariant(signature = "dict")]
+pub struct Metadata {
+    #[serde(rename = "mpris:trackid", with = "optional")]
+    pub trackid: Option<String>,
+    #[serde(rename = "mpris:length", with = "optional")]
+    pub length: Option<i64>,
+    #[serde(rename = "mpris:artUrl", with = "optional")]
+    pub art_url: Option<String>,
+
+    #[serde(rename = "xesam:title", with = "optional")]
+    pub title: Option<String>,
+    #[serde(rename = "xesam:url", with = "optional")]
+    pub url: Option<String>,
+    #[serde(rename = "xesam:artist", with = "optional")]
+    pub artist: Option<Vec<String>>,
+    #[serde(rename = "xesam:album", with = "optional")]
+    pub album: Option<String>,
+}
+
+// FIXME: OwnedValue macro did not work
+impl TryFrom<zbus::zvariant::OwnedValue> for Metadata {
+    type Error = zbus::zvariant::Error;
+    #[inline]
+    fn try_from(value: zbus::zvariant::OwnedValue) -> zbus::zvariant::Result<Self> {
+        let mut fields = <HashMap<String, zbus::zvariant::Value>>::try_from(value)?;
+        Ok(Self {
+            length: fields
+                .get("mpris:length")
+                .map(|v| v.try_into())
+                .transpose()
+                .unwrap_or(None),
+            art_url: fields
+                .get("mpris:artUrl")
+                .map(|v| v.try_into())
+                .transpose()
+                .unwrap_or(None),
+            title: fields
+                .get("xesam:title")
+                .map(|v| v.try_into())
+                .transpose()
+                .unwrap_or(None),
+            url: fields
+                .get("xesam:url")
+                .map(|v| v.try_into())
+                .transpose()
+                .unwrap_or(None),
+            artist: fields
+                .remove("xesam:artist")
+                .map(|v| v.try_into())
+                .transpose()
+                .unwrap_or(None),
+            album: fields
+                .get("xesam:album")
+                .map(|v| v.try_into())
+                .transpose()
+                .unwrap_or(None),
+            trackid: Some(
+                TryInto::<zbus::zvariant::ObjectPath>::try_into(
+                    fields
+                        .remove("mpris:trackid")
+                        .ok_or_else(|| zbus::zvariant::Error::IncorrectType)?,
+                )?
+                .as_str()
+                .to_string(),
+            ),
+        })
+    }
+}
