@@ -113,21 +113,21 @@ impl Component for Model {
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             Input::Event(output) => {
-                if output.name.to_lowercase().contains("firefox") {
-                    use services::dbus::mpris::Event;
-                    match output.event {
-                        Event::Volume(_) => {}
-                        Event::Metadata(metadata) => {
-                            self.artist = metadata
-                                .artist
-                                .map(|v| v.first().unwrap_or(&format!("no artist")).to_owned());
-                            self.title = metadata.title;
-                            self.length = metadata.length;
-                        }
-                        Event::PlaybackStatus(playback_status) => self.status = playback_status,
-                        Event::PlaybackRate(playback_rate) => self.rate = playback_rate,
-                    };
-                }
+                use services::dbus::mpris::Event;
+                match output.event {
+                    Event::Volume(_) => {}
+                    Event::Metadata(metadata) => {
+                        self.artist = metadata
+                            .artist
+                            .map(|v| v.first().unwrap_or(&format!("no artist")).to_owned());
+                        self.title = metadata.title;
+                        self.art_url = metadata.art_url;
+                        self.length = metadata.length;
+                        self.position = 0.;
+                    }
+                    Event::PlaybackStatus(playback_status) => self.status = playback_status,
+                    Event::PlaybackRate(playback_rate) => self.rate = playback_rate,
+                };
             }
         }
     }
