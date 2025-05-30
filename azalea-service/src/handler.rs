@@ -67,11 +67,11 @@ pub struct Handler<S>
 where
     S: Service,
 {
-    input: broadcast::Sender<S::Input>,
+    input: flume::Sender<S::Input>,
     output: broadcast::Sender<S::Output>,
     cancellation: Arc<broadcast::Sender<()>>,
     init: S::Init,
-    status: Arc<Mutex<Status>>,
+    status: Arc<Mutex<Option<flume::Receiver<S::Input>>>>,
 }
 
 impl<S> Handler<S>
@@ -79,8 +79,7 @@ where
     S: Service + 'static,
 {
     pub fn new(init: S::Init, input_capacity: usize, output_capacity: usize) -> Self {
-        // TODO: Receive channel limits (somehow)
-        let (input_sender, _) = broadcast::channel(input_capacity);
+        let (input_sender, input_receiver) = flume::bounded(input_capacity);
         let (output_sender, _) = broadcast::channel(output_capacity);
         let (cancellation_sender, _) = broadcast::channel(1);
 
@@ -89,17 +88,16 @@ where
             output: output_sender,
             init,
             cancellation: Arc::new(cancellation_sender),
-            status: Arc::new(Mutex::new(Status::Stopped)),
+            status: Arc::new(Mutex::new(Some(input_receiver))),
         }
     }
 
     pub fn start(&mut self) {
-        if let Status::Started = *(self.status.lock().unwrap()) {
+        let Some(input) = self.status.lock().unwrap().take() else {
             return;
-        }
+        };
 
         let input_sender = self.input.clone();
-        let mut input = self.input.subscribe();
         let output_sender = self.output.clone();
         let init = self.init.clone();
         let mut cancellation_receiver = self.cancellation.subscribe();
@@ -107,38 +105,39 @@ where
 
         relm4::spawn(async move {
             let mut service = S::new(init, input_sender, output_sender.clone()).await;
+            log::info!("Service started: {}", std::any::type_name::<S>());
 
             loop {
                 tokio::select! {
                     _ = service.iteration(&output_sender) => (),
-                    Ok(msg) = input.recv() => service.message(msg, &output_sender).await,
+                    Ok(msg) = input.recv_async() => service.message(msg, &output_sender).await,
                     _ = cancellation_receiver.recv() => break,
                     else => continue,
                 };
             }
 
             if let Ok(mut status) = status.lock() {
-                *status = Status::Stopped;
+                *status = Some(input);
             };
 
             log::info!("Service stopped: {}", std::any::type_name::<S>());
         });
 
-        if let Ok(mut status) = self.status.lock() {
-            *status = Status::Started;
-        };
-
-        log::info!("Service started: {}", std::any::type_name::<S>());
+        log::info!("Service starting: {}", std::any::type_name::<S>());
     }
 
     pub fn stop(&mut self) {
-        if let Status::Started = *(self.status.lock().unwrap()) {
+        if self.status.lock().unwrap().is_none() {
             drop(self.cancellation.send(()));
         }
     }
 
     pub fn status(&self) -> Status {
-        (*self.status.lock().unwrap()).clone()
+        if self.status.lock().unwrap().is_none() {
+            Status::Started
+        } else {
+            Status::Stopped
+        }
     }
 
     pub fn send(&mut self, message: S::Input) {

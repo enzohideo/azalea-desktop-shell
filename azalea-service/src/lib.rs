@@ -17,12 +17,12 @@ where
     Self: Sized + Send + 'static,
 {
     type Init: Clone + Send;
-    type Input: Clone + Send;
+    type Input: Send;
     type Output: Clone + 'static + Send;
 
     fn new(
         init: Self::Init,
-        input_sender: broadcast::Sender<Self::Input>,
+        input_sender: flume::Sender<Self::Input>,
         output_sender: broadcast::Sender<Self::Output>,
     ) -> impl std::future::Future<Output = Self> + Send;
     fn handler(init: Self::Init) -> Handler<Self> {

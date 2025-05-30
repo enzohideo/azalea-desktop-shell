@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use futures_lite::stream::StreamExt;
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, oneshot};
 use zbus_names::OwnedBusName;
 
 use crate::{
@@ -51,37 +51,56 @@ impl crate::Service for Service {
 
     async fn new(
         init: Self::Init,
-        input_sender: broadcast::Sender<Self::Input>,
-        _: broadcast::Sender<Self::Output>,
+        input_sender: flume::Sender<Self::Input>,
+        output_sender: broadcast::Sender<Self::Output>,
     ) -> Self {
         let connection = init
             .dbus_connection
             .unwrap_or(zbus::Connection::session().await.unwrap());
 
-        let listener_handle = super::discovery::Service::listen(move |output| {
-            use super::discovery::Output;
+        let listener_handle =
+            super::discovery::Service::filtered_forward(input_sender.into(), |output| {
+                use super::discovery::Output;
 
-            match output {
-                Output::ObjectCreated(owned_bus_name) => {
-                    if owned_bus_name.contains("org.mpris.MediaPlayer2") {
-                        drop(input_sender.send(Input::ObjectCreated(owned_bus_name)));
+                match output {
+                    Output::ObjectCreated(owned_bus_name) => {
+                        if owned_bus_name.contains("org.mpris.MediaPlayer2") {
+                            return Some(Input::ObjectCreated(owned_bus_name));
+                        }
                     }
-                }
-                Output::ObjectDeleted(owned_bus_name) => {
-                    if owned_bus_name.contains("org.mpris.MediaPlayer2") {
-                        drop(input_sender.send(Input::ObjectDeleted(owned_bus_name)));
+                    Output::ObjectDeleted(owned_bus_name) => {
+                        if owned_bus_name.contains("org.mpris.MediaPlayer2") {
+                            return Some(Input::ObjectDeleted(owned_bus_name));
+                        }
                     }
-                }
-            };
+                };
 
-            true
-        });
+                None
+            });
 
-        Self {
+        let mut service = Self {
             _listener_handle: listener_handle,
             connection,
             players: Default::default(),
+        };
+
+        let (tx, rx) = oneshot::channel();
+        super::discovery::Service::send(super::discovery::Input::QueryObjects(tx));
+        match rx.await {
+            Ok(names) => {
+                for name in names {
+                    if !name.contains("org.mpris.MediaPlayer2") {
+                        continue;
+                    }
+                    service
+                        .message(Input::ObjectCreated(name), &output_sender)
+                        .await;
+                }
+            }
+            Err(e) => azalea_log::debug!("Failed to send: {e}"),
         }
+
+        service
     }
 
     async fn message(

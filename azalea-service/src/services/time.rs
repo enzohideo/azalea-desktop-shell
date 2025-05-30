@@ -37,7 +37,7 @@ impl crate::Service for Service {
 
     async fn new(
         init: Self::Init,
-        _: broadcast::Sender<Self::Input>,
+        _: flume::Sender<Self::Input>,
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
         Self {

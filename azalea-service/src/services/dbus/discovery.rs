@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use futures_lite::stream::StreamExt;
 use tokio::sync::broadcast;
 use zbus::fdo::DBusProxy;
@@ -11,11 +13,12 @@ use crate::error;
 #[derive(Clone)]
 pub struct Service {
     proxy: DBusProxy<'static>,
+    objects: HashSet<OwnedBusName>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Input {
-    QueryObjects, // TODO: Add channel to receive response
+    QueryObjects(tokio::sync::oneshot::Sender<Vec<OwnedBusName>>),
 }
 
 #[derive(Clone, Debug)]
@@ -35,17 +38,18 @@ impl crate::Service for Service {
 
     async fn new(
         connection: Self::Init,
-        _input_sender: broadcast::Sender<Self::Input>,
-        output_sender: broadcast::Sender<Self::Output>,
+        _input_sender: flume::Sender<Self::Input>,
+        _output_sender: broadcast::Sender<Self::Output>,
     ) -> Self {
         let connection = connection.unwrap_or(zbus::Connection::session().await.unwrap());
         let proxy = DBusProxy::new(&connection).await.unwrap();
+        let mut objects: HashSet<OwnedBusName> = Default::default();
 
-        for name in proxy.list_names().await.unwrap() {
-            drop(output_sender.send(Output::ObjectCreated(name)));
+        for name in proxy.list_names().await.unwrap_or_default() {
+            objects.insert(name);
         }
 
-        Self { proxy }
+        Self { proxy, objects }
     }
 
     async fn message(
@@ -54,7 +58,10 @@ impl crate::Service for Service {
         _output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
-            Input::QueryObjects => todo!(),
+            Input::QueryObjects(sender) => {
+                let names = self.objects.clone().into_iter().collect();
+                drop(sender.send(names));
+            }
         }
     }
 
