@@ -3,8 +3,13 @@ use azalea_service::{
     dbus::mpris::media_player2::{PlaybackRate, PlaybackStatus},
     services,
 };
-use gtk::prelude::{BoxExt, OrientableExt};
-use relm4::{Component, ComponentParts, ComponentSender, component};
+use gtk::{
+    glib::object::Cast,
+    prelude::{BoxExt, OrientableExt},
+};
+use relm4::{Component, ComponentController, ComponentParts, ComponentSender, component};
+
+use crate::component::image;
 
 // TODO: Stack factory
 crate::init! {
@@ -15,6 +20,9 @@ crate::init! {
         artist: Option<String>,
         length: Option<i64>,
         position: f64,
+
+        art_cover: relm4::Controller<image::Model>,
+
         _event_listener_handle: LocalListenerHandle,
     }
 
@@ -48,6 +56,10 @@ impl Component for Model {
 
             gtk::Box{
                 set_spacing: 12,
+
+                #[local_ref]
+                art_cover_widget -> gtk::Widget {},
+
                 gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
 
@@ -84,6 +96,8 @@ impl Component for Model {
         _root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
+        let art_cover = image::Model::builder().launch(()).detach();
+
         let model = Model {
             status: PlaybackStatus::Stopped,
             rate: 1.,
@@ -91,6 +105,8 @@ impl Component for Model {
             artist: None,
             length: None,
             position: 0.,
+
+            art_cover,
             _event_listener_handle: services::dbus::mpris::Service::forward_local(
                 sender.input_sender().clone(),
                 Input::Event,
@@ -105,6 +121,7 @@ impl Component for Model {
             }
         });
 
+        let art_cover_widget: &gtk::Widget = model.art_cover.widget().upcast_ref();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -121,7 +138,10 @@ impl Component for Model {
                             .artist
                             .map(|v| v.first().unwrap_or(&format!("no artist")).to_owned());
                         self.title = metadata.title;
-                        self.art_url = metadata.art_url;
+                        drop(match metadata.art_url {
+                            Some(url) => self.art_cover.sender().send(image::Input::LoadImage(url)),
+                            None => self.art_cover.sender().send(image::Input::Unload),
+                        });
                         self.length = metadata.length;
                         self.position = 0.;
                     }
