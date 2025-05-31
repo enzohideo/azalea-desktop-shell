@@ -37,7 +37,7 @@ pub enum Event {
 
 #[derive(Clone, Debug)]
 pub struct Output {
-    pub name: OwnedBusName,
+    pub name: String,
     pub event: Event,
 }
 
@@ -161,7 +161,7 @@ async fn listen_to_player<'a>(
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] Volume changed for object {}: {}", name, value);
                 drop(output_sender.send(Output {
-                    name: name.clone(),
+                    name: name.to_string(),
                     event: Event::Volume(value),
                 }));
             },
@@ -169,7 +169,7 @@ async fn listen_to_player<'a>(
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] Metadata changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
-                    name: name.clone(),
+                    name: name.to_string(),
                     event: Event::Metadata(value),
                 }));
             },
@@ -177,7 +177,7 @@ async fn listen_to_player<'a>(
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] PlaybackStatus changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
-                    name: name.clone(),
+                    name: name.to_string(),
                     event: Event::PlaybackStatus(value),
                 }));
             },
@@ -185,7 +185,7 @@ async fn listen_to_player<'a>(
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] PlaybackRate changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
-                    name: name.clone(),
+                    name: name.to_string(),
                     event: Event::PlaybackRate(value),
                 }));
             },
