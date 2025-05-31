@@ -22,10 +22,18 @@ pub struct Init {
 }
 
 #[derive(Clone, Debug)]
+pub enum Action {
+    PlayPause(OwnedBusName),
+    Previous(OwnedBusName),
+    Next(OwnedBusName),
+}
+
+#[derive(Clone, Debug)]
 pub enum Input {
     ObjectCreated(OwnedBusName),
     ObjectDeleted(OwnedBusName),
     QueryPosition(OwnedBusName),
+    Action(Action),
 }
 
 #[derive(Clone, Debug)]
@@ -135,6 +143,20 @@ impl crate::Service for Service {
                     name: bus_name,
                     event: Event::Position(position),
                 }));
+            }
+            Input::Action(action) => {
+                azalea_log::debug!("[MPRIS] Triggered action: {:?}", action);
+                match action {
+                    Action::PlayPause(bus_name) => {
+                        self.players.get(&bus_name).map(|p| p.play_pause());
+                    }
+                    Action::Previous(bus_name) => {
+                        self.players.get(&bus_name).map(|p| p.previous());
+                    }
+                    Action::Next(bus_name) => {
+                        self.players.get(&bus_name).map(|p| p.next());
+                    }
+                }
             }
         }
     }
