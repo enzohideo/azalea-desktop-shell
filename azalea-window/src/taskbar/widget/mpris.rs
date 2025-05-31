@@ -7,7 +7,7 @@ use azalea_service::{
 };
 use gtk::{
     glib::object::Cast,
-    prelude::{BoxExt, OrientableExt},
+    prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt},
 };
 use relm4::{Component, ComponentController, ComponentParts, ComponentSender, component};
 
@@ -24,7 +24,6 @@ struct Player {
 
 type PlayerName = String;
 
-// TODO: Stack factory
 crate::init! {
     Model {
         position: f64,
@@ -67,8 +66,30 @@ impl Component for Model {
             set_transition_type: gtk::RevealerTransitionType::Crossfade,
             set_transition_duration: 300,
 
+
             gtk::Box{
                 set_spacing: 12,
+
+                gtk::MenuButton {
+                    set_hexpand: false,
+                    set_vexpand: false,
+
+                    set_direction: gtk::ArrowType::Up,
+
+                    #[wrap(Some)]
+                    set_popover = &gtk::Popover {
+                        set_position: gtk::PositionType::Right,
+
+                        gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_spacing: 5,
+
+                            gtk::Button {
+                                set_label: "TODO",
+                            },
+                        },
+                    },
+                },
 
                 #[local_ref]
                 art_cover_widget -> gtk::Widget {},
