@@ -30,6 +30,7 @@ pub enum Input {
 #[derive(Clone, Debug)]
 pub enum Event {
     Volume(f64),
+    Position(i64),
     Metadata(Metadata),
     PlaybackStatus(PlaybackStatus),
     PlaybackRate(PlaybackRate),
@@ -179,6 +180,11 @@ async fn listen_to_player<'a>(
                 drop(output_sender.send(Output {
                     name: name.to_string(),
                     event: Event::PlaybackStatus(value),
+                }));
+                let Ok(position) = player.position().await else { continue; };
+                drop(output_sender.send(Output {
+                    name: name.to_string(),
+                    event: Event::Position(position),
                 }));
             },
             Some(prop) = playback_rate.next() => {
