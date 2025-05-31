@@ -23,3 +23,4 @@ gtk4-layer-shell.workspace = true
 relm4.workspace = true
 
 reqwest = "0.12.18"
+base64 = "0.22.1"

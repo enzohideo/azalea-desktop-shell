@@ -305,6 +305,7 @@ version = "0.0.0"
 dependencies = [
  "azalea-log",
  "azalea-service",
+ "base64",
  "chrono",
  "clap",
  "gtk4",

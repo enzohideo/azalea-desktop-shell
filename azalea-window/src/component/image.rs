@@ -6,6 +6,7 @@ use std::io::Read;
 use std::rc::Rc;
 use std::sync::OnceLock;
 
+use base64::Engine;
 use relm4::gtk::prelude::{FrameExt, WidgetExt};
 use relm4::gtk::{gdk, gdk_pixbuf};
 use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt};
@@ -53,12 +54,12 @@ impl Component for Model {
         match input {
             Input::LoadImage(url) => {
                 if let Some(pixbuf) = Self::cache().borrow().get(&url) {
-                    azalea_log::info!("[IMAGE] Loaded image (cache hit): {url}");
+                    azalea_log::info!("[IMAGE] Loaded image (cache hit): {}...", &url[0..50]);
                     self.set_image(root, &pixbuf);
                 } else {
                     sender.oneshot_command(async move {
                         let image = Self::load_image(&url).await;
-                        azalea_log::info!("[IMAGE] Loaded image (cache miss): {url}");
+                        azalea_log::info!("[IMAGE] Loaded image (cache miss): {}...", &url[0..50]);
                         CommandOutput::LoadedImage(url, image)
                     });
                 }
@@ -121,6 +122,14 @@ impl Model {
                 .ok()?
                 .into_iter()
                 .collect(),
+            base64 if base64.starts_with("data:image") => {
+                base64
+                    .split("base64,")
+                    .collect::<Vec<&str>>()
+                    .get(1)
+                    .and_then(|img| base64::engine::general_purpose::STANDARD.decode(img).ok())?
+                    .into()
+            }
             file => {
                 let mut buffer = vec![];
                 File::open(file.strip_prefix("file://")?)

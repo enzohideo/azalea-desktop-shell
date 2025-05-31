@@ -155,7 +155,11 @@ impl crate::Service for Service {
                 let Ok(metadata) = player.metadata().await else {
                     return;
                 };
-                azalea_log::debug!("[MPRIS] Metadata changed for object {}. {:#?}", bus_name, metadata);
+                azalea_log::debug!(
+                    "[MPRIS] Metadata changed for object {}. {:#?}",
+                    bus_name,
+                    metadata
+                );
                 drop(output_sender.send(Output {
                     name: bus_name,
                     event: Event::Metadata(metadata),
