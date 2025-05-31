@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use azalea_service::{
     LocalListenerHandle, StaticHandler,
     dbus::mpris::media_player2::{PlaybackRate, PlaybackStatus},
@@ -11,23 +13,28 @@ use relm4::{Component, ComponentController, ComponentParts, ComponentSender, com
 
 use crate::component::image;
 
+#[derive(Default)]
+struct Player {
+    status: PlaybackStatus,
+    rate: PlaybackRate,
+    title: Option<String>,
+    artist: Option<String>,
+    length: Option<i64>,
+}
+
+type PlayerName = String;
+
 // TODO: Stack factory
 crate::init! {
     Model {
-        status: PlaybackStatus,
-        rate: PlaybackRate,
-        title: Option<String>,
-        artist: Option<String>,
-        length: Option<i64>,
         position: f64,
-
+        selected: Option<PlayerName>,
+        players: HashMap<PlayerName, Player>,
         art_cover: relm4::Controller<image::Model>,
-
         _event_listener_handle: LocalListenerHandle,
     }
 
-    Config {
-    }
+    Config {}
 }
 
 #[derive(Debug)]
@@ -50,7 +57,13 @@ impl Component for Model {
     view! {
         gtk::Revealer {
             #[watch]
-            set_reveal_child: if let PlaybackStatus::Stopped = model.status { false } else { true },
+            set_reveal_child: model
+                .player()
+                .map(|p| match p.status {
+                    PlaybackStatus::Stopped => false,
+                    _ => true
+                })
+                .unwrap_or(false),
             set_transition_type: gtk::RevealerTransitionType::Crossfade,
             set_transition_duration: 300,
 
@@ -65,7 +78,7 @@ impl Component for Model {
 
                     gtk::Label {
                         #[watch]
-                        set_label: &model.title.to_owned().unwrap_or(format!("no title"))
+                        set_label: &model.title(),
                     },
 
                     gtk::Box{
@@ -73,7 +86,7 @@ impl Component for Model {
 
                         gtk::Label {
                             #[watch]
-                            set_label: &model.artist.to_owned().unwrap_or(format!("no artist"))
+                            set_label: &model.artist(),
                         },
 
                         gtk::Label {
@@ -82,7 +95,7 @@ impl Component for Model {
                                 &format!(
                                     "{}/{}",
                                     Self::format_time(model.position as i64),
-                                    model.length.map(Self::format_time).unwrap_or(format!("00:00"))
+                                    model.length(),
                                 )
                         },
                     },
@@ -99,11 +112,8 @@ impl Component for Model {
         let art_cover = image::Model::builder().launch(()).detach();
 
         let model = Model {
-            status: PlaybackStatus::Stopped,
-            rate: 1.,
-            title: None,
-            artist: None,
-            length: None,
+            selected: None,
+            players: Default::default(),
             position: 0.,
 
             art_cover,
@@ -130,23 +140,35 @@ impl Component for Model {
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             Input::Event(output) => {
+                if !self.players.contains_key(&output.name) {
+                    azalea_log::debug!("[MPRIS]: Player added with name {}", output.name);
+                    self.players.insert(output.name.clone(), Default::default());
+                    // TODO: custom default filters
+                    if output.name.to_lowercase().contains("music") {
+                        self.selected = Some(output.name.clone());
+                        self.reset();
+                    }
+                }
+                let Some(player) = self.players.get_mut(&output.name) else {
+                    return;
+                };
                 use services::dbus::mpris::Event;
                 match output.event {
                     Event::Volume(_) => {}
                     Event::Metadata(metadata) => {
-                        self.artist = metadata
+                        player.artist = metadata
                             .artist
                             .map(|v| v.first().unwrap_or(&format!("no artist")).to_owned());
-                        self.title = metadata.title;
+                        player.title = metadata.title;
+                        player.length = metadata.length;
                         drop(match metadata.art_url {
                             Some(url) => self.art_cover.sender().send(image::Input::LoadImage(url)),
                             None => self.art_cover.sender().send(image::Input::Unload),
                         });
-                        self.length = metadata.length;
-                        self.position = 0.;
+                        self.reset();
                     }
-                    Event::PlaybackStatus(playback_status) => self.status = playback_status,
-                    Event::PlaybackRate(playback_rate) => self.rate = playback_rate,
+                    Event::PlaybackStatus(playback_status) => player.status = playback_status,
+                    Event::PlaybackRate(playback_rate) => player.rate = playback_rate,
                 };
             }
         }
@@ -158,10 +180,13 @@ impl Component for Model {
         _sender: ComponentSender<Self>,
         _root: &Self::Root,
     ) {
+        let Some(player) = self.player_mut() else {
+            return;
+        };
         match message {
             CommandOutput::PositionDelta(delta) => {
-                if let PlaybackStatus::Playing = self.status {
-                    self.position += delta * self.rate
+                if let PlaybackStatus::Playing = player.status {
+                    self.position += delta * player.rate
                 }
             }
         }
@@ -169,6 +194,36 @@ impl Component for Model {
 }
 
 impl Model {
+    fn player(&self) -> Option<&Player> {
+        self.players.get(self.selected.as_ref()?)
+    }
+
+    fn player_mut(&mut self) -> Option<&mut Player> {
+        self.players.get_mut(self.selected.as_ref()?)
+    }
+
+    fn title(&self) -> String {
+        self.player()
+            .and_then(|p| p.title.to_owned())
+            .unwrap_or(format!("no title"))
+    }
+
+    fn artist(&self) -> String {
+        self.player()
+            .and_then(|p| p.artist.to_owned())
+            .unwrap_or(format!("no artist"))
+    }
+
+    fn length(&self) -> String {
+        self.player()
+            .and_then(|p| p.length.map(Self::format_time))
+            .unwrap_or(format!("00:00"))
+    }
+
+    fn reset(&mut self) {
+        self.position = 0.;
+    }
+
     fn format_time(us: i64) -> String {
         let time = us / 1000000;
         let hours = time / 3600;
