@@ -204,6 +204,7 @@ impl Component for Model {
                 use services::dbus::mpris::Event;
                 match output.event {
                     Event::Volume(_) => {}
+                    Event::Position(position) => self.position = position as f64,
                     Event::Metadata(metadata) => {
                         player.artist = metadata
                             .artist
