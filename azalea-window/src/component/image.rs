@@ -54,12 +54,18 @@ impl Component for Model {
         match input {
             Input::LoadImage(url) => {
                 if let Some(pixbuf) = Self::cache().borrow().get(&url) {
-                    azalea_log::info!("[IMAGE] Loaded image (cache hit): {}...", &url[0..50]);
+                    azalea_log::info!(
+                        "[IMAGE] Loaded image (cache hit): {}...",
+                        Self::truncate(&url)
+                    );
                     self.set_image(root, &pixbuf);
                 } else {
                     sender.oneshot_command(async move {
                         let image = Self::load_image(&url).await;
-                        azalea_log::info!("[IMAGE] Loaded image (cache miss): {}...", &url[0..50]);
+                        azalea_log::info!(
+                            "[IMAGE] Loaded image (cache miss): {}...",
+                            Self::truncate(&url)
+                        );
                         CommandOutput::LoadedImage(url, image)
                     });
                 }
@@ -122,14 +128,12 @@ impl Model {
                 .ok()?
                 .into_iter()
                 .collect(),
-            base64 if base64.starts_with("data:image") => {
-                base64
-                    .split("base64,")
-                    .collect::<Vec<&str>>()
-                    .get(1)
-                    .and_then(|img| base64::engine::general_purpose::STANDARD.decode(img).ok())?
-                    .into()
-            }
+            base64 if base64.starts_with("data:image") => base64
+                .split("base64,")
+                .collect::<Vec<&str>>()
+                .get(1)
+                .and_then(|img| base64::engine::general_purpose::STANDARD.decode(img).ok())?
+                .into(),
             file => {
                 let mut buffer = vec![];
                 File::open(file.strip_prefix("file://")?)
@@ -139,6 +143,13 @@ impl Model {
                 buffer.into()
             }
         })
+    }
+
+    fn truncate<'a>(url: &'a str) -> &'a str {
+        url.char_indices()
+            .nth(50)
+            .map(|(size, _)| &url[..size])
+            .unwrap_or(&url)
     }
 
     fn cache() -> Rc<RefCell<HashMap<String, gdk_pixbuf::Pixbuf>>> {
