@@ -25,6 +25,7 @@ pub struct Init {
 pub enum Input {
     ObjectCreated(OwnedBusName),
     ObjectDeleted(OwnedBusName),
+    QueryPosition(OwnedBusName),
 }
 
 #[derive(Clone, Debug)]
@@ -108,7 +109,7 @@ impl crate::Service for Service {
     async fn message(
         &mut self,
         input: Self::Input,
-        _output_sender: &broadcast::Sender<Self::Output>,
+        output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
             Input::ObjectCreated(bus_name) => {
@@ -124,6 +125,16 @@ impl crate::Service for Service {
             Input::ObjectDeleted(bus_name) => {
                 azalea_log::debug!("[MPRIS] Object deleted: {}", bus_name);
                 self.players.remove(&bus_name);
+            }
+            Input::QueryPosition(bus_name) => {
+                let Some(player) = self.players.get(&bus_name) else {
+                    return;
+                };
+                let position = player.position().await.unwrap_or(0);
+                drop(output_sender.send(Output {
+                    name: bus_name,
+                    event: Event::Position(position),
+                }));
             }
         }
     }

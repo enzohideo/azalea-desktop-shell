@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use azalea_service::{
     LocalListenerHandle, StaticHandler,
     dbus::mpris::media_player2::{PlaybackRate, PlaybackStatus},
-    services::{self, dbus::mpris::OwnedBusName},
+    services::{
+        self,
+        dbus::mpris::{self, OwnedBusName},
+    },
 };
 use gtk::{
     glib::object::Cast,
@@ -159,7 +162,7 @@ impl Component for Model {
                     menu::Output::Select(name) => Input::Select(name),
                 }),
 
-            _event_listener_handle: services::dbus::mpris::Service::forward_local(
+            _event_listener_handle: mpris::Service::forward_local(
                 sender.input_sender().clone(),
                 Input::Event,
             ),
@@ -275,8 +278,10 @@ impl Model {
                 .send(image::Input::LoadImage(url.to_string())),
             None => self.art_cover.sender().send(image::Input::Unload),
         });
-        // TODO: Send message to retrieve position and rate
-        self.position = 0.;
+
+        if let Some(name) = &self.selected {
+            mpris::Service::send(mpris::Input::QueryPosition(name.clone()));
+        }
     }
 
     fn format_time(us: i64) -> String {
