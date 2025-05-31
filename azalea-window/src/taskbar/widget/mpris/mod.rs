@@ -78,13 +78,7 @@ impl Component for Model {
     view! {
         gtk::Revealer {
             #[watch]
-            set_reveal_child: model
-                .player()
-                .map(|p| match p.status {
-                    PlaybackStatus::Stopped => false,
-                    _ => true
-                })
-                .unwrap_or(false),
+            set_reveal_child: !model.players.is_empty(),
             set_transition_type: gtk::RevealerTransitionType::Crossfade,
             set_transition_duration: 300,
 
