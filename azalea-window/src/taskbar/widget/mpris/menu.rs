@@ -32,7 +32,7 @@ impl FactoryComponent for MenuName {
     view! {
         #[root]
         gtk::Button {
-            set_label: &self.name,
+            set_label: &self.name.strip_prefix("org.mpris.MediaPlayer2.").unwrap_or(&self.name),
             connect_clicked => Input::Click
         }
     }
