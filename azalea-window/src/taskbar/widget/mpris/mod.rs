@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use azalea_service::{
     LocalListenerHandle, StaticHandler,
     dbus::mpris::media_player2::{PlaybackRate, PlaybackStatus},
-    services,
+    services::{self, dbus::mpris::OwnedBusName},
 };
 use gtk::{
     glib::object::Cast,
@@ -39,7 +39,7 @@ impl Default for Player {
     }
 }
 
-type PlayerName = String;
+type PlayerName = OwnedBusName;
 
 crate::init! {
     Model {
