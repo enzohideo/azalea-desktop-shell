@@ -32,7 +32,8 @@ pub enum Action {
 pub enum Input {
     ObjectCreated(OwnedBusName),
     ObjectDeleted(OwnedBusName),
-    QueryPosition(OwnedBusName),
+    UpdatePositionAndRate(OwnedBusName),
+    UpdateMetadata(OwnedBusName),
     Action(Action),
 }
 
@@ -134,14 +135,30 @@ impl crate::Service for Service {
                 azalea_log::debug!("[MPRIS] Object deleted: {}", bus_name);
                 self.players.remove(&bus_name);
             }
-            Input::QueryPosition(bus_name) => {
+            Input::UpdatePositionAndRate(bus_name) => {
                 let Some(player) = self.players.get(&bus_name) else {
                     return;
                 };
-                let position = player.position().await.unwrap_or(0);
+                drop(output_sender.send(Output {
+                    name: bus_name.clone(),
+                    event: Event::Position(player.position().await.unwrap_or(0)),
+                }));
+                drop(output_sender.send(Output {
+                    name: bus_name.clone(),
+                    event: Event::PlaybackRate(player.rate().await.unwrap_or(1.)),
+                }));
+            }
+            Input::UpdateMetadata(bus_name) => {
+                let Some(player) = self.players.get(&bus_name) else {
+                    return;
+                };
+                let Ok(metadata) = player.metadata().await else {
+                    return;
+                };
+                azalea_log::debug!("[MPRIS] Metadata changed for object {}. {:#?}", bus_name, metadata);
                 drop(output_sender.send(Output {
                     name: bus_name,
-                    event: Event::Position(position),
+                    event: Event::Metadata(metadata),
                 }));
             }
             Input::Action(action) => {

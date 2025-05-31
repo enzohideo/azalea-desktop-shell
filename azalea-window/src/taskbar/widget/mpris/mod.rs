@@ -204,7 +204,7 @@ impl Component for Model {
         match message {
             Input::Select(name) => {
                 self.selected = Some(name.clone());
-                self.reset();
+                mpris::Service::send(mpris::Input::UpdateMetadata(name));
             }
             Input::Event(output) => {
                 if !self.players.contains_key(&output.name) {
@@ -307,7 +307,7 @@ impl Model {
         });
 
         if let Some(name) = &self.selected {
-            mpris::Service::send(mpris::Input::QueryPosition(name.clone()));
+            mpris::Service::send(mpris::Input::UpdatePositionAndRate(name.clone()));
         }
     }
 
