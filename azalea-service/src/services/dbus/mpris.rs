@@ -195,8 +195,6 @@ impl crate::Service for Service {
         &mut self,
         output_sender: &broadcast::Sender<self::Output>,
     ) -> Result<(), error::Error> {
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-
         let mut players = tokio::task::JoinSet::new();
 
         for (name, player) in self.players.clone() {
