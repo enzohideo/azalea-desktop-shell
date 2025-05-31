@@ -10,7 +10,7 @@ use azalea_service::{
 };
 use gtk::{
     glib::object::Cast,
-    prelude::{BoxExt, OrientableExt, PopoverExt, WidgetExt},
+    prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt},
 };
 use relm4::{
     Component, ComponentController, ComponentParts, ComponentSender, component,
@@ -58,9 +58,17 @@ crate::init! {
 }
 
 #[derive(Debug)]
+pub enum Action {
+    Previous,
+    Next,
+    PlayPause,
+}
+
+#[derive(Debug)]
 pub enum Input {
     Select(PlayerName),
-    Event(services::dbus::mpris::Output),
+    Event(mpris::Output),
+    Action(Action),
 }
 
 #[derive(Debug)]
@@ -134,6 +142,21 @@ impl Component for Model {
                         },
                     },
                 },
+
+                gtk::Button {
+                    set_label: "<", // TODO: Icons
+                    connect_clicked => Input::Action(Action::Previous)
+                },
+
+                gtk::Button {
+                    set_label: "||", // TODO: Icons
+                    connect_clicked => Input::Action(Action::PlayPause)
+                },
+
+                gtk::Button {
+                    set_label: ">", // TODO: Icons
+                    connect_clicked => Input::Action(Action::Next)
+                }
             },
         }
     }
@@ -214,6 +237,16 @@ impl Component for Model {
                     Event::PlaybackStatus(playback_status) => player.status = playback_status,
                     Event::PlaybackRate(playback_rate) => player.rate = playback_rate,
                 };
+            }
+            Input::Action(action) => {
+                let Some(name) = self.selected.clone() else {
+                    return;
+                };
+                mpris::Service::send(mpris::Input::Action(match action {
+                    Action::Previous => mpris::Action::Previous(name),
+                    Action::Next => mpris::Action::Next(name),
+                    Action::PlayPause => mpris::Action::PlayPause(name),
+                }));
             }
         }
     }
