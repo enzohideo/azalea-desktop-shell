@@ -146,15 +146,28 @@ impl crate::Service for Service {
             }
             Input::Action(action) => {
                 azalea_log::debug!("[MPRIS] Triggered action: {:?}", action);
+                // TODO: return anyhow error
                 match action {
                     Action::PlayPause(bus_name) => {
-                        self.players.get(&bus_name).map(|p| p.play_pause());
+                        drop(
+                            self.players
+                                .get(&bus_name)
+                                .map(|p| p.play_pause())
+                                .unwrap()
+                                .await,
+                        );
                     }
                     Action::Previous(bus_name) => {
-                        self.players.get(&bus_name).map(|p| p.previous());
+                        drop(
+                            self.players
+                                .get(&bus_name)
+                                .map(|p| p.previous())
+                                .unwrap()
+                                .await,
+                        );
                     }
                     Action::Next(bus_name) => {
-                        self.players.get(&bus_name).map(|p| p.next());
+                        drop(self.players.get(&bus_name).map(|p| p.next()).unwrap().await);
                     }
                 }
             }
