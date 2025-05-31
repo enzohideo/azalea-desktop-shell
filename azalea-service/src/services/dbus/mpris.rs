@@ -57,7 +57,7 @@ impl crate::Service for Service {
     type Output = Output;
 
     fn handler(init: Self::Init) -> crate::Handler<Self> {
-        crate::Handler::new(init, 1, 8)
+        crate::Handler::new(init, 8, 8)
     }
 
     async fn new(
