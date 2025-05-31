@@ -213,7 +213,7 @@ impl Component for Model {
                     self.menu.guard().push_back(output.name.clone());
                     self.players.insert(output.name.clone(), Default::default());
                     // TODO: custom default filters
-                    if output.name.to_lowercase().contains("music") {
+                    if self.selected.is_none() || output.name.to_lowercase().contains("music") {
                         self.selected = Some(output.name.clone());
                         self.reset();
                     }
