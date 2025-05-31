@@ -7,19 +7,36 @@ use azalea_service::{
 };
 use gtk::{
     glib::object::Cast,
-    prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt},
+    prelude::{BoxExt, OrientableExt, PopoverExt, WidgetExt},
 };
-use relm4::{Component, ComponentController, ComponentParts, ComponentSender, component};
+use relm4::{
+    Component, ComponentController, ComponentParts, ComponentSender, component,
+    prelude::FactoryVecDeque,
+};
 
 use crate::component::image;
+mod menu;
 
-#[derive(Default)]
 struct Player {
     status: PlaybackStatus,
     rate: PlaybackRate,
     title: Option<String>,
     artist: Option<String>,
     length: Option<i64>,
+    art_url: Option<String>,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            status: Default::default(),
+            rate: 1.,
+            title: Default::default(),
+            artist: Default::default(),
+            length: Default::default(),
+            art_url: Default::default(),
+        }
+    }
 }
 
 type PlayerName = String;
@@ -30,6 +47,7 @@ crate::init! {
         selected: Option<PlayerName>,
         players: HashMap<PlayerName, Player>,
         art_cover: relm4::Controller<image::Model>,
+        menu: FactoryVecDeque<menu::MenuName>,
         _event_listener_handle: LocalListenerHandle,
     }
 
@@ -38,6 +56,7 @@ crate::init! {
 
 #[derive(Debug)]
 pub enum Input {
+    Select(PlayerName),
     Event(services::dbus::mpris::Output),
 }
 
@@ -80,13 +99,10 @@ impl Component for Model {
                     set_popover = &gtk::Popover {
                         set_position: gtk::PositionType::Right,
 
-                        gtk::Box {
+                        #[local_ref]
+                        menu_widget -> gtk::Box {
                             set_orientation: gtk::Orientation::Vertical,
                             set_spacing: 5,
-
-                            gtk::Button {
-                                set_label: "TODO",
-                            },
                         },
                     },
                 },
@@ -130,14 +146,19 @@ impl Component for Model {
         _root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let art_cover = image::Model::builder().launch(()).detach();
-
         let model = Model {
             selected: None,
             players: Default::default(),
             position: 0.,
 
-            art_cover,
+            art_cover: image::Model::builder().launch(()).detach(),
+
+            menu: FactoryVecDeque::builder()
+                .launch(gtk::Box::default())
+                .forward(sender.input_sender(), |output| match output {
+                    menu::Output::Select(name) => Input::Select(name),
+                }),
+
             _event_listener_handle: services::dbus::mpris::Service::forward_local(
                 sender.input_sender().clone(),
                 Input::Event,
@@ -152,6 +173,7 @@ impl Component for Model {
             }
         });
 
+        let menu_widget = model.menu.widget();
         let art_cover_widget: &gtk::Widget = model.art_cover.widget().upcast_ref();
         let widgets = view_output!();
 
@@ -160,9 +182,15 @@ impl Component for Model {
 
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
+            Input::Select(name) => {
+                self.selected = Some(name.clone());
+                self.reset();
+            }
             Input::Event(output) => {
                 if !self.players.contains_key(&output.name) {
                     azalea_log::debug!("[MPRIS]: Player added with name {}", output.name);
+                    // TODO: Implement removal from menu
+                    self.menu.guard().push_back(output.name.clone());
                     self.players.insert(output.name.clone(), Default::default());
                     // TODO: custom default filters
                     if output.name.to_lowercase().contains("music") {
@@ -182,10 +210,7 @@ impl Component for Model {
                             .map(|v| v.first().unwrap_or(&format!("no artist")).to_owned());
                         player.title = metadata.title;
                         player.length = metadata.length;
-                        drop(match metadata.art_url {
-                            Some(url) => self.art_cover.sender().send(image::Input::LoadImage(url)),
-                            None => self.art_cover.sender().send(image::Input::Unload),
-                        });
+                        player.art_url = metadata.art_url;
                         self.reset();
                     }
                     Event::PlaybackStatus(playback_status) => player.status = playback_status,
@@ -242,6 +267,14 @@ impl Model {
     }
 
     fn reset(&mut self) {
+        drop(match self.player().and_then(|p| p.art_url.as_ref()) {
+            Some(url) => self
+                .art_cover
+                .sender()
+                .send(image::Input::LoadImage(url.to_string())),
+            None => self.art_cover.sender().send(image::Input::Unload),
+        });
+        // TODO: Send message to retrieve position and rate
         self.position = 0.;
     }
 
