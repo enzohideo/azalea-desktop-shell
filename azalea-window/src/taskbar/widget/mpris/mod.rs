@@ -149,7 +149,8 @@ impl Component for Model {
                 },
 
                 gtk::Button {
-                    set_icon_name: icon::PAUSE,
+                    #[watch]
+                    set_icon_name: if model.is_playing() { icon::PAUSE } else { icon::PLAY },
                     connect_clicked => Input::Action(Action::PlayPause)
                 },
 
@@ -277,6 +278,12 @@ impl Model {
 
     fn player_mut(&mut self) -> Option<&mut Player> {
         self.players.get_mut(self.selected.as_ref()?)
+    }
+
+    fn is_playing(&self) -> bool {
+        self.player()
+            .map(|p| matches!(p.status, PlaybackStatus::Playing))
+            .unwrap_or(false)
     }
 
     fn title(&self) -> String {
