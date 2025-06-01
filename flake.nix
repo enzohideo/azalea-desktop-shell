@@ -41,8 +41,13 @@
         {
           default = pkgs.mkShell {
             name = "azalea-devshell";
-            G_MESSAGES_DEBUG = "Azalea";
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+            G_MESSAGES_DEBUG = "Azalea";
+            GDK_PIXBUF_MODULE_FILE = "${pkgs.gnome._gdkPixbufCacheBuilder_DO_NOT_USE {
+              extraLoaders = with pkgs; [
+                librsvg # icons
+              ];
+            }}";
             buildInputs = with pkgs; [
               nixfmt-tree
 
