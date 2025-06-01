@@ -53,6 +53,8 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
 }
 
 fn main() {
+    azalea_window::icon::init();
+
     relm4::view!(
         mut windows = HashMap::new() {
             insert: (format!("bottom-taskbar"), config::window::Config {

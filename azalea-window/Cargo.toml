@@ -24,3 +24,7 @@ relm4.workspace = true
 
 reqwest = "0.12.18"
 base64 = "0.22.1"
+relm4-icons = "0.10.0-beta.1"
+
+[build-dependencies]
+relm4-icons-build = "0.10.0-beta.1"

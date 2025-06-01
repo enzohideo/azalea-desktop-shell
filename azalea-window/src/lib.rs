@@ -1,7 +1,7 @@
 pub mod component;
+pub mod icon;
 pub mod taskbar;
 
-// TODO: Add service manager
 #[derive(Debug, Clone)]
 pub struct Init<Model>
 where
