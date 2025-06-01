@@ -17,7 +17,7 @@ use relm4::{
     prelude::FactoryVecDeque,
 };
 
-use crate::component::image;
+use crate::{component::image, icon};
 mod menu;
 
 struct Player {
@@ -144,17 +144,17 @@ impl Component for Model {
                 },
 
                 gtk::Button {
-                    set_label: "<", // TODO: Icons
+                    set_icon_name: icon::PREVIOUS,
                     connect_clicked => Input::Action(Action::Previous)
                 },
 
                 gtk::Button {
-                    set_label: "||", // TODO: Icons
+                    set_icon_name: icon::PAUSE,
                     connect_clicked => Input::Action(Action::PlayPause)
                 },
 
                 gtk::Button {
-                    set_label: ">", // TODO: Icons
+                    set_icon_name: icon::NEXT,
                     connect_clicked => Input::Action(Action::Next)
                 }
             },
