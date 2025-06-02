@@ -10,9 +10,9 @@ crate::init! {
     }
 
     Config {
-        start: Vec<widget::Kind>,
-        center: Vec<widget::Kind>,
-        end: Vec<widget::Kind>,
+        start: Vec<widget::ConfigWrapper>,
+        center: Vec<widget::ConfigWrapper>,
+        end: Vec<widget::ConfigWrapper>,
     }
 }
 

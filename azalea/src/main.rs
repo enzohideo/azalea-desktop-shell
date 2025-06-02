@@ -59,7 +59,7 @@ fn main() {
         mut windows = HashMap::new() {
             insert: (format!("bottom-taskbar"), config::window::Config {
                 config: ConfigWrapper::Taskbar({
-                    use taskbar::{Config, widget::Kind::*};
+                    use taskbar::{Config, widget::ConfigWrapper::*};
 
                     Config {
                         start: vec![],

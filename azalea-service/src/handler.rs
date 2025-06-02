@@ -13,10 +13,7 @@ pub struct ListenerHandle(
     Arc<broadcast::Sender<()>>,
     Option<tokio::task::JoinHandle<()>>,
 );
-pub struct LocalListenerHandle(
-    Arc<broadcast::Sender<()>>,
-    Option<glib::JoinHandle<()>>,
-);
+pub struct LocalListenerHandle(Arc<broadcast::Sender<()>>, Option<glib::JoinHandle<()>>);
 
 impl ListenerHandle {
     pub async fn join(mut self) {
