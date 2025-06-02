@@ -12,6 +12,7 @@ name = "azalea"
 
 [workspace.dependencies]
 azalea-core = { path = "azalea-core" }
+azalea-derive = { path = "azalea-derive" }
 azalea-log = { path = "azalea-log" }
 azalea-window = { path = "azalea-window" }
 azalea-service = { path = "azalea-service" }
