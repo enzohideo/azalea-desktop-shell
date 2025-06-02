@@ -1,15 +1,15 @@
 use azalea_service::StaticHandler;
-use azalea_window::services;
+use azalea_window::service;
 
 #[tokio::main]
 async fn main() {
     let connection = zbus::Connection::session().await.unwrap();
 
-    services::dbus::mpris::Service::init(services::dbus::mpris::Init {
+    service::dbus::mpris::Service::init(service::dbus::mpris::Init {
         dbus_connection: Some(connection),
     });
 
-    services::dbus::mpris::Service::listen(|out| {
+    service::dbus::mpris::Service::listen(|out| {
         azalea_log::message!("MPRIS output received:\n{out:#?}");
         true
     })

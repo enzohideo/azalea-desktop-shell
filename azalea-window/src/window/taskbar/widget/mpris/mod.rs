@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::services::{
+use crate::service::{
     self,
     dbus::mpris::{
         self, OwnedBusName,
@@ -222,7 +222,7 @@ impl Component for Model {
                 let Some(player) = self.players.get_mut(&output.name) else {
                     return;
                 };
-                use services::dbus::mpris::Event;
+                use service::dbus::mpris::Event;
                 match output.event {
                     Event::Volume(_) => {}
                     Event::Position(position) => self.position = position as f64,

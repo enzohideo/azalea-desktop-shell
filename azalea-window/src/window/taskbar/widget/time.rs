@@ -2,7 +2,7 @@ use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
-use crate::services;
+use crate::service;
 
 type Time = chrono::DateTime<chrono::Local>;
 
@@ -51,10 +51,10 @@ impl Component for Model {
         let model = Model {
             format: format.clone(),
             time: chrono::Local::now(),
-            _time_handle: services::time::Service::filtered_forward_local(
+            _time_handle: service::time::Service::filtered_forward_local(
                 sender.input_sender().clone(),
                 move |event| {
-                    use services::time::Output;
+                    use service::time::Output;
 
                     let format_contains_time = |date_time: chrono::DateTime<chrono::Local>,
                                                 time: &str|
