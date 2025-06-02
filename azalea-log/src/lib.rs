@@ -61,8 +61,11 @@ macro_rules! debug {
     }};
 }
 
-pub fn error<Obj>(text: &str) {
+pub fn error<Obj>(text: &str) -> ! {
     error!("[{}] {}", std::any::type_name::<Obj>(), text);
+    loop {
+        panic!()
+    }
 }
 
 pub fn critical<Obj>(text: &str) {
