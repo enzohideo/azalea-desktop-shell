@@ -60,3 +60,27 @@ macro_rules! debug {
         $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Debug, $format);
     }};
 }
+
+pub fn error<Obj>(text: &str) {
+    error!("[{}] {}", std::any::type_name::<Obj>(), text);
+}
+
+pub fn critical<Obj>(text: &str) {
+    critical!("[{}] {}", std::any::type_name::<Obj>(), text);
+}
+
+pub fn warning<Obj>(text: &str) {
+    warning!("[{}] {}", std::any::type_name::<Obj>(), text);
+}
+
+pub fn message<Obj>(text: &str) {
+    message!("[{}] {}", std::any::type_name::<Obj>(), text);
+}
+
+pub fn info<Obj>(text: &str) {
+    info!("[{}] {}", std::any::type_name::<Obj>(), text);
+}
+
+pub fn debug<Obj>(text: &str) {
+    debug!("[{}] {}", std::any::type_name::<Obj>(), text);
+}
