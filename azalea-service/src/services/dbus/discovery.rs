@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use futures::stream::StreamExt;
+use futures_lite::stream::StreamExt;
 use tokio::sync::broadcast;
 use zbus::fdo::{DBusProxy, NameOwnerChangedStream};
 use zbus_names::OwnedBusName;

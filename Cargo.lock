@@ -287,7 +287,7 @@ dependencies = [
  "chrono",
  "clap",
  "flume",
- "futures",
+ "futures-lite",
  "gtk4",
  "gtk4-layer-shell",
  "relm4",
