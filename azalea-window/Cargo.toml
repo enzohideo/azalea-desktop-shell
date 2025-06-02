@@ -9,6 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 azalea-log.workspace = true
+azalea-derive.workspace = true
 azalea-service.workspace = true
 
 clap.workspace = true

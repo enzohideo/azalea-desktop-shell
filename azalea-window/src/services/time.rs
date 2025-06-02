@@ -3,7 +3,7 @@ use tokio::sync::broadcast;
 
 use azalea_service::error;
 
-#[derive(Default)]
+#[derive(Default, azalea_derive::StaticHandler)]
 pub struct Service {
     minute: u32,
     hour: u32,
@@ -86,5 +86,3 @@ impl azalea_service::Service for Service {
         Ok(())
     }
 }
-
-azalea_service::impl_static_handler!(Service);

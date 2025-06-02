@@ -10,6 +10,7 @@ use azalea_service::error;
 /// DBus Discovery Service
 ///
 /// Listens for newly created or destroyed DBus objects
+#[derive(azalea_derive::StaticHandler)]
 pub struct Service {
     stream: NameOwnerChangedStream,
     objects: HashSet<OwnedBusName>,
@@ -91,5 +92,3 @@ impl azalea_service::Service for Service {
         Ok(())
     }
 }
-
-azalea_service::impl_static_handler!(Service);

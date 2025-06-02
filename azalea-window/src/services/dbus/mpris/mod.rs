@@ -8,6 +8,7 @@ pub use zbus_names::OwnedBusName;
 pub mod proxy;
 use proxy::{Metadata, PlaybackRate, PlaybackStatus, PlayerProxy};
 
+#[derive(azalea_derive::StaticHandler)]
 pub struct Service {
     connection: zbus::Connection,
     players: HashMap<OwnedBusName, PlayerProxy<'static>>,
@@ -254,5 +255,3 @@ async fn listen_to_player<'a>(
         }
     }
 }
-
-azalea_service::impl_static_handler!(Service);
