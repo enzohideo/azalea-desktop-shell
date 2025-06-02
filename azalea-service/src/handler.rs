@@ -15,7 +15,7 @@ pub struct ListenerHandle(
 );
 pub struct LocalListenerHandle(
     Arc<broadcast::Sender<()>>,
-    Option<gtk::glib::JoinHandle<()>>,
+    Option<glib::JoinHandle<()>>,
 );
 
 impl ListenerHandle {

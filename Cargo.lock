@@ -294,7 +294,7 @@ version = "0.0.0"
 dependencies = [
  "azalea-log",
  "flume",
- "gtk4",
+ "glib",
  "relm4",
  "thiserror",
  "tokio",

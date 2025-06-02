@@ -10,7 +10,7 @@ path = "src/lib.rs"
 [dependencies]
 azalea-log.workspace = true
 
-gtk.workspace = true
+glib.workspace = true
 relm4.workspace = true
 flume = "0.11.1"
 tokio.workspace = true
