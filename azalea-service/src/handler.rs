@@ -109,7 +109,7 @@ where
 
             loop {
                 tokio::select! {
-                    event = service.event_generator() => {
+                    event = service.event_generator(), if !S::DISABLE_EVENTS => {
                         match service.event_handler(event, &output_sender).await {
                             Ok(_) => continue,
                             Err(e) => azalea_log::debug::<S>(&format!("Service iteration failed {e}")),

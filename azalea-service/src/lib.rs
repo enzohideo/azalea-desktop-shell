@@ -20,6 +20,7 @@ where
     type Input: Send;
     type Event: Send;
     type Output: Clone + 'static + Send;
+    const DISABLE_EVENTS: bool = false;
 
     fn new(
         init: Self::Init,
@@ -37,11 +38,15 @@ where
         output_sender: &broadcast::Sender<Self::Output>,
     ) -> impl std::future::Future<Output = ()> + Send;
 
-    fn event_generator(&mut self) -> impl std::future::Future<Output = Self::Event> + Send;
+    fn event_generator(&mut self) -> impl std::future::Future<Output = Self::Event> + Send {
+        async { azalea_log::error::<Self>("Event generator not implemented!") }
+    }
 
     fn event_handler(
         &mut self,
-        event: Self::Event,
-        output_sender: &broadcast::Sender<Self::Output>,
-    ) -> impl std::future::Future<Output = Result<(), error::Error>> + Send;
+        _event: Self::Event,
+        _output_sender: &broadcast::Sender<Self::Output>,
+    ) -> impl std::future::Future<Output = Result<(), error::Error>> + Send {
+        async { Ok(()) }
+    }
 }
