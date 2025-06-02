@@ -5,7 +5,7 @@ edition.workspace = true
 authors.workspace = true
 
 [lib]
-path = "src/lib.rs"
+path = "lib.rs"
 
 [dependencies]
 glib.workspace = true
