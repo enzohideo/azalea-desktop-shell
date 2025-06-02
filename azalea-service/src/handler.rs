@@ -320,19 +320,19 @@ where
 #[macro_export]
 macro_rules! impl_static_handler {
     ($service:ty) => {
-        impl crate::StaticHandler for $service {
-            fn static_handler() -> std::rc::Rc<std::cell::RefCell<crate::Handler<Self>>> {
+        impl $crate::StaticHandler for $service {
+            fn static_handler() -> std::rc::Rc<std::cell::RefCell<$crate::Handler<Self>>> {
                 use std::{cell::RefCell, rc::Rc, sync::OnceLock};
 
                 thread_local! {
-                    static HANDLER: OnceLock<Rc<RefCell<crate::Handler<$service>>>> = OnceLock::new();
+                    static HANDLER: OnceLock<Rc<RefCell<$crate::Handler<$service>>>> = OnceLock::new();
                 }
 
                 HANDLER.with(|handler| {
                     handler
                         .get_or_init(move || {
                             azalea_log::info!("Service initialized: {}", std::any::type_name::<$service>());
-                            Rc::new(RefCell::new(<Self as crate::Service>::handler(
+                            Rc::new(RefCell::new(<Self as $crate::Service>::handler(
                                 Default::default(),
                             )))
                         })
