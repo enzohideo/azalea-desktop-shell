@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use futures_lite::stream::StreamExt;
+use futures::{FutureExt, future::select_all, stream::StreamExt};
 use tokio::sync::{broadcast, oneshot};
 pub use zbus_names::OwnedBusName;
 
@@ -55,6 +55,7 @@ pub struct Output {
 impl crate::Service for Service {
     type Init = Init;
     type Input = Input;
+    type Event = Vec<Output>;
     type Output = Output;
 
     fn handler(init: Self::Init) -> crate::Handler<Self> {
@@ -195,18 +196,40 @@ impl crate::Service for Service {
         }
     }
 
-    async fn iteration(
+    async fn event_generator(&mut self) -> Self::Event {
+        // let mut players = tokio::task::JoinSet::new();
+        let futures = self
+            .players
+            .clone()
+            .into_iter()
+            .map(|(name, player)| listen_to_player(name, player).boxed());
+
+        let (item_resolved, _ready_future_index, _remaining_futures) = select_all(futures).await;
+
+        item_resolved
+
+        // vec![Output {
+        //     name: todo!(),
+        //     event: todo!(),
+        // }]
+        // for (name, player) in self.players.clone() {
+        //     players.spawn(listen_to_player(name, player));
+        // }
+
+        // while let Some(_) = players.join_next().await {}
+    }
+
+    async fn event_handler(
         &mut self,
+        event: Self::Event,
         output_sender: &broadcast::Sender<self::Output>,
     ) -> Result<(), error::Error> {
-        let mut players = tokio::task::JoinSet::new();
-
-        for (name, player) in self.players.clone() {
-            players.spawn(listen_to_player(name, player, output_sender.clone()));
+        for output in event {
+            match output_sender.send(output) {
+                Ok(_) => continue,
+                Err(e) => azalea_log::debug::<Self>(&format!("Failed to send output: {e}")),
+            }
         }
-
-        while let Some(_) = players.join_next().await {}
-
         Ok(())
     }
 }
@@ -214,8 +237,7 @@ impl crate::Service for Service {
 async fn listen_to_player<'a>(
     name: OwnedBusName,
     player: PlayerProxy<'a>,
-    output_sender: broadcast::Sender<Output>,
-) {
+) -> <Service as crate::Service>::Event {
     let mut volume = player.receive_volume_changed().await;
     let mut metadata = player.receive_metadata_changed().await;
     let mut playback_status = player.receive_playback_status_changed().await;
@@ -226,39 +248,41 @@ async fn listen_to_player<'a>(
             Some(prop) = volume.next() => {
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] Volume changed for object {}: {}", name, value);
-                drop(output_sender.send(Output {
+                return vec![Output {
                     name: name.clone(),
                     event: Event::Volume(value),
-                }));
+                }];
             },
             Some(prop) = metadata.next() => {
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] Metadata changed for object {}: {:#?}", name, value);
-                drop(output_sender.send(Output {
+                return vec![Output {
                     name: name.clone(),
                     event: Event::Metadata(value),
-                }));
+                }];
             },
             Some(prop) = playback_status.next() => {
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] PlaybackStatus changed for object {}: {:#?}", name, value);
-                drop(output_sender.send(Output {
-                    name: name.clone(),
-                    event: Event::PlaybackStatus(value),
-                }));
                 let Ok(position) = player.position().await else { continue; };
-                drop(output_sender.send(Output {
-                    name: name.clone(),
-                    event: Event::Position(position),
-                }));
+                return vec![
+                    Output {
+                        name: name.clone(),
+                        event: Event::PlaybackStatus(value),
+                    },
+                    Output {
+                        name: name.clone(),
+                        event: Event::Position(position),
+                    }
+                ];
             },
             Some(prop) = playback_rate.next() => {
                 let Ok(value) = prop.get().await else { continue; };
                 azalea_log::debug!("[MPRIS] PlaybackRate changed for object {}: {:#?}", name, value);
-                drop(output_sender.send(Output {
+                return vec![Output {
                     name: name.clone(),
                     event: Event::PlaybackRate(value),
-                }));
+                }];
             },
             else => continue
         }

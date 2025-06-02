@@ -33,6 +33,7 @@ pub enum Output {
 impl crate::Service for Service {
     type Init = Init;
     type Input = String;
+    type Event = ();
     type Output = Output;
 
     async fn new(
@@ -54,12 +55,15 @@ impl crate::Service for Service {
         println!("Received input {input:?}");
     }
 
-    async fn iteration(
+    async fn event_generator(&mut self) -> Self::Event {
+        tokio::time::sleep(self.interval_duration).await;
+    }
+
+    async fn event_handler(
         &mut self,
+        _event: Self::Event,
         output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> Result<(), error::Error> {
-        tokio::time::sleep(self.interval_duration).await;
-
         let time = chrono::Local::now();
 
         output_sender.send(Output::Second(time))?;

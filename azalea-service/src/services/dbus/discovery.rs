@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use futures_lite::stream::StreamExt;
+use futures::stream::StreamExt;
 use tokio::sync::broadcast;
 use zbus::fdo::DBusProxy;
 use zbus_names::OwnedBusName;
@@ -30,6 +30,7 @@ pub enum Output {
 impl crate::Service for Service {
     type Init = Option<zbus::Connection>;
     type Input = Input;
+    type Event = Output;
     type Output = Output;
 
     fn handler(init: Self::Init) -> crate::Handler<Self> {
@@ -65,23 +66,29 @@ impl crate::Service for Service {
         }
     }
 
-    async fn iteration(
-        &mut self,
-        output_sender: &broadcast::Sender<self::Output>,
-    ) -> Result<(), error::Error> {
+    async fn event_generator(&mut self) -> Self::Event {
         let mut name_stream = self.proxy.receive_name_owner_changed().await.unwrap();
 
-        while let Some(msg) = name_stream.next().await {
-            let Ok(args) = msg.args() else {
-                continue;
-            };
-            if args.new_owner().is_some() {
-                output_sender.send(Output::ObjectCreated(args.name.into()))?;
-            } else {
-                output_sender.send(Output::ObjectDeleted(args.name.into()))?;
+        loop {
+            if let Some(msg) = name_stream.next().await {
+                let Ok(args) = msg.args() else {
+                    continue;
+                };
+                if args.new_owner().is_some() {
+                    return Output::ObjectCreated(args.name.into());
+                } else {
+                    return Output::ObjectDeleted(args.name.into());
+                }
             }
         }
+    }
 
+    async fn event_handler(
+        &mut self,
+        event: Self::Event,
+        output_sender: &broadcast::Sender<self::Output>,
+    ) -> Result<(), error::Error> {
+        output_sender.send(event)?;
         Ok(())
     }
 }

@@ -109,7 +109,12 @@ where
 
             loop {
                 tokio::select! {
-                    _ = service.iteration(&output_sender) => (),
+                    event = service.event_generator() => {
+                        match service.event_handler(event, &output_sender).await {
+                            Ok(_) => continue,
+                            Err(e) => azalea_log::debug::<S>(&format!("Service iteration failed {e}")),
+                        }
+                    },
                     Ok(msg) = input.recv_async() => service.message(msg, &output_sender).await,
                     _ = cancellation_receiver.recv() => break,
                     else => continue,
