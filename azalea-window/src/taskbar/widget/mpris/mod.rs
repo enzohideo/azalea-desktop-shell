@@ -189,8 +189,8 @@ impl Component for Model {
         let cmd_sender = sender.command_sender().clone();
         sender.oneshot_command(async move {
             loop {
-                tokio::time::sleep(tokio::time::Duration::from_millis(1500)).await;
-                drop(cmd_sender.send(CommandOutput::PositionDelta(1500000.)));
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                drop(cmd_sender.send(CommandOutput::PositionDelta(1e6)));
             }
         });
 
