@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use futures::stream::StreamExt;
 use tokio::sync::broadcast;
-use zbus::fdo::DBusProxy;
+use zbus::fdo::{DBusProxy, NameOwnerChangedStream};
 use zbus_names::OwnedBusName;
 
 use crate::error;
@@ -10,9 +10,8 @@ use crate::error;
 /// DBus Discovery Service
 ///
 /// Listens for newly created or destroyed DBus objects
-#[derive(Clone)]
 pub struct Service {
-    proxy: DBusProxy<'static>,
+    stream: NameOwnerChangedStream,
     objects: HashSet<OwnedBusName>,
 }
 
@@ -50,7 +49,9 @@ impl crate::Service for Service {
             objects.insert(name);
         }
 
-        Self { proxy, objects }
+        let stream = proxy.receive_name_owner_changed().await.unwrap();
+
+        Self { stream, objects }
     }
 
     async fn message(
@@ -67,10 +68,8 @@ impl crate::Service for Service {
     }
 
     async fn event_generator(&mut self) -> Self::Event {
-        let mut name_stream = self.proxy.receive_name_owner_changed().await.unwrap();
-
         loop {
-            if let Some(msg) = name_stream.next().await {
+            if let Some(msg) = self.stream.next().await {
                 let Ok(args) = msg.args() else {
                     continue;
                 };
