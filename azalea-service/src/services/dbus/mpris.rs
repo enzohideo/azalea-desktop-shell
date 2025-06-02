@@ -7,7 +7,6 @@ pub use zbus_names::OwnedBusName;
 use crate::{
     ListenerHandle, StaticHandler,
     dbus::mpris::media_player2::{Metadata, PlaybackRate, PlaybackStatus, PlayerProxy},
-    error,
 };
 
 pub struct Service {
@@ -57,6 +56,7 @@ impl crate::Service for Service {
     type Input = Input;
     type Event = ();
     type Output = Output;
+    const DISABLE_EVENTS: bool = true;
 
     fn handler(init: Self::Init) -> crate::Handler<Self> {
         crate::Handler::new(init, 8, 8)
@@ -199,19 +199,6 @@ impl crate::Service for Service {
                 }
             }
         }
-    }
-
-    async fn event_generator(&mut self) -> Self::Event {
-        // TODO: Remove this... (move to trait) or do discovery here?
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    }
-
-    async fn event_handler(
-        &mut self,
-        _event: Self::Event,
-        _output_sender: &broadcast::Sender<self::Output>,
-    ) -> Result<(), error::Error> {
-        Ok(())
     }
 }
 
