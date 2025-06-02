@@ -5,7 +5,7 @@ use azalea::{
         app::{self},
         config,
     },
-    window::{self, window::taskbar},
+    shell::{self, icon, window::taskbar},
 };
 use azalea_core::config::Config;
 use relm4::{Component, ComponentController};
@@ -35,7 +35,7 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
             ConfigWrapper::Taskbar(config) => {
                 let builder = taskbar::Model::builder();
                 let controller = builder
-                    .launch(window::window::Init::<taskbar::Model> {
+                    .launch(shell::window::Init::<taskbar::Model> {
                         config: config.clone(),
                     })
                     .detach();
@@ -53,7 +53,7 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
 }
 
 fn main() {
-    azalea_window::icon::init();
+    icon::init();
 
     relm4::view!(
         mut windows = HashMap::new() {

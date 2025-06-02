@@ -4,8 +4,8 @@ pub mod core {
 pub mod log {
     pub use azalea_log::*;
 }
-pub mod window {
-    pub use azalea_window::*;
+pub mod shell {
+    pub use azalea_shell::*;
 }
 pub mod service {
     pub use azalea_service::*;

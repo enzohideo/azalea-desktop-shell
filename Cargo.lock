@@ -245,7 +245,7 @@ dependencies = [
  "azalea-core",
  "azalea-log",
  "azalea-service",
- "azalea-window",
+ "azalea-shell",
  "clap",
  "gtk4",
  "gtk4-layer-shell",
@@ -301,7 +301,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "azalea-window"
+name = "azalea-shell"
 version = "0.0.0"
 dependencies = [
  "azalea-derive",

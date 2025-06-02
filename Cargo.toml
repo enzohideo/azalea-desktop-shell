@@ -14,7 +14,7 @@ name = "azalea"
 azalea-core = { path = "azalea-core" }
 azalea-derive = { path = "azalea-derive" }
 azalea-log = { path = "azalea-log" }
-azalea-window = { path = "azalea-window" }
+azalea-shell = { path = "azalea-shell" }
 azalea-service = { path = "azalea-service" }
 
 clap = { version = "4.5.32", features = [ "derive" ] }

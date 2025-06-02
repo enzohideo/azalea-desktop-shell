@@ -15,8 +15,8 @@ path = "src/main.rs"
 [dependencies]
 azalea-core.workspace = true
 azalea-log.workspace = true
-azalea-window.workspace = true
 azalea-service.workspace = true
+azalea-shell.workspace = true
 
 clap.workspace = true
 serde.workspace = true
