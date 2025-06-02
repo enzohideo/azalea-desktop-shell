@@ -14,7 +14,7 @@ macro_rules! register_widgets {
         #[allow(dead_code)]
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub enum Kind {
-            $($window(<$model as crate::InitExt>::Config)),+
+            $($window(<$model as crate::window::InitExt>::Config)),+
         }
 
         #[allow(dead_code)]
@@ -24,7 +24,7 @@ macro_rules! register_widgets {
                     let builder = <$model>::builder();
                     let widget = builder.root.clone();
                     let wrapper = WidgetWrapper::$window(
-                        builder.launch($crate::Init::new(config))
+                        builder.launch($crate::window::Init::new(config))
                     );
                     (wrapper, gtk::glib::object::Cast::upcast::<gtk::Widget>(widget))
                 },)+
