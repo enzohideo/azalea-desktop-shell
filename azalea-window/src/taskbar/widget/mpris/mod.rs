@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use azalea_service::{
-    LocalListenerHandle, StaticHandler,
-    dbus::mpris::media_player2::{PlaybackRate, PlaybackStatus},
-    services::{
-        self,
-        dbus::mpris::{self, OwnedBusName},
+use crate::services::{
+    self,
+    dbus::mpris::{
+        self, OwnedBusName,
+        proxy::{PlaybackRate, PlaybackStatus},
     },
 };
+use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::{
     glib::object::Cast,
     prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt},

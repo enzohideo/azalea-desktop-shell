@@ -10,19 +10,9 @@ path = "src/lib.rs"
 [dependencies]
 azalea-log.workspace = true
 
-clap.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-chrono.workspace = true
-zbus.workspace = true
-zbus_names.workspace = true
-
 gtk.workspace = true
-gtk4-layer-shell.workspace = true
 relm4.workspace = true
-
 flume = "0.11.1"
 tokio.workspace = true
-futures-lite.workspace = true
 
 thiserror.workspace = true

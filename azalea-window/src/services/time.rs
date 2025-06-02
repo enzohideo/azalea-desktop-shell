@@ -1,7 +1,7 @@
 use chrono::Timelike;
 use tokio::sync::broadcast;
 
-use crate::error;
+use azalea_service::error;
 
 #[derive(Default)]
 pub struct Service {
@@ -30,7 +30,7 @@ pub enum Output {
     Hour(chrono::DateTime<chrono::Local>),
 }
 
-impl crate::Service for Service {
+impl azalea_service::Service for Service {
     type Init = Init;
     type Input = String;
     type Event = ();
@@ -87,4 +87,4 @@ impl crate::Service for Service {
     }
 }
 
-crate::impl_static_handler!(Service);
+azalea_service::impl_static_handler!(Service);

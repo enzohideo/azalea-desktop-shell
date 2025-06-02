@@ -5,7 +5,7 @@ use tokio::sync::broadcast;
 use zbus::fdo::{DBusProxy, NameOwnerChangedStream};
 use zbus_names::OwnedBusName;
 
-use crate::error;
+use azalea_service::error;
 
 /// DBus Discovery Service
 ///
@@ -26,14 +26,14 @@ pub enum Output {
     ObjectDeleted(OwnedBusName),
 }
 
-impl crate::Service for Service {
+impl azalea_service::Service for Service {
     type Init = Option<zbus::Connection>;
     type Input = Input;
     type Event = Output;
     type Output = Output;
 
-    fn handler(init: Self::Init) -> crate::Handler<Self> {
-        crate::Handler::new(init, 1, 8)
+    fn handler(init: Self::Init) -> azalea_service::Handler<Self> {
+        azalea_service::Handler::new(init, 1, 8)
     }
 
     async fn new(
@@ -92,4 +92,4 @@ impl crate::Service for Service {
     }
 }
 
-crate::impl_static_handler!(Service);
+azalea_service::impl_static_handler!(Service);

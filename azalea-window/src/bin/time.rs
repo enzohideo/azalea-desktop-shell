@@ -1,4 +1,5 @@
-use azalea_service::{StaticHandler, services};
+use azalea_service::StaticHandler;
+use azalea_window::services;
 
 #[tokio::main]
 async fn main() {

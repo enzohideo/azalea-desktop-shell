@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
+use azalea_service::{ListenerHandle, StaticHandler};
 use futures_lite::stream::StreamExt;
 use tokio::sync::{broadcast, oneshot};
 pub use zbus_names::OwnedBusName;
 
-use crate::{
-    ListenerHandle, StaticHandler,
-    dbus::mpris::media_player2::{Metadata, PlaybackRate, PlaybackStatus, PlayerProxy},
-};
+pub mod proxy;
+use proxy::{Metadata, PlaybackRate, PlaybackStatus, PlayerProxy};
 
 pub struct Service {
     connection: zbus::Connection,
@@ -51,15 +50,15 @@ pub struct Output {
     pub event: Event,
 }
 
-impl crate::Service for Service {
+impl azalea_service::Service for Service {
     type Init = Init;
     type Input = Input;
     type Event = ();
     type Output = Output;
     const DISABLE_EVENTS: bool = true;
 
-    fn handler(init: Self::Init) -> crate::Handler<Self> {
-        crate::Handler::new(init, 8, 8)
+    fn handler(init: Self::Init) -> azalea_service::Handler<Self> {
+        azalea_service::Handler::new(init, 8, 8)
     }
 
     async fn new(
@@ -205,8 +204,8 @@ impl crate::Service for Service {
 async fn listen_to_player<'a>(
     name: OwnedBusName,
     player: PlayerProxy<'a>,
-    output_sender: &broadcast::Sender<<Service as crate::Service>::Output>,
-) -> <Service as crate::Service>::Event {
+    output_sender: &broadcast::Sender<<Service as azalea_service::Service>::Output>,
+) -> <Service as azalea_service::Service>::Event {
     let mut volume = player.receive_volume_changed().await;
     let mut metadata = player.receive_metadata_changed().await;
     let mut playback_status = player.receive_playback_status_changed().await;
@@ -256,4 +255,4 @@ async fn listen_to_player<'a>(
     }
 }
 
-crate::impl_static_handler!(Service);
+azalea_service::impl_static_handler!(Service);
