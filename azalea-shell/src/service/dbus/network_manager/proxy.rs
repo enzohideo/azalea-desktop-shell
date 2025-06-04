@@ -23,10 +23,6 @@ pub trait NetworkManager {
 
     #[zbus(signal)]
     fn properties_changed(&self, properties: HashMap<String, OwnedValue>) -> zbus::Result<()>;
-
-    // TODO: Check if this is necessary (or if state sends the default propertychanged signal)
-    // #[zbus(signal)]
-    // fn state_changed(&self, state: NMState) -> zbus::Result<()>;
 }
 
 /// NMState values indicate the current overall networking state.

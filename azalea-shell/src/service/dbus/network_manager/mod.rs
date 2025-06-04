@@ -15,6 +15,7 @@ pub struct Service {
 
 pub struct Streams {
     state: PropertyStream<'static, NMState>,
+    connectivity: PropertyStream<'static, NMConnectivityState>,
 }
 
 #[derive(Default, Clone)]
@@ -25,6 +26,7 @@ pub struct Init {
 #[derive(Debug)]
 pub enum Event {
     State(NMState),
+    Connectivity(NMConnectivityState),
 }
 
 #[derive(Clone, Debug)]
@@ -49,14 +51,12 @@ impl azalea_service::Service for Service {
             .unwrap_or(zbus::Connection::system().await.unwrap());
         let proxy = NetworkManagerProxy::new(&connection).await.unwrap();
 
-        let listener = proxy.receive_state_changed();
-        let state_stream = listener.await;
-
         Self {
-            proxy,
             streams: Streams {
-                state: state_stream,
+                state: proxy.receive_state_changed().await,
+                connectivity: proxy.receive_connectivity_changed().await,
             },
+            proxy,
         }
     }
 
@@ -70,11 +70,21 @@ impl azalea_service::Service for Service {
 
     async fn event_generator(&mut self) -> Self::Event {
         loop {
-            let prop = self.streams.state.next().await.unwrap();
-            let Ok(state) = prop.get().await else {
-                continue;
-            };
-            return Event::State(state);
+            tokio::select! {
+                Some(prop) = self.streams.state.next() => {
+                    let Ok(value) = prop.get().await else {
+                        continue;
+                    };
+                    return Event::State(value);
+                },
+                Some(prop) = self.streams.connectivity.next() => {
+                    let Ok(value) = prop.get().await else {
+                        continue;
+                    };
+                    return Event::Connectivity(value);
+                },
+                else => continue,
+            }
         }
     }
 
