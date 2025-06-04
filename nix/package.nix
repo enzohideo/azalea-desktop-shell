@@ -4,6 +4,8 @@
   rustPlatform,
   pkg-config,
   wrapGAppsHook4,
+  gnome,
+  librsvg,
   gtk4,
   gtk4-layer-shell,
   openssl,
@@ -65,6 +67,17 @@ craneLib.buildPackage (
     pname = "azalea";
     cargoExtraArgs = "-p azalea";
     src = fileSetForCrate ../azalea;
+
+    postInstall = ''
+      export GDK_PIXBUF_MODULE_FILE="${
+        gnome._gdkPixbufCacheBuilder_DO_NOT_USE {
+          extraLoaders = [
+            librsvg
+          ];
+        }
+      }";
+    '';
+
     meta = with lib; {
       mainProgram = pname;
       maintainers = with maintainers; [ enzohideo ];
