@@ -14,7 +14,7 @@ macro_rules! register_widgets {
         #[allow(dead_code)]
         #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
         pub enum ConfigWrapper {
-            $($window(<$model as crate::window::InitExt>::Config)),+
+            $($window(<$model as crate::window::ModelExt>::Config)),+
         }
 
         #[allow(dead_code)]

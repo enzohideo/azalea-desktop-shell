@@ -3,21 +3,21 @@ pub mod taskbar;
 #[derive(Debug, Clone)]
 pub struct Init<Model>
 where
-    Model: InitExt,
+    Model: ModelExt,
 {
     pub config: Model::Config,
 }
 
 impl<Model> Init<Model>
 where
-    Model: InitExt,
+    Model: ModelExt,
 {
     fn new(config: Model::Config) -> Self {
         Self { config }
     }
 }
 
-pub trait InitExt {
+pub trait ModelExt {
     type Config;
 }
 
@@ -43,7 +43,7 @@ macro_rules! init {
             )*
         }
 
-        impl $crate::window::InitExt for Model {
+        impl $crate::window::ModelExt for Model {
             type Config = Config;
         }
 
