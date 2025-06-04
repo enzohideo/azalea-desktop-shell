@@ -30,9 +30,11 @@ where
 
     fn message(
         &mut self,
-        input: Self::Input,
-        output_sender: &broadcast::Sender<Self::Output>,
-    ) -> impl std::future::Future<Output = ()> + Send;
+        _input: Self::Input,
+        _output_sender: &broadcast::Sender<Self::Output>,
+    ) -> impl std::future::Future<Output = ()> + Send {
+        async {}
+    }
 
     fn event_generator(&mut self) -> impl std::future::Future<Output = Self::Event> + Send {
         async { azalea_log::error::<Self>("Event generator not implemented!") }
