@@ -186,9 +186,8 @@ where
                                     .loop_accept(async |mut stream: UnixStreamWrapper| {
                                         match stream.read().await {
                                             Ok(cmd) => {
-                                                state.borrow_mut().handle_command(cmd, &app);
-                                                // TODO: Allow commands with custom responses
-                                                let answer = cli::Response::Success(format!("Ok"));
+                                                let answer =
+                                                    state.borrow_mut().handle_command(cmd, &app);
                                                 drop(stream.write(answer).await);
                                                 return true;
                                             }
@@ -246,16 +245,16 @@ where
         }
     }
 
-    fn handle_command(&mut self, cmd: Command, app: &gtk::Application) {
+    fn handle_command(&mut self, cmd: Command, app: &gtk::Application) -> cli::Response {
         match cmd {
             Command::Daemon(cli::daemon::Command::Start { config: _ }) => {
-                log::warning!("There's already an instance running")
+                return cli::Response::Error(format!("There's already an instance running."));
             }
             Command::Daemon(cli::daemon::Command::Stop) => app.quit(),
             Command::Window(cli::window::Command::Create(arg)) => self.create_window(&arg.id, app),
             Command::Window(cli::window::Command::Toggle(arg)) => {
                 let Some(wrapper) = self.windows.get(&arg.id) else {
-                    return;
+                    return cli::Response::Error(format!("Window with id {} not found", arg.id));
                 };
                 let window = WM::unwrap_window(wrapper);
                 window.set_visible(!window.get_visible());
@@ -267,10 +266,10 @@ where
                 .filter(|win| arg.cmp(win))
                 .for_each(|win| win.set_visible(!win.get_visible())),
             Command::Config(cli::config::Command::View { json }) => {
-                // TODO: Send as response to remote instance
-                println!("{}", self.config_to_string(json))
+                return cli::Response::Success(self.config_to_string(json));
             }
         }
+        cli::Response::Success(format!("Ok"))
     }
 
     fn create_window(&mut self, id: &config::window::Id, app: &gtk::Application) {
