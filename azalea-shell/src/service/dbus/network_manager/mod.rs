@@ -23,12 +23,6 @@ pub struct Init {
     pub dbus_connection: Option<zbus::Connection>,
 }
 
-#[derive(Debug)]
-pub enum Event {
-    State(NMState),
-    Connectivity(NMConnectivityState),
-}
-
 #[derive(Clone, Debug)]
 pub enum Output {
     StateChanged(NMState),
@@ -38,7 +32,7 @@ pub enum Output {
 impl azalea_service::Service for Service {
     type Init = Init;
     type Input = ();
-    type Event = Event;
+    type Event = Output;
     type Output = Output;
 
     async fn new(
@@ -80,13 +74,13 @@ impl azalea_service::Service for Service {
                     let Ok(value) = prop.get().await else {
                         continue;
                     };
-                    return Event::State(value);
+                    return Output::StateChanged(value);
                 },
                 Some(prop) = self.streams.connectivity.next() => {
                     let Ok(value) = prop.get().await else {
                         continue;
                     };
-                    return Event::Connectivity(value);
+                    return Output::ConnectivityChanged(value);
                 },
                 else => continue,
             }
@@ -96,9 +90,9 @@ impl azalea_service::Service for Service {
     async fn event_handler(
         &mut self,
         event: Self::Event,
-        _output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
+        output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> Result<(), error::Error> {
-        println!("{:?}", event);
+        output_sender.send(event)?;
         Ok(())
     }
 }
