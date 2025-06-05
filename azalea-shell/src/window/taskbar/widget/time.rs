@@ -1,5 +1,4 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
-use gtk::prelude::BoxExt;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
 use crate::service;
@@ -31,13 +30,9 @@ impl Component for Model {
     type CommandOutput = Message;
 
     view! {
-        gtk::Box{
-            set_spacing: 12,
-
-            gtk::Label {
-                #[watch]
-                set_label: &format!("{}", model.time.format(&model.format))
-            },
+        gtk::Label {
+            #[watch]
+            set_label: &format!("{}", model.time.format(&model.format))
         },
     }
 
