@@ -44,7 +44,9 @@ where
         &mut self,
         _event: Self::Event,
         _output_sender: &broadcast::Sender<Self::Output>,
-    ) -> impl std::future::Future<Output = Result<(), error::Error>> + Send {
+    ) -> impl std::future::Future<Output = anyhow::Result<()>> + Send {
         async { Ok(()) }
     }
 }
+
+pub use anyhow::Result;

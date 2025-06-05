@@ -5,8 +5,6 @@ use tokio::sync::broadcast;
 use zbus::fdo::{DBusProxy, NameOwnerChangedStream};
 use zbus_names::OwnedBusName;
 
-use azalea_service::error;
-
 /// DBus Discovery Service
 ///
 /// Listens for newly created or destroyed DBus objects
@@ -87,7 +85,7 @@ impl azalea_service::Service for Service {
         &mut self,
         event: Self::Event,
         output_sender: &broadcast::Sender<self::Output>,
-    ) -> Result<(), error::Error> {
+    ) -> azalea_service::Result<()> {
         output_sender.send(event)?;
         Ok(())
     }

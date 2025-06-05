@@ -4,8 +4,7 @@ use futures_lite::StreamExt;
 use proxy::{NMConnectivityState, NMState, NetworkManagerProxy};
 use tokio::sync::broadcast;
 
-use azalea_service::error;
-use zbus::proxy::PropertyStream;
+use zbus::proxy::{PropertyChanged, PropertyStream};
 
 #[derive(azalea_derive::StaticHandler)]
 pub struct Service {
@@ -91,7 +90,7 @@ impl azalea_service::Service for Service {
         &mut self,
         event: Self::Event,
         output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
-    ) -> Result<(), error::Error> {
+    ) -> azalea_service::Result<()> {
         output_sender.send(event)?;
         Ok(())
     }

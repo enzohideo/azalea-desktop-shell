@@ -1,8 +1,6 @@
 use chrono::Timelike;
 use tokio::sync::broadcast;
 
-use azalea_service::error;
-
 #[derive(Default, azalea_derive::StaticHandler)]
 pub struct Service {
     minute: u32,
@@ -63,7 +61,7 @@ impl azalea_service::Service for Service {
         &mut self,
         _event: Self::Event,
         output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
-    ) -> Result<(), error::Error> {
+    ) -> azalea_service::Result<()> {
         let time = chrono::Local::now();
 
         output_sender.send(Output::Second(time))?;

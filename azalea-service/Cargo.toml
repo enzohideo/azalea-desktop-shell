@@ -16,3 +16,4 @@ flume = "0.11.1"
 tokio.workspace = true
 
 thiserror.workspace = true
+anyhow.workspace = true
