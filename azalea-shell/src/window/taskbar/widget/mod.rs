@@ -1,4 +1,5 @@
 pub mod media;
+pub mod network;
 pub mod time;
 
 macro_rules! register_widgets {
@@ -36,4 +37,5 @@ macro_rules! register_widgets {
 register_widgets!(
     Time, time::Model;
     Media, media::Model;
+    Network, network::Model;
 );

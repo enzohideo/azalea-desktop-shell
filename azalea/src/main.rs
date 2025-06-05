@@ -67,6 +67,7 @@ fn main() {
                             Media(media::Config {})
                         ],
                         end: vec![
+                            Network(network::Config {}),
                             Time(time::Config {
                                 format: format!("%d/%m/%y")
                             }),

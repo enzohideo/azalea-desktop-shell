@@ -47,7 +47,7 @@ impl azalea_service::Service for Service {
 
     async fn new(
         init: Self::Init,
-        input: flume::Sender<Self::Input>,
+        _input: flume::Sender<Self::Input>,
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
         let connection = init
