@@ -64,7 +64,7 @@ fn main() {
                     Config {
                         start: vec![],
                         center: vec![
-                            Mpris(taskbar::widget::mpris::Config {})
+                            Media(taskbar::widget::media::Config {})
                         ],
                         end: vec![
                             Time(taskbar::widget::time::Config {
