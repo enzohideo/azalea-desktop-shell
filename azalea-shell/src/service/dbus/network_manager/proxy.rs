@@ -27,6 +27,7 @@ pub trait NetworkManager {
 
 /// NMState values indicate the current overall networking state.
 #[derive(
+    Default,
     Clone,
     Debug,
     serde_repr::Serialize_repr,
@@ -37,6 +38,7 @@ pub trait NetworkManager {
 #[repr(u32)]
 #[zvariant(signature = "u")]
 pub enum NMState {
+    #[default]
     /// Networking state is unknown
     NMStateUnknown = 0,
 
@@ -63,10 +65,13 @@ pub enum NMState {
 }
 
 /// NMState values indicate the current overall networking state.
-#[derive(Clone, Debug, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, OwnedValue)]
+#[derive(
+    Default, Clone, Debug, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, OwnedValue,
+)]
 #[repr(u32)]
 #[zvariant(signature = "u")]
 pub enum NMConnectivityState {
+    #[default]
     /// Network connectivity is unknown.
     NMConnectivityUnknown = 1,
 
