@@ -8,6 +8,7 @@ use zbus::proxy::{PropertyChanged, PropertyStream};
 
 #[derive(azalea_derive::StaticHandler)]
 pub struct Service {
+    #[allow(dead_code)]
     proxy: NetworkManagerProxy<'static>,
     streams: Streams,
 }
@@ -22,6 +23,11 @@ pub struct Init {
     pub dbus_connection: Option<zbus::Connection>,
 }
 
+pub enum Event {
+    StateChanged(PropertyChanged<'static, NMState>),
+    ConnectivityChanged(PropertyChanged<'static, NMConnectivityState>),
+}
+
 #[derive(Clone, Debug)]
 pub enum Output {
     StateChanged(NMState),
@@ -31,7 +37,7 @@ pub enum Output {
 impl azalea_service::Service for Service {
     type Init = Init;
     type Input = ();
-    type Event = Output;
+    type Event = Event;
     type Output = Output;
 
     async fn new(
@@ -69,18 +75,10 @@ impl azalea_service::Service for Service {
     async fn event_generator(&mut self) -> Self::Event {
         loop {
             tokio::select! {
-                Some(prop) = self.streams.state.next() => {
-                    let Ok(value) = prop.get().await else {
-                        continue;
-                    };
-                    return Output::StateChanged(value);
-                },
-                Some(prop) = self.streams.connectivity.next() => {
-                    let Ok(value) = prop.get().await else {
-                        continue;
-                    };
-                    return Output::ConnectivityChanged(value);
-                },
+                Some(prop) = self.streams.state.next() =>
+                    return Event::StateChanged(prop),
+                Some(prop) = self.streams.connectivity.next() =>
+                    return Event::ConnectivityChanged(prop),
                 else => continue,
             }
         }
@@ -91,7 +89,11 @@ impl azalea_service::Service for Service {
         event: Self::Event,
         output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> azalea_service::Result<()> {
-        output_sender.send(event)?;
+        let output = match event {
+            Event::StateChanged(prop) => Output::StateChanged(prop.get().await?),
+            Event::ConnectivityChanged(prop) => Output::ConnectivityChanged(prop.get().await?),
+        };
+        output_sender.send(output)?;
         Ok(())
     }
 }
