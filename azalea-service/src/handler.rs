@@ -102,7 +102,7 @@ where
 
         relm4::spawn(async move {
             let mut service = S::new(init, input_sender, output_sender.clone()).await;
-            log::info!("Service started: {}", std::any::type_name::<S>());
+            log::info::<S>("Service started");
 
             loop {
                 tokio::select! {
@@ -122,10 +122,8 @@ where
                 *status = Some(input);
             };
 
-            log::info!("Service stopped: {}", std::any::type_name::<S>());
+            log::info::<S>("Service stopped");
         });
-
-        log::info!("Service starting: {}", std::any::type_name::<S>());
     }
 
     pub fn stop(&mut self) {
@@ -328,7 +326,7 @@ macro_rules! impl_static_handler {
                 HANDLER.with(|handler| {
                     handler
                         .get_or_init(move || {
-                            azalea_log::info!("Service initialized: {}", std::any::type_name::<$service>());
+                            azalea_log::debug::<$service>("Service initialized");
                             Rc::new(RefCell::new(<Self as $crate::Service>::handler(
                                 Default::default(),
                             )))
