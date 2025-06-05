@@ -23,6 +23,11 @@ pub struct Init {
     pub dbus_connection: Option<zbus::Connection>,
 }
 
+#[derive(Clone, Debug)]
+pub enum Input {
+    Update,
+}
+
 pub enum Event {
     StateChanged(PropertyChanged<'static, NMState>),
     ConnectivityChanged(PropertyChanged<'static, NMConnectivityState>),
@@ -36,13 +41,13 @@ pub enum Output {
 
 impl azalea_service::Service for Service {
     type Init = Init;
-    type Input = ();
+    type Input = Input;
     type Event = Event;
     type Output = Output;
 
     async fn new(
         init: Self::Init,
-        _: flume::Sender<Self::Input>,
+        input: flume::Sender<Self::Input>,
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
         let connection = init
@@ -67,9 +72,16 @@ impl azalea_service::Service for Service {
     async fn message(
         &mut self,
         input: Self::Input,
-        _output_sender: &broadcast::Sender<Self::Output>,
+        output_sender: &broadcast::Sender<Self::Output>,
     ) {
-        println!("Received input {input:?}");
+        match input {
+            Input::Update => {
+                drop(output_sender.send(Output::StateChanged(self.proxy.state().await.unwrap())));
+                drop(output_sender.send(Output::ConnectivityChanged(
+                    self.proxy.connectivity().await.unwrap(),
+                )));
+            }
+        }
     }
 
     async fn event_generator(&mut self) -> Self::Event {

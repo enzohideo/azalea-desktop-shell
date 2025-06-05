@@ -59,18 +59,18 @@ fn main() {
         mut windows = HashMap::new() {
             insert: (format!("bottom-taskbar"), config::window::Config {
                 config: ConfigWrapper::Taskbar({
-                    use taskbar::{Config, widget::ConfigWrapper::*};
+                    use taskbar::{Config, widget::{media, network, time, ConfigWrapper::*}};
 
                     Config {
                         start: vec![],
                         center: vec![
-                            Media(taskbar::widget::media::Config {})
+                            Media(media::Config {})
                         ],
                         end: vec![
-                            Time(taskbar::widget::time::Config {
+                            Time(time::Config {
                                 format: format!("%d/%m/%y")
                             }),
-                            Time(taskbar::widget::time::Config {
+                            Time(time::Config {
                                 format: format!("%H:%M:%S")
                             })
                         ],
