@@ -122,21 +122,7 @@ where
                 }
             }
             Command::Config(cli::config::Command::View { json }) => {
-                println!(
-                    "{}",
-                    if json {
-                        serde_json::to_string_pretty(&self.config).unwrap()
-                    } else {
-                        use ron::extensions::Extensions;
-                        ron::ser::to_string_pretty(
-                            &self.config,
-                            ron::ser::PrettyConfig::default().extensions(
-                                Extensions::IMPLICIT_SOME | Extensions::UNWRAP_VARIANT_NEWTYPES,
-                            ),
-                        )
-                        .unwrap()
-                    },
-                );
+                println!("{}", self.config_to_string(json));
                 return;
             }
             _ => {
@@ -280,7 +266,10 @@ where
                 .map(|win| WM::unwrap_window(win))
                 .filter(|win| arg.cmp(win))
                 .for_each(|win| win.set_visible(!win.get_visible())),
-            Command::Config(cli::config::Command::View { json: _ }) => todo!(),
+            Command::Config(cli::config::Command::View { json }) => {
+                // TODO: Send as response to remote instance
+                println!("{}", self.config_to_string(json))
+            }
         }
     }
 
@@ -316,6 +305,20 @@ where
         window.present();
 
         self.windows.insert(id.clone(), wrapped_window);
+    }
+
+    fn config_to_string(&self, json: bool) -> String {
+        if json {
+            serde_json::to_string_pretty(&self.config).unwrap()
+        } else {
+            use ron::extensions::Extensions;
+            ron::ser::to_string_pretty(
+                &self.config,
+                ron::ser::PrettyConfig::default()
+                    .extensions(Extensions::IMPLICIT_SOME | Extensions::UNWRAP_VARIANT_NEWTYPES),
+            )
+            .unwrap()
+        }
     }
 }
 
