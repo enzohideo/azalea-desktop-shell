@@ -211,6 +211,7 @@ async fn listen_to_player<'a>(
     let mut metadata = player.receive_metadata_changed().await;
     let mut playback_status = player.receive_playback_status_changed().await;
     let mut playback_rate = player.receive_rate_changed().await;
+    let mut seeked = player.receive_seeked().await.unwrap();
 
     loop {
         tokio::select! {
@@ -249,6 +250,14 @@ async fn listen_to_player<'a>(
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::PlaybackRate(value),
+                }));
+            },
+            Some(prop) = seeked.next() => {
+                let Ok(value) = prop.args() else { continue; };
+                azalea_log::debug!("[MPRIS] Seeked position for object {}: {:#?}", name, value.position);
+                drop(output_sender.send(Output {
+                    name: name.clone(),
+                    event: Event::Position(value.position),
                 }));
             },
             else => continue
