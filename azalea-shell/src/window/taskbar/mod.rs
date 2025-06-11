@@ -10,6 +10,7 @@ crate::init! {
     }
 
     Config {
+        spacing: i32,
         start: Vec<widget::ConfigWrapper>,
         center: Vec<widget::ConfigWrapper>,
         end: Vec<widget::ConfigWrapper>,
@@ -59,18 +60,21 @@ impl SimpleComponent for Model {
             let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.start_widget.append(&widget);
+            widgets.start_widget.set_spacing(init.config.spacing);
         }
 
         for widget_kind in init.config.center {
             let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
-            widgets.center_widget.append(&widget)
+            widgets.center_widget.append(&widget);
+            widgets.center_widget.set_spacing(init.config.spacing);
         }
 
         for widget_kind in init.config.end {
             let (wrapper, widget) = build_widget(widget_kind);
             model.widgets.push(wrapper);
             widgets.end_widget.append(&widget);
+            widgets.end_widget.set_spacing(init.config.spacing);
         }
 
         ComponentParts { model, widgets }

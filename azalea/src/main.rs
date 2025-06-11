@@ -62,10 +62,14 @@ fn main() {
                     use taskbar::{Config, widget::{media, network, time, ConfigWrapper::*}};
 
                     Config {
+                        spacing: 8,
+
                         start: vec![],
+
                         center: vec![
                             Media(media::Config {})
                         ],
+
                         end: vec![
                             Network(network::Config {}),
                             Time(time::Config {
