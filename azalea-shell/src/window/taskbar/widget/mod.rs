@@ -1,3 +1,4 @@
+pub mod bluetooth;
 pub mod media;
 pub mod network;
 pub mod time;
@@ -35,7 +36,8 @@ macro_rules! register_widgets {
 }
 
 register_widgets!(
-    Time, time::Model;
+    Bluetooth, bluetooth::Model;
     Media, media::Model;
     Network, network::Model;
+    Time, time::Model;
 );
