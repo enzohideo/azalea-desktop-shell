@@ -1,39 +1,16 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
+use futures_lite::StreamExt;
 use tokio::sync::broadcast;
-
-use zbus::fdo::ObjectManagerProxy;
 
 #[derive(azalea_derive::StaticHandler)]
 pub struct Service {
-    interface: BluetoothInterface,
+    session: bluer::Session,
 }
 
-pub struct BluetoothInterface {
-    selected: String,
-    interfaces: HashSet<String>,
-}
-
-impl BluetoothInterface {
-    async fn new<'a>(proxy: &ObjectManagerProxy<'a>) -> Self {
-        let interfaces = HashSet::<String>::from_iter(
-            proxy
-                .get_managed_objects()
-                .await
-                .unwrap()
-                .keys()
-                .flat_map(|p| p.split("/").nth(3).map(|s| s.to_owned())),
-        );
-
-        Self {
-            selected: interfaces
-                .iter()
-                .nth(0)
-                .map(|v| v.to_owned())
-                .unwrap_or(format!("hci0")),
-            interfaces,
-        }
-    }
+#[derive(Default, Debug)]
+pub struct Device {
+    name: Option<String>,
 }
 
 #[derive(Default, Clone)]
@@ -41,8 +18,13 @@ pub struct Init {
     pub dbus_connection: Option<zbus::Connection>,
 }
 
+pub type AdapterName = String;
+
 #[derive(Clone, Debug)]
-pub enum Input {}
+pub enum Input {
+    Adapters(flume::Sender<Vec<AdapterName>>),
+    Devices(flume::Sender<HashMap<String, HashMap<String, Device>>>),
+}
 
 pub enum Event {}
 
@@ -54,37 +36,88 @@ impl azalea_service::Service for Service {
     type Input = Input;
     type Event = ();
     type Output = Output;
+    const DISABLE_EVENTS: bool = true;
 
     async fn new(
-        init: Self::Init,
+        _init: Self::Init,
         _input: flume::Sender<Self::Input>,
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
-        let connection = init
-            .dbus_connection
-            .unwrap_or(zbus::Connection::system().await.unwrap());
-        let proxy = zbus::fdo::ObjectManagerProxy::new(&connection, "org.bluez", "/")
-            .await
-            .unwrap();
+        let session = bluer::Session::new().await.unwrap();
 
-        let interface = BluetoothInterface::new(&proxy).await;
-
-        Self { interface }
+        Self { session }
     }
 
     async fn message(
         &mut self,
         input: Self::Input,
-        output_sender: &broadcast::Sender<Self::Output>,
+        _output_sender: &broadcast::Sender<Self::Output>,
     ) {
+        match input {
+            Input::Adapters(sender) => {
+                let names = self.session.adapter_names().await.unwrap_or_default();
+                drop(sender.send(names));
+            }
+            Input::Devices(sender) => {
+                let devices = futures_lite::stream::iter(
+                    self.session.adapter_names().await.unwrap_or_default(),
+                )
+                .then(|name| {
+                    let name = name.clone();
+                    let session = self.session.clone();
+                    async move {
+                        (
+                            name.to_owned(),
+                            match session.adapter(&name) {
+                                Ok(adapter) => {
+                                    futures_lite::stream::iter(
+                                        adapter.device_addresses().await.unwrap_or_default(),
+                                    )
+                                    .then(|addr| {
+                                        let adapter = adapter.clone();
+                                        async move {
+                                            (
+                                                addr.to_string(),
+                                                match adapter.device(addr) {
+                                                    Ok(device) => Device {
+                                                        name: device.name().await.unwrap_or(None),
+                                                    },
+                                                    Err(e) => {
+                                                        azalea_log::warning::<Self>(
+                                                            &format!("Failed to get device from adapter {addr}: {e:?}"),
+                                                        );
+                                                        Default::default()
+                                                    },
+                                                },
+                                            )
+                                        }
+                                    })
+                                    .collect::<HashMap<String, Device>>()
+                                    .await
+                                }
+                                Err(e) => {
+                                    azalea_log::warning::<Self>(
+                                        &format!("Failed to get adapter with name {name}: {e:?}"),
+                                    );
+                                    Default::default()
+                                }
+                            },
+                        )
+                    }
+                })
+                .collect()
+                .await;
+                drop(sender.send(devices));
+            }
+        }
     }
 
     async fn event_generator(&mut self) -> Self::Event {}
 
     async fn event_handler(
         &mut self,
-        event: Self::Event,
-        output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
+        _event: Self::Event,
+        _output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> azalea_service::Result<()> {
         Ok(())
     }
