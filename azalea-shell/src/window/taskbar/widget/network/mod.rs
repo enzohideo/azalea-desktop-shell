@@ -62,6 +62,8 @@ impl Component for Model {
             ),
         };
 
+        network_manager::Service::send(network_manager::Input::Update);
+
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
