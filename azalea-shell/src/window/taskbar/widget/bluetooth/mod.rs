@@ -22,7 +22,7 @@ crate::init! {
 
 #[derive(Debug)]
 pub enum Input {
-    Connect(Device),
+    Connect(Device, bool),
 }
 
 #[derive(Debug)]
@@ -72,7 +72,7 @@ impl Component for Model {
             devices_menu: FactoryVecDeque::builder()
                 .launch(gtk::Box::default())
                 .forward(sender.input_sender(), |output| match output {
-                    menu::Output::Connect(name) => Input::Connect(name),
+                    menu::Output::Connect(device, connect) => Input::Connect(device, connect),
                 }),
         };
 
@@ -90,12 +90,15 @@ impl Component for Model {
         ComponentParts { model, widgets }
     }
 
-    fn update(
-        &mut self,
-        _message: Self::Input,
-        _sender: ComponentSender<Self>,
-        _root: &Self::Root,
-    ) {
+    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
+        match message {
+            Input::Connect(device, connect) => {
+                service::dbus::bluez::Service::send(service::dbus::bluez::Input::Connect(
+                    device.address,
+                    connect,
+                ));
+            }
+        }
     }
 
     fn update_cmd(

@@ -18,7 +18,7 @@ pub enum Input {
 
 #[derive(Debug)]
 pub enum Output {
-    Connect(Device),
+    Connect(Device, bool),
 }
 
 #[relm4::factory(pub)]
@@ -42,7 +42,11 @@ impl FactoryComponent for BluetoothDeviceMenu {
 
             gtk::Button {
                 set_halign: gtk::Align::End,
-                set_icon_name: icon::PLUG_CONNECTED, // TODO: Change according to status
+                set_icon_name: if self.device.is_connected {
+                    icon::PLUG_CONNECTED
+                } else {
+                    icon::PLUG_DISCONNECTED
+                },
                 connect_clicked => Input::Connect
             }
         }
@@ -54,7 +58,10 @@ impl FactoryComponent for BluetoothDeviceMenu {
 
     fn update(&mut self, message: Self::Input, sender: FactorySender<Self>) {
         match message {
-            Input::Connect => drop(sender.output(Output::Connect(self.device.clone()))),
+            Input::Connect => drop(sender.output(Output::Connect(
+                self.device.clone(),
+                !self.device.is_connected,
+            ))),
         }
     }
 }
