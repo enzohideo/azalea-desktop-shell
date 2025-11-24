@@ -18,6 +18,8 @@ fn main() {
             "radiowaves-none",
             "radiowaves-question-mark",
             "radiowaves-dots",
+            "bluetooth",
+            "bluetooth-x",
         ],
     );
 }
