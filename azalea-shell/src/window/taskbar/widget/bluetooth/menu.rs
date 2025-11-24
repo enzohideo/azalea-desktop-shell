@@ -8,7 +8,7 @@ use crate::{icon, service::dbus::bluez::Device};
 
 #[derive(Debug)]
 pub struct BluetoothDeviceMenu {
-    device: Device,
+    pub device: Device,
 }
 
 #[derive(Debug)]
@@ -24,6 +24,7 @@ pub enum Output {
 
 #[relm4::factory(pub)]
 impl FactoryComponent for BluetoothDeviceMenu {
+    type Index = String;
     type Init = Device;
     type Input = Input;
     type Output = Output;
@@ -43,17 +44,20 @@ impl FactoryComponent for BluetoothDeviceMenu {
 
             gtk::Button {
                 set_halign: gtk::Align::End,
+
+                #[watch]
                 set_icon_name: if self.device.is_connected {
                     icon::PLUG_CONNECTED
                 } else {
                     icon::PLUG_DISCONNECTED
                 },
+
                 connect_clicked => Input::Connect
             }
         }
     }
 
-    fn init_model(device: Self::Init, _index: &DynamicIndex, _sender: FactorySender<Self>) -> Self {
+    fn init_model(device: Self::Init, _index: &String, _sender: FactorySender<Self>) -> Self {
         Self { device }
     }
 

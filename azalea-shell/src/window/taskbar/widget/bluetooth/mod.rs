@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
-use relm4::{Component, ComponentParts, ComponentSender, component, prelude::*};
+use relm4::{
+    Component, ComponentParts, ComponentSender, component, factory::FactoryHashMap, prelude::*,
+};
 
 use crate::{
     icon,
@@ -13,8 +15,7 @@ mod menu;
 
 crate::init! {
     Model {
-        devices: HashMap<String, Device>,
-        devices_menu: FactoryVecDeque<menu::BluetoothDeviceMenu>,
+        devices_menu: FactoryHashMap<String, menu::BluetoothDeviceMenu>,
         _event_listener_handle: LocalListenerHandle,
     }
 
@@ -54,7 +55,7 @@ impl Component for Model {
 
                     gtk::Box {
                         #[local_ref]
-                        devices_menu_widget -> gtk::Box {
+                        devices_widget -> gtk::Box {
                             set_orientation: gtk::Orientation::Vertical,
                             set_spacing: 5,
                         }
@@ -70,8 +71,7 @@ impl Component for Model {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
-            devices: Default::default(),
-            devices_menu: FactoryVecDeque::builder()
+            devices_menu: FactoryHashMap::builder()
                 .launch(gtk::Box::default())
                 .forward(sender.input_sender(), |output| match output {
                     menu::Output::Connect(device, connect) => {
@@ -92,7 +92,7 @@ impl Component for Model {
             CommandOutput::SetDevices(devices)
         });
 
-        let devices_menu_widget = model.devices_menu.widget();
+        let devices_widget = model.devices_menu.widget();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -107,8 +107,9 @@ impl Component for Model {
             }
             Input::Bluez(output) => match output {
                 service::dbus::bluez::Output::Connected(device_address, connected) => {
-                    // TODO: Send status to device menu
-                    println!("bluetooth device connected: {device_address} {connected}")
+                    if let Some(mut menu_entry) = self.devices_menu.get_mut(&device_address) {
+                        menu_entry.device.is_connected = connected;
+                    }
                 }
             },
         }
@@ -122,10 +123,9 @@ impl Component for Model {
     ) {
         match message {
             CommandOutput::SetDevices(devices) => {
-                self.devices = devices;
-                let mut menu = self.devices_menu.guard();
-                for device in self.devices.values() {
-                    menu.push_back(device.clone());
+                self.devices_menu.clear();
+                for (address, device) in devices.into_iter() {
+                    self.devices_menu.insert(address, device);
                 }
             }
         }
