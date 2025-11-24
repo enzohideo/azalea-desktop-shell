@@ -12,7 +12,7 @@ pub struct Service {
 
 #[derive(Default, Clone, Debug)]
 pub struct Device {
-    name: Option<String>,
+    pub name: Option<String>,
 }
 
 #[derive(Default, Clone)]

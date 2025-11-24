@@ -20,6 +20,8 @@ fn main() {
             "radiowaves-dots",
             "bluetooth",
             "bluetooth-x",
+            "plug-connected-filled",
+            "plug-disconnected-filled",
         ],
     );
 }
