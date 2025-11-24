@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use bluer::DeviceEvent;
 use futures_lite::StreamExt;
 use tokio::sync::broadcast;
 
@@ -34,7 +35,7 @@ pub enum Event {}
 
 #[derive(Clone, Debug)]
 pub enum Output {
-    Connection(DeviceAdress, bool),
+    Connected(DeviceAdress, bool),
 }
 
 impl azalea_service::Service for Service {
@@ -47,7 +48,7 @@ impl azalea_service::Service for Service {
     async fn new(
         _init: Self::Init,
         _input: flume::Sender<Self::Input>,
-        _: broadcast::Sender<Self::Output>,
+        output_sender: broadcast::Sender<Self::Output>,
     ) -> Self {
         let session = bluer::Session::new().await.unwrap();
         let adapter = session.default_adapter().await.unwrap();
@@ -55,7 +56,13 @@ impl azalea_service::Service for Service {
             futures_lite::stream::iter(adapter.device_addresses().await.unwrap_or_default())
                 .then(|addr| {
                     let adapter = adapter.clone();
-                    async move { (addr.to_string(), adapter.device(addr).unwrap()) }
+                    let device = adapter.device(addr).unwrap();
+                    let device_clone = device.clone();
+                    let sender = output_sender.clone();
+                    relm4::spawn(async move {
+                        listen_to_player(device_clone, sender).await;
+                    });
+                    async move { (addr.to_string(), device) }
                 })
                 .collect::<HashMap<String, bluer::Device>>()
                 .await;
@@ -99,11 +106,11 @@ impl azalea_service::Service for Service {
                 Some(device) => {
                     if connect {
                         if let Ok(_) = device.connect().await {
-                            drop(output_sender.send(Output::Connection(device_address, connect)));
+                            drop(output_sender.send(Output::Connected(device_address, connect)));
                         }
                     } else {
                         if let Ok(_) = device.disconnect().await {
-                            drop(output_sender.send(Output::Connection(device_address, connect)));
+                            drop(output_sender.send(Output::Connected(device_address, connect)));
                         }
                     }
                 }
@@ -120,5 +127,42 @@ impl azalea_service::Service for Service {
         _output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> azalea_service::Result<()> {
         Ok(())
+    }
+}
+
+async fn listen_to_player(device: bluer::Device, output_sender: broadcast::Sender<Output>) {
+    let address = device.address().to_string();
+    let mut event_stream = device.events().await.unwrap();
+    while let Some(event) = event_stream.next().await {
+        match event {
+            DeviceEvent::PropertyChanged(device_property) => match device_property {
+                bluer::DeviceProperty::Name(_) => {}
+                bluer::DeviceProperty::RemoteAddress(_address) => {}
+                bluer::DeviceProperty::AddressType(_address_type) => {}
+                bluer::DeviceProperty::Icon(_) => {}
+                bluer::DeviceProperty::Class(_) => {}
+                bluer::DeviceProperty::Appearance(_) => {}
+                bluer::DeviceProperty::Uuids(_hash_set) => {}
+                bluer::DeviceProperty::Paired(_) => {}
+                bluer::DeviceProperty::Connected(connected) => {
+                    drop(output_sender.send(Output::Connected(address.clone(), connected)));
+                }
+                bluer::DeviceProperty::Trusted(_) => {}
+                bluer::DeviceProperty::Blocked(_) => {}
+                bluer::DeviceProperty::WakeAllowed(_) => {}
+                bluer::DeviceProperty::Alias(_) => {}
+                bluer::DeviceProperty::LegacyPairing(_) => {}
+                bluer::DeviceProperty::Modalias(_modalias) => {}
+                bluer::DeviceProperty::Rssi(_) => {}
+                bluer::DeviceProperty::TxPower(_) => {}
+                bluer::DeviceProperty::ManufacturerData(_hash_map) => {}
+                bluer::DeviceProperty::ServiceData(_hash_map) => {}
+                bluer::DeviceProperty::ServicesResolved(_) => {}
+                bluer::DeviceProperty::AdvertisingFlags(_items) => {}
+                bluer::DeviceProperty::AdvertisingData(_hash_map) => {}
+                bluer::DeviceProperty::BatteryPercentage(_) => {}
+                _ => {}
+            },
+        }
     }
 }

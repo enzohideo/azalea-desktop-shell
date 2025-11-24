@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use azalea_service::StaticHandler;
+use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
 use relm4::{Component, ComponentParts, ComponentSender, component, prelude::*};
 
@@ -15,6 +15,7 @@ crate::init! {
     Model {
         devices: HashMap<String, Device>,
         devices_menu: FactoryVecDeque<menu::BluetoothDeviceMenu>,
+        _event_listener_handle: LocalListenerHandle,
     }
 
     Config {}
@@ -22,7 +23,8 @@ crate::init! {
 
 #[derive(Debug)]
 pub enum Input {
-    Connect(Device, bool),
+    Connect(String, bool),
+    Bluez(service::dbus::bluez::Output),
 }
 
 #[derive(Debug)]
@@ -72,8 +74,14 @@ impl Component for Model {
             devices_menu: FactoryVecDeque::builder()
                 .launch(gtk::Box::default())
                 .forward(sender.input_sender(), |output| match output {
-                    menu::Output::Connect(device, connect) => Input::Connect(device, connect),
+                    menu::Output::Connect(device, connect) => {
+                        Input::Connect(device.address, connect)
+                    }
                 }),
+            _event_listener_handle: service::dbus::bluez::Service::forward_local(
+                sender.input_sender().clone(),
+                Input::Bluez,
+            ),
         };
 
         let (tx, rx) = flume::bounded(1);
@@ -92,12 +100,17 @@ impl Component for Model {
 
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
-            Input::Connect(device, connect) => {
+            Input::Connect(address, connect) => {
                 service::dbus::bluez::Service::send(service::dbus::bluez::Input::Connect(
-                    device.address,
-                    connect,
+                    address, connect,
                 ));
             }
+            Input::Bluez(output) => match output {
+                service::dbus::bluez::Output::Connected(device_address, connected) => {
+                    // TODO: Send status to device menu
+                    println!("bluetooth device connected: {device_address} {connected}")
+                }
+            },
         }
     }
 

@@ -14,6 +14,7 @@ pub struct BluetoothDeviceMenu {
 #[derive(Debug)]
 pub enum Input {
     Connect,
+    Connected(bool),
 }
 
 #[derive(Debug)]
@@ -62,6 +63,7 @@ impl FactoryComponent for BluetoothDeviceMenu {
                 self.device.clone(),
                 !self.device.is_connected,
             ))),
+            Input::Connected(is_connected) => self.device.is_connected = is_connected,
         }
     }
 }
