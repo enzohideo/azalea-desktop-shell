@@ -59,7 +59,12 @@ impl Component for Model {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, _message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(
+        &mut self,
+        _message: Self::Input,
+        _sender: ComponentSender<Self>,
+        _root: &Self::Root,
+    ) {
     }
 
     fn update_cmd(

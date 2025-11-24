@@ -4,6 +4,20 @@ fn main() {
         Some("br.usp.ime.Azalea"),
         None::<&str>,
         None::<&str>,
-        ["play", "pause", "first", "last"],
+        [
+            "play",
+            "pause",
+            "first",
+            "last",
+            "radiowaves-1",
+            "radiowaves-2",
+            "radiowaves-3",
+            "radiowaves-4",
+            "radiowaves-5",
+            "waves-7",
+            "radiowaves-none",
+            "radiowaves-question-mark",
+            "radiowaves-dots",
+        ],
     );
 }

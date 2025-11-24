@@ -1,10 +1,10 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
-use crate::service::dbus::network_manager::{
+use crate::{icon, service::dbus::network_manager::{
     self,
     proxy::{NMConnectivityState, NMState},
-};
+}};
 
 crate::init! {
     Model {
@@ -29,18 +29,18 @@ impl Component for Model {
     type CommandOutput = ();
 
     view! {
-        gtk::Label {
+        gtk::Image {
             #[watch]
-            set_label: match model.state {
-                NMState::NMStateUnknown => "1",
-                NMState::NMStateAsleep => "2",
-                NMState::NMStateDisconnected => "3",
-                NMState::NMStateDisconnecting => "4",
-                NMState::NMStateConnecting => "5",
-                NMState::NMStateConnectedLocal => "6",
-                NMState::NMStateConnectedSite => "7",
-                NMState::NMStateConnectedGlobal => "8",
-            }
+            set_icon_name: Some(match model.state {
+                NMState::NMStateUnknown => icon::WIFI_QUESTION_MARK,
+                NMState::NMStateAsleep => icon::WIFI_SLEEP,
+                NMState::NMStateDisconnected => icon::WIFI_X,
+                NMState::NMStateDisconnecting => icon::WIFI_DOTS,
+                NMState::NMStateConnecting => icon::WIFI_DOTS,
+                NMState::NMStateConnectedLocal => icon::WIFI_3,
+                NMState::NMStateConnectedSite => icon::WIFI_3,
+                NMState::NMStateConnectedGlobal => icon::WIFI_3,
+            }),
         },
     }
 
@@ -57,6 +57,8 @@ impl Component for Model {
                 Input::NetworkManager,
             ),
         };
+
+        network_manager::Service::send(network_manager::Input::Update);
 
         let widgets = view_output!();
 
