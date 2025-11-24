@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use azalea_service::StaticHandler;
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
-use crate::service::{self, dbus::bluez::Device};
+use crate::{icon, service::{self, dbus::bluez::Device}};
 
 crate::init! {
     Model {
-        devices: HashMap<String, HashMap<String, Device>>,
+        devices: HashMap<String, Device>,
     }
 
     Config {}
@@ -18,7 +18,7 @@ pub enum Input {}
 
 #[derive(Debug)]
 pub enum CommandOutput {
-    SetDevices(HashMap<String, HashMap<String, Device>>),
+    SetDevices(HashMap<String, Device>),
 }
 
 #[component(pub)]

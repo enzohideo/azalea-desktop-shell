@@ -6,24 +6,24 @@ use tokio::sync::broadcast;
 #[derive(azalea_derive::StaticHandler)]
 pub struct Service {
     session: bluer::Session,
+    adapter: bluer::Adapter,
+    devices: HashMap<String, Device>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct Device {
     name: Option<String>,
 }
 
 #[derive(Default, Clone)]
-pub struct Init {
-    pub dbus_connection: Option<zbus::Connection>,
-}
+pub struct Init {}
 
 pub type AdapterName = String;
 
 #[derive(Clone, Debug)]
 pub enum Input {
     Adapters(flume::Sender<Vec<AdapterName>>),
-    Devices(flume::Sender<HashMap<String, HashMap<String, Device>>>),
+    Devices(flume::Sender<HashMap<String, Device>>),
 }
 
 pub enum Event {}
@@ -44,8 +44,36 @@ impl azalea_service::Service for Service {
         _: broadcast::Sender<Self::Output>,
     ) -> Self {
         let session = bluer::Session::new().await.unwrap();
+        let adapter = session.default_adapter().await.unwrap();
+        let devices =
+            futures_lite::stream::iter(adapter.device_addresses().await.unwrap_or_default())
+                .then(|addr| {
+                    let adapter = adapter.clone();
+                    async move {
+                        (
+                            addr.to_string(),
+                            match adapter.device(addr) {
+                                Ok(device) => Device {
+                                    name: device.name().await.unwrap_or(None),
+                                },
+                                Err(e) => {
+                                    azalea_log::warning::<Self>(&format!(
+                                        "Failed to get device from adapter {addr}: {e:?}"
+                                    ));
+                                    Default::default()
+                                }
+                            },
+                        )
+                    }
+                })
+                .collect::<HashMap<String, Device>>()
+                .await;
 
-        Self { session }
+        Self {
+            session,
+            adapter,
+            devices,
+        }
     }
 
     async fn message(
@@ -59,55 +87,7 @@ impl azalea_service::Service for Service {
                 drop(sender.send(names));
             }
             Input::Devices(sender) => {
-                let devices = futures_lite::stream::iter(
-                    self.session.adapter_names().await.unwrap_or_default(),
-                )
-                .then(|name| {
-                    let name = name.clone();
-                    let session = self.session.clone();
-                    async move {
-                        (
-                            name.to_owned(),
-                            match session.adapter(&name) {
-                                Ok(adapter) => {
-                                    futures_lite::stream::iter(
-                                        adapter.device_addresses().await.unwrap_or_default(),
-                                    )
-                                    .then(|addr| {
-                                        let adapter = adapter.clone();
-                                        async move {
-                                            (
-                                                addr.to_string(),
-                                                match adapter.device(addr) {
-                                                    Ok(device) => Device {
-                                                        name: device.name().await.unwrap_or(None),
-                                                    },
-                                                    Err(e) => {
-                                                        azalea_log::warning::<Self>(
-                                                            &format!("Failed to get device from adapter {addr}: {e:?}"),
-                                                        );
-                                                        Default::default()
-                                                    },
-                                                },
-                                            )
-                                        }
-                                    })
-                                    .collect::<HashMap<String, Device>>()
-                                    .await
-                                }
-                                Err(e) => {
-                                    azalea_log::warning::<Self>(
-                                        &format!("Failed to get adapter with name {name}: {e:?}"),
-                                    );
-                                    Default::default()
-                                }
-                            },
-                        )
-                    }
-                })
-                .collect()
-                .await;
-                drop(sender.send(devices));
+                drop(sender.send(self.devices.clone()));
             }
         }
     }
