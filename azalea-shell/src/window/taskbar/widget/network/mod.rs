@@ -1,10 +1,13 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use relm4::{Component, ComponentParts, ComponentSender, component};
 
-use crate::{icon, service::dbus::network_manager::{
-    self,
-    proxy::{NMConnectivityState, NMState},
-}};
+use crate::{
+    icon,
+    service::dbus::network_manager::{
+        self,
+        proxy::{NMConnectivityState, NMState},
+    },
+};
 
 crate::init! {
     Model {
