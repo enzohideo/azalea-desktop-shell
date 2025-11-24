@@ -119,6 +119,8 @@ impl Component for Model {
                     set_orientation: gtk::Orientation::Vertical,
 
                     gtk::Label {
+                        set_halign: gtk::Align::Start,
+
                         #[watch]
                         set_label: &model.title(),
                     },
