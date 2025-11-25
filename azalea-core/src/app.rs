@@ -1,11 +1,8 @@
 use std::{cell::RefCell, collections::HashMap, path::PathBuf, rc::Rc, sync::mpsc};
 
 use gtk::{
-    gio::{
-        self,
-        prelude::{ApplicationExt, ApplicationExtManual},
-    },
-    glib,
+    gdk::{self, prelude::*},
+    gio, glib,
     prelude::{GtkApplicationExt, GtkWindowExt, WidgetExt},
 };
 use gtk4_layer_shell::LayerShell;
@@ -338,6 +335,9 @@ where
         if let Some(layer_shell) = &window_cfg.layer_shell {
             window.init_layer_shell();
             window.set_namespace(Some(&layer_shell.namespace));
+            if let Some(monitor) = layer_shell.monitor {
+                window.set_monitor(Self::get_monitor(monitor).as_ref())
+            }
             window.set_layer((&layer_shell.layer).into());
             for anchor in &layer_shell.anchors {
                 window.set_anchor(anchor.into(), true);
@@ -365,6 +365,15 @@ where
             )
             .unwrap()
         }
+    }
+
+    fn get_monitor(index: u32) -> Option<gdk::Monitor> {
+        gdk::Display::default().and_then(|display| {
+            display
+                .monitors()
+                .item(index)
+                .and_then(|m| m.downcast::<gdk::Monitor>().ok())
+        })
     }
 }
 
