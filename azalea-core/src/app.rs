@@ -29,6 +29,8 @@ where
     dbus: Option<dbus::DBusWrapper>,
     window_manager: WM,
     windows: HashMap<config::window::Id, WindowWrapper>,
+
+    dynamic_css_provider: gtk::CssProvider,
 }
 
 impl<WM, ConfigWrapper, WindowWrapper> Application<WM, ConfigWrapper, WindowWrapper>
@@ -42,6 +44,8 @@ where
             dbus: dbus::DBusWrapper::new().ok(),
             window_manager,
             windows: Default::default(),
+
+            dynamic_css_provider: gtk::CssProvider::new(),
         }
     }
 
@@ -178,7 +182,7 @@ where
                 }
             }
 
-            Self::load_style(None);
+            Self::load_style(&gtk::CssProvider::new(), None);
 
             match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
                 Ok(listener) => {
@@ -283,15 +287,15 @@ where
                         ));
                     };
 
-                    Self::load_style(Some(&scss));
+                    Self::load_style(&self.dynamic_css_provider, Some(&scss))
                 }
-                cli::style::Command::Default => Self::load_style(None),
+                cli::style::Command::Default => Self::load_style(&self.dynamic_css_provider, None),
             },
         }
         cli::Response::Success(format!("Ok"))
     }
 
-    fn load_style(scss: Option<&str>) {
+    fn load_style(provider: &gtk::CssProvider, scss: Option<&str>) {
         let css = match grass::from_string(
             scss.unwrap_or(include_str!("./style.scss")),
             &grass::Options::default(),
@@ -303,15 +307,13 @@ where
             }
         };
 
-        let provider = gtk::CssProvider::new();
-
         provider.load_from_string(&css);
 
         if let Some(display) = gtk::gdk::Display::default() {
             #[allow(deprecated)] // it's not really deprecated
             gtk::StyleContext::add_provider_for_display(
                 &display,
-                &provider,
+                provider,
                 gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
             );
         }
