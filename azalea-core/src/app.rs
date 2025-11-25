@@ -178,6 +178,8 @@ where
                 }
             }
 
+            Self::load_style(None);
+
             match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
                 Ok(listener) => {
                     glib::spawn_future_local(glib::clone!(
@@ -271,14 +273,48 @@ where
             Command::Config(cli::config::Command::View { json }) => {
                 return cli::Response::Success(self.config_to_string(json));
             }
-            Command::Style(cli::style::Command::Reload { file }) => {
-                match file {
-                    Some(file) => todo!(),
-                    None => todo!(),
+            Command::Style(command) => match command {
+                cli::style::Command::Reload { file } => {
+                    let file = file.unwrap_or(PathBuf::from(""));
+
+                    let Ok(scss) = std::fs::read_to_string(&file) else {
+                        return cli::Response::Error(format!(
+                            "failed to find style file: {file:?}"
+                        ));
+                    };
+
+                    Self::load_style(Some(&scss));
                 }
-            }
+                cli::style::Command::Default => Self::load_style(None),
+            },
         }
         cli::Response::Success(format!("Ok"))
+    }
+
+    fn load_style(scss: Option<&str>) {
+        let css = match grass::from_string(
+            scss.unwrap_or(include_str!("./style.scss")),
+            &grass::Options::default(),
+        ) {
+            Ok(css) => css,
+            Err(e) => {
+                log::warning!("Failed to compile sass style: {e}");
+                return;
+            }
+        };
+
+        let provider = gtk::CssProvider::new();
+
+        provider.load_from_string(&css);
+
+        if let Some(display) = gtk::gdk::Display::default() {
+            #[allow(deprecated)] // it's not really deprecated
+            gtk::StyleContext::add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+        }
     }
 
     fn create_window(&mut self, id: &config::window::Id, app: &gtk::Application) {

@@ -145,6 +145,8 @@ pub mod style {
             #[clap(long)]
             file: Option<std::path::PathBuf>,
         },
+        /// Loads default css style
+        Default,
     }
 }
 

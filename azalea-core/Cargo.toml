@@ -26,3 +26,4 @@ gtk.workspace = true
 gtk4-layer-shell.workspace = true
 
 thiserror.workspace = true
+grass = "0.13.4"

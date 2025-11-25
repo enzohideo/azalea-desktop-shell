@@ -1,0 +1,100 @@
+:root {
+  --background: #111416;
+  --error: #ff5449;
+  --error-container: #7b0007;
+  --inverse-on-surface: #626467;
+  --inverse-primary: #5286a8;
+  --inverse-surface: #e1e2e5;
+  --on-background: #606265;
+  --on-error: #5c0003;
+  --on-error-container: #ff7d70;
+  --on-primary: #054a69;
+  --on-primary-container: #76aacd;
+  --on-primary-fixed: #96caef;
+  --on-primary-fixed-variant: #72a6c9;
+  --on-secondary: #192c38;
+  --on-secondary-container: #93a6b6;
+  --on-secondary-fixed: #b3c7d6;
+  --on-secondary-fixed-variant: #8fa3b2;
+  --on-surface: #a1a3a6;
+  --on-surface-variant: #7d848a;
+  --on-tertiary: #3d1c48;
+  --on-tertiary-container: #c095c9;
+  --on-tertiary-fixed: #e1b5eb;
+  --on-tertiary-fixed-variant: #bc92c5;
+  --outline: #4e555b;
+  --outline-variant: #343b40;
+  --primary: #6397b9;
+  --primary-container: #003e5a;
+  --primary-fixed: #1b5676;
+  --primary-fixed-dim: #003e5a;
+  --scrim: #000000;
+  --secondary: #8093a2;
+  --secondary-container: #2a3c49;
+  --secondary-fixed: #415361;
+  --secondary-fixed-dim: #2a3c49;
+  --shadow: #000000;
+  --source-color: #588cae;
+  --surface: #111416;
+  --surface-bright: #37393c;
+  --surface-container: #1d2022;
+  --surface-container-high: #282a2d;
+  --surface-container-highest: #333537;
+  --surface-container-low: #191c1e;
+  --surface-container-lowest: #0c0e11;
+  --surface-dim: #111416;
+  --surface-tint: #99cdf1;
+  --surface-variant: #41484d;
+  --tertiary: #ab82b5;
+  --tertiary-container: #4f2d59;
+  --tertiary-fixed: #674472;
+  --tertiary-fixed-dim: #4f2d59;
+}
+
+text selection {
+  background: var(--tertiary);
+  color: var(--on-tertiary);
+}
+
+frame {
+  background: transparent;
+  border: unset;
+}
+
+button {
+  border: unset;
+  box-shadow: unset;
+
+  padding: 0 3px 0 3px;
+  margin: 0;
+
+  color: var(--on-surface);
+  background: var(--surface);
+
+  transition: opacity 0.1s linear;
+}
+
+button:hover {
+  color: var(--on-surface-variant);
+  background: var(--surface-variant);
+}
+
+button:checked {
+  color: var(--on-surface-variant);
+  background: unquote("mix(var(--primary), var(--surface-container), 0.75)");
+}
+
+popover {
+  & contents,
+  arrow {
+    background: var(--surface);
+  }
+}
+
+box {
+  all: unset;
+}
+
+window {
+  background: var(--surface);
+}
