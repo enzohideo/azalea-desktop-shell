@@ -9,6 +9,7 @@
   openssl,
   clang,
   mold-wrapped,
+  dbus,
 }:
 
 let
@@ -30,6 +31,7 @@ let
       gtk4
       gtk4-layer-shell
       openssl
+      dbus
     ];
 
     NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";
@@ -50,6 +52,7 @@ let
       fileset = lib.fileset.unions [
         ../Cargo.toml
         ../Cargo.lock
+        ../azalea-core/src/style.scss
         (craneLib.fileset.commonCargoSources ../azalea-core)
         (craneLib.fileset.commonCargoSources ../azalea-derive)
         (craneLib.fileset.commonCargoSources ../azalea-log)
