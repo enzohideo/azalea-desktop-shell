@@ -147,63 +147,66 @@ where
         let state = Rc::new(RefCell::new(self));
 
         app.connect_activate(move |app| {
-            if let Ok(app_guard) = ping_rx.try_recv() {
-                log::message!("Daemon started");
+            // Make sure only the first one goes past this
+            let Ok(app_guard) = ping_rx.try_recv() else {
+                return;
+            };
 
-                pong_tx.send(app_guard).expect("Daemon could not pong!");
+            log::message!("Daemon started");
 
-                {
-                    let config_window_ids: Vec<config::window::Id> = state
-                        .borrow()
-                        .config
-                        .windows
-                        .keys()
-                        .map(|v| v.to_owned())
-                        .collect();
-                    let mut state = state.borrow_mut();
-                    for id in config_window_ids {
-                        let Some(window_cfg) = state.config.windows.get(&id) else {
-                            continue;
-                        };
+            pong_tx.send(app_guard).expect("Daemon could not pong!");
 
-                        if window_cfg.lazy {
-                            continue;
+            {
+                let config_window_ids: Vec<config::window::Id> = state
+                    .borrow()
+                    .config
+                    .windows
+                    .keys()
+                    .map(|v| v.to_owned())
+                    .collect();
+                let mut state = state.borrow_mut();
+                for id in config_window_ids {
+                    let Some(window_cfg) = state.config.windows.get(&id) else {
+                        continue;
+                    };
+
+                    if window_cfg.lazy {
+                        continue;
+                    }
+
+                    state.create_window(&id, app)
+                }
+            }
+
+            match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
+                Ok(listener) => {
+                    glib::spawn_future_local(glib::clone!(
+                        #[weak]
+                        app,
+                        #[weak]
+                        state,
+                        async move {
+                            listener
+                                .loop_accept(async |mut stream: UnixStreamWrapper| {
+                                    match stream.read().await {
+                                        Ok(cmd) => {
+                                            let answer =
+                                                state.borrow_mut().handle_command(cmd, &app);
+                                            drop(stream.write(answer).await);
+                                            return true;
+                                        }
+                                        Err(e) => {
+                                            let answer = cli::Response::Error(format!("{e:?}"));
+                                            drop(stream.write(answer).await);
+                                            return false;
+                                        }
+                                    };
+                                })
+                                .await;
                         }
-
-                        state.create_window(&id, app)
-                    }
+                    ));
                 }
-
-                match socket::r#async::UnixListenerWrapper::bind(&socket_path) {
-                    Ok(listener) => {
-                        glib::spawn_future_local(glib::clone!(
-                            #[weak]
-                            app,
-                            #[weak]
-                            state,
-                            async move {
-                                listener
-                                    .loop_accept(async |mut stream: UnixStreamWrapper| {
-                                        match stream.read().await {
-                                            Ok(cmd) => {
-                                                let answer =
-                                                    state.borrow_mut().handle_command(cmd, &app);
-                                                drop(stream.write(answer).await);
-                                                return true;
-                                            }
-                                            Err(e) => {
-                                                let answer = cli::Response::Error(format!("{e:?}"));
-                                                drop(stream.write(answer).await);
-                                                return false;
-                                            }
-                                        };
-                                    })
-                                    .await;
-                            }
-                        ));
-                    }
-                    Err(e) => log::error!("Failed to bind unix socket {e:?}"),
-                }
+                Err(e) => log::error!("Failed to bind unix socket {e:?}"),
             }
         });
 
