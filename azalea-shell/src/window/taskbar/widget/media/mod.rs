@@ -190,7 +190,7 @@ impl Component for Model {
             art_cover: image::Model::builder()
                 .launch(image::Init {
                     width: None,
-                    height: Some(50),
+                    height: Some(30),
                 })
                 .detach(),
 

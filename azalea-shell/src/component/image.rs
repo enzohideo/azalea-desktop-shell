@@ -57,7 +57,10 @@ impl Component for Model {
                     set_paintable: model.image.as_ref(),
                     set_can_shrink: true,
                 }
-            }
+            },
+
+            set_width_request: model.width.unwrap_or(-1),
+            set_height_request: model.height.unwrap_or(-1),
         },
     }
 
