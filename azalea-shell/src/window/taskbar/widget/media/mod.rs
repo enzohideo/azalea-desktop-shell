@@ -13,7 +13,7 @@ use gtk::{
     prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt},
 };
 use relm4::{
-    Component, ComponentController, ComponentParts, ComponentSender, component,
+    Component, ComponentController, ComponentParts, ComponentSender, RelmWidgetExt, component,
     prelude::FactoryVecDeque,
 };
 
@@ -117,6 +117,9 @@ impl Component for Model {
 
                 gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
+                    set_valign: gtk::Align::Center,
+                    set_vexpand: true,
+                    inline_css: "font-size: 11px;",
 
                     gtk::Label {
                         set_halign: gtk::Align::Start,
@@ -125,23 +128,11 @@ impl Component for Model {
                         set_label: &model.title(),
                     },
 
-                    gtk::Box{
-                        set_spacing: 12,
+                    gtk::Label {
+                        set_halign: gtk::Align::Start,
 
-                        gtk::Label {
-                            #[watch]
-                            set_label: &model.artist(),
-                        },
-
-                        gtk::Label {
-                            #[watch]
-                            set_label:
-                                &format!(
-                                    "{}/{}",
-                                    Self::format_time(model.position as i64),
-                                    model.length(),
-                                )
-                        },
+                        #[watch]
+                        set_label: &model.artist(),
                     },
                 },
 
@@ -159,7 +150,19 @@ impl Component for Model {
                 gtk::Button {
                     set_icon_name: icon::NEXT,
                     connect_clicked => Input::Action(Action::Next)
-                }
+                },
+
+                gtk::Label {
+                    inline_css: "font-size: 13px;",
+
+                    #[watch]
+                    set_label:
+                        &format!(
+                            "{}/{}",
+                            Self::format_time(model.position as i64),
+                            model.length(),
+                        )
+                },
             },
         }
     }
