@@ -46,6 +46,7 @@
             GDK_PIXBUF_MODULE_FILE = "${pkgs.gnome._gdkPixbufCacheBuilder_DO_NOT_USE {
               extraLoaders = with pkgs; [
                 librsvg # icons
+                webp-pixbuf-loader # webp
               ];
             }}";
             buildInputs = with pkgs; [
