@@ -97,6 +97,7 @@ impl Component for Model {
                 gtk::MenuButton {
                     set_hexpand: false,
                     set_vexpand: false,
+                    set_valign: gtk::Align::Center,
 
                     set_direction: gtk::ArrowType::Up,
 
@@ -137,17 +138,26 @@ impl Component for Model {
                 },
 
                 gtk::Button {
+                    set_vexpand: false,
+                    set_valign: gtk::Align::Center,
+
                     set_icon_name: icon::PREVIOUS,
                     connect_clicked => Input::Action(Action::Previous)
                 },
 
                 gtk::Button {
+                    set_vexpand: false,
+                    set_valign: gtk::Align::Center,
+
                     #[watch]
                     set_icon_name: if model.is_playing() { icon::PAUSE } else { icon::PLAY },
                     connect_clicked => Input::Action(Action::PlayPause)
                 },
 
                 gtk::Button {
+                    set_vexpand: false,
+                    set_valign: gtk::Align::Center,
+
                     set_icon_name: icon::NEXT,
                     connect_clicked => Input::Action(Action::Next)
                 },

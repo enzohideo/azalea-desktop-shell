@@ -45,6 +45,7 @@ impl Component for Model {
             gtk::MenuButton {
                 set_hexpand: false,
                 set_vexpand: false,
+                set_valign: gtk::Align::Center,
 
                 set_direction: gtk::ArrowType::Up,
                 set_icon_name: icon::BLUETOOTH, // TODO: Change according to status
