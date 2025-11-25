@@ -271,6 +271,12 @@ where
             Command::Config(cli::config::Command::View { json }) => {
                 return cli::Response::Success(self.config_to_string(json));
             }
+            Command::Style(cli::style::Command::Reload { file }) => {
+                match file {
+                    Some(file) => todo!(),
+                    None => todo!(),
+                }
+            }
         }
         cli::Response::Success(format!("Ok"))
     }

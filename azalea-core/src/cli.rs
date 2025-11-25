@@ -46,6 +46,9 @@ pub enum Command {
 
     #[command(subcommand)]
     Config(config::Command),
+
+    #[command(subcommand)]
+    Style(style::Command),
     // TODO: Extra subcommand given by the user?
 }
 
@@ -129,6 +132,18 @@ pub mod config {
         View {
             #[clap(long)]
             json: bool,
+        },
+    }
+}
+
+pub mod style {
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub enum Command {
+        /// Reload style from css file
+        Reload {
+            /// Path to css file
+            #[clap(long)]
+            file: Option<std::path::PathBuf>,
         },
     }
 }
