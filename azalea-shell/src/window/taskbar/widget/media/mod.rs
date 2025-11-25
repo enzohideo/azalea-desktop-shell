@@ -174,7 +174,12 @@ impl Component for Model {
             players: Default::default(),
             position: 0.,
 
-            art_cover: image::Model::builder().launch(()).detach(),
+            art_cover: image::Model::builder()
+                .launch(image::Init {
+                    width: None,
+                    height: Some(50),
+                })
+                .detach(),
 
             menu: FactoryVecDeque::builder()
                 .launch(gtk::Box::default())

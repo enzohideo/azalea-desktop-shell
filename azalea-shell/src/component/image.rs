@@ -9,9 +9,18 @@ use std::sync::OnceLock;
 use base64::Engine;
 use relm4::gtk::prelude::{FrameExt, WidgetExt};
 use relm4::gtk::{gdk, gdk_pixbuf};
-use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt};
+use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt, component};
 
-pub struct Model {}
+pub struct Model {
+    image: Option<gdk::Texture>,
+    width: Option<i32>,
+    height: Option<i32>,
+}
+
+pub struct Init {
+    pub width: Option<i32>,
+    pub height: Option<i32>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Input {
@@ -24,33 +33,51 @@ pub enum CommandOutput {
     LoadedImage(String, Option<VecDeque<u8>>),
 }
 
+#[component(pub)]
 impl Component for Model {
     type CommandOutput = CommandOutput;
     type Input = Input;
     type Output = ();
-    type Init = ();
-    type Root = gtk::Frame;
-    type Widgets = ();
+    type Init = Init;
 
-    fn init_root() -> Self::Root {
-        gtk::Frame::default()
+    view! {
+        gtk::Frame {
+            inline_css: "border-radius: 6px;",
+
+            #[wrap(Some)]
+            set_child = if model.image.is_none() {
+                gtk::Spinner {
+                    set_halign: gtk::Align::Center,
+                    set_valign: gtk::Align::Center,
+                    start: (),
+                }
+            } else {
+                gtk::Picture {
+                    #[watch]
+                    set_paintable: model.image.as_ref(),
+                    set_can_shrink: true,
+                }
+            }
+        },
     }
 
     fn init(
-        _init: Self::Init,
-        root: Self::Root,
+        init: Self::Init,
+        _root: Self::Root,
         _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let widget = gtk::Box::default();
-        root.set_child(Some(&widget));
+        let model = Self {
+            image: None,
+            width: init.width,
+            height: init.height,
+        };
 
-        let model = Self {};
-        model.set_spinner(&root);
+        let widgets = view_output!();
 
-        ComponentParts { model, widgets: () }
+        ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, input: Self::Input, sender: ComponentSender<Self>, root: &Self::Root) {
+    fn update(&mut self, input: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match input {
             Input::LoadImage(url) => {
                 if let Some(pixbuf) = Self::cache().borrow().get(&url) {
@@ -58,7 +85,7 @@ impl Component for Model {
                         "[IMAGE] Loaded image (cache hit): {}...",
                         Self::truncate(&url)
                     );
-                    self.set_image(root, &pixbuf);
+                    self.set_image(&pixbuf);
                 } else {
                     sender.oneshot_command(async move {
                         let image = Self::load_image(&url).await;
@@ -70,7 +97,7 @@ impl Component for Model {
                     });
                 }
             }
-            Input::Unload => self.set_spinner(root),
+            Input::Unload => self.set_spinner(),
         }
     }
 
@@ -78,12 +105,26 @@ impl Component for Model {
         &mut self,
         message: Self::CommandOutput,
         _sender: ComponentSender<Self>,
-        root: &Self::Root,
+        _root: &Self::Root,
     ) {
         match message {
             CommandOutput::LoadedImage(url, Some(data)) => {
-                let pixbuf = gdk_pixbuf::Pixbuf::from_read(data).unwrap();
-                self.set_image(root, &pixbuf);
+                let mut pixbuf = gdk_pixbuf::Pixbuf::from_read(data).unwrap();
+
+                if self.height.is_some() || self.width.is_some() {
+                    let width = self
+                        .width
+                        .unwrap_or_else(|| pixbuf.width() * self.height.unwrap() / pixbuf.height());
+
+                    let height = self
+                        .height
+                        .unwrap_or_else(|| pixbuf.height() * self.width.unwrap() / pixbuf.width());
+
+                    pixbuf = pixbuf
+                        .scale_simple(width, height, gdk_pixbuf::InterpType::Hyper)
+                        .unwrap();
+                }
+                self.set_image(&pixbuf);
                 Self::cache().borrow_mut().insert(url, pixbuf);
             }
             CommandOutput::LoadedImage(url, None) => {
@@ -94,28 +135,12 @@ impl Component for Model {
 }
 
 impl Model {
-    fn set_spinner(&self, root: &<Self as Component>::Root) {
-        relm4::view! {
-            #[local_ref]
-            root -> gtk::Frame {
-                #[name(spinner)]
-                gtk::Spinner {
-                    set_halign: gtk::Align::Center,
-                    set_valign: gtk::Align::Center,
-                    start: (),
-                }
-            }
-        }
+    fn set_spinner(&mut self) {
+        self.image = None;
     }
 
-    fn set_image(&self, root: &<Self as Component>::Root, pixbuf: &gdk_pixbuf::Pixbuf) {
-        relm4::view! {
-            #[local_ref]
-            root -> gtk::Frame {
-                inline_css: "border-radius: 6px;",
-                gtk::Picture::for_paintable(&gdk::Texture::for_pixbuf(&pixbuf)) {}
-            }
-        }
+    fn set_image(&mut self, pixbuf: &gdk_pixbuf::Pixbuf) {
+        self.image = Some(gdk::Texture::for_pixbuf(&pixbuf));
     }
 
     async fn load_image(url: &str) -> Option<VecDeque<u8>> {
