@@ -55,49 +55,49 @@ impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
 fn main() {
     icon::init();
 
-    relm4::view!(
-        mut windows = HashMap::new() {
-            insert: (format!("bottom-taskbar"), config::window::Config {
-                config: ConfigWrapper::Taskbar({
-                    use taskbar::{Config, widget::{media, network, time, bluetooth, ConfigWrapper::*}};
+    let windows = HashMap::from([(
+        format!("bottom-taskbar"),
+        config::window::Config {
+            config: ConfigWrapper::Taskbar({
+                use taskbar::{
+                    Config,
+                    widget::{ConfigWrapper::*, bluetooth, media, network, time},
+                };
 
-                    Config {
-                        spacing: 8,
+                Config {
+                    spacing: 8,
 
-                        start: vec![],
+                    start: vec![],
 
-                        center: vec![
-                            Media(media::Config {})
-                        ],
+                    center: vec![Media(media::Config {})],
 
-                        end: vec![
-                            Bluetooth(bluetooth::Config {}),
-                            Network(network::Config {}),
-                            Time(time::Config {
-                                format: format!("%d/%m/%y")
-                            }),
-                            Time(time::Config {
-                                format: format!("%H:%M:%S")
-                            })
-                        ],
-                    }
-                }),
-
-                layer_shell: Some({
-                    use config::layer_shell::{Anchor, Config, Layer};
-
-                    Config {
-                        namespace: format!("taskbar"),
-                        layer: Layer::Top,
-                        anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
-                        auto_exclusive_zone: true,
-                    }
-                }),
-
-                lazy: false,
+                    end: vec![
+                        Bluetooth(bluetooth::Config {}),
+                        Network(network::Config {}),
+                        Time(time::Config {
+                            format: format!("%d/%m/%y"),
+                        }),
+                        Time(time::Config {
+                            format: format!("%H:%M:%S"),
+                        }),
+                    ],
+                }
             }),
-        }
-    );
+
+            layer_shell: Some({
+                use config::layer_shell::{Anchor, Config, Layer};
+
+                Config {
+                    namespace: format!("taskbar"),
+                    layer: Layer::Top,
+                    anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
+                    auto_exclusive_zone: true,
+                }
+            }),
+
+            lazy: false,
+        },
+    )]);
 
     app::Application::new(WindowManager {}, Config { windows }).run();
 }
