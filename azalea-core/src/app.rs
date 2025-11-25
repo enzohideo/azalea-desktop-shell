@@ -279,7 +279,7 @@ where
             }
             Command::Style(command) => match command {
                 cli::style::Command::Reload { file } => {
-                    let file = file.unwrap_or(PathBuf::from(""));
+                    let file = file.unwrap_or(glib::user_config_dir().join(WM::STYLE_PATH));
 
                     let Ok(scss) = std::fs::read_to_string(&file) else {
                         return cli::Response::Error(format!(
@@ -374,6 +374,7 @@ where
     Self: 'static + Sized,
 {
     const CONFIG_PATH: &str = "azalea/config.ron";
+    const STYLE_PATH: &str = "azalea/style.scss";
     const SOCKET_NAME: &str = "azalea.sock";
     const APP_ID: &str = "br.usp.ime.Azalea";
 
