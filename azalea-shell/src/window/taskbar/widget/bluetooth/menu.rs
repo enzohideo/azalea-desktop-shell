@@ -1,8 +1,5 @@
 use gtk::prelude::{BoxExt, ButtonExt, WidgetExt};
-use relm4::{
-    FactorySender,
-    prelude::{DynamicIndex, FactoryComponent},
-};
+use relm4::{FactorySender, prelude::FactoryComponent};
 
 use crate::{icon, service::dbus::bluez::Device};
 
@@ -14,7 +11,6 @@ pub struct BluetoothDeviceMenu {
 #[derive(Debug)]
 pub enum Input {
     Connect,
-    Connected(bool),
 }
 
 #[derive(Debug)]
@@ -35,6 +31,10 @@ impl FactoryComponent for BluetoothDeviceMenu {
         #[root]
         gtk::Box {
             set_spacing: 12,
+
+            gtk::Image {
+                set_icon_name: Some(self.device.icon.as_deref().unwrap_or(icon::BLUETOOTH)),
+            },
 
             gtk::Label {
                 set_halign: gtk::Align::Start,
@@ -67,7 +67,6 @@ impl FactoryComponent for BluetoothDeviceMenu {
                 self.device.clone(),
                 !self.device.is_connected,
             ))),
-            Input::Connected(is_connected) => self.device.is_connected = is_connected,
         }
     }
 }

@@ -16,6 +16,7 @@ pub struct Device {
     pub address: String,
     pub name: Option<String>,
     pub is_connected: bool,
+    pub icon: Option<String>,
 }
 
 #[derive(Default, Clone)]
@@ -95,6 +96,7 @@ impl azalea_service::Service for Service {
                                     address,
                                     name: device.name().await.unwrap_or(None),
                                     is_connected: device.is_connected().await.unwrap_or(false),
+                                    icon: device.icon().await.unwrap_or(None),
                                 },
                             )
                         })
