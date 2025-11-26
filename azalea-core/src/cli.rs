@@ -47,6 +47,8 @@ pub enum Command {
     #[command(subcommand)]
     Config(config::Command),
 
+    Monitors,
+
     #[command(subcommand)]
     Style(style::Command),
     // TODO: Extra subcommand given by the user?

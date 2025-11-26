@@ -122,6 +122,10 @@ where
                     },
                 }
             }
+            Command::Monitors => {
+                println!("{}", Self::monitors_to_string());
+                return;
+            }
             Command::Config(cli::config::Command::View { json }) => {
                 println!("{}", self.config_to_string(json));
                 return;
@@ -274,6 +278,9 @@ where
             Command::Config(cli::config::Command::View { json }) => {
                 return cli::Response::Success(self.config_to_string(json));
             }
+            Command::Monitors => {
+                return cli::Response::Success(Self::monitors_to_string());
+            }
             Command::Style(command) => match command {
                 cli::style::Command::Reload { file } => {
                     let file = file.unwrap_or(glib::user_config_dir().join(WM::STYLE_PATH));
@@ -367,13 +374,49 @@ where
         }
     }
 
+    fn monitors_to_string() -> String {
+        let monitors = gdk::Display::default().unwrap().monitors();
+        let mut output = vec![];
+
+        for i in 0..monitors.n_items() {
+            let Some(monitor): Option<gdk::Monitor> = monitors.item(i).and_downcast() else {
+                continue;
+            };
+
+            output.push(HashMap::from([
+                (
+                    "connector".to_string(),
+                    monitor
+                        .connector()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "description".to_string(),
+                    monitor
+                        .description()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "manufacturer".to_string(),
+                    monitor
+                        .manufacturer()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "model".to_string(),
+                    monitor.model().map(|v| v.to_string()).unwrap_or_default(),
+                ),
+            ]));
+        }
+
+        serde_json::to_string_pretty(&output).unwrap()
+    }
+
     fn get_monitor(index: u32) -> Option<gdk::Monitor> {
-        gdk::Display::default().and_then(|display| {
-            display
-                .monitors()
-                .item(index)
-                .and_then(|m| m.downcast::<gdk::Monitor>().ok())
-        })
+        gdk::Display::default().and_then(|display| display.monitors().item(index).and_downcast())
     }
 }
 
