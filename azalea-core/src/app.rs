@@ -16,26 +16,24 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
-pub struct Application<WM, ConfigWrapper, WindowWrapper>
+pub struct Application<WM>
 where
-    WM: WindowManager<ConfigWrapper, WindowWrapper>,
-    ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
+    WM: WindowManager,
     Self: 'static + Sized,
 {
-    config: config::Config<ConfigWrapper>,
+    config: config::Config<WM::ConfigWrapper>,
     dbus: Option<dbus::DBusWrapper>,
     window_manager: WM,
-    windows: HashMap<config::window::Id, WindowWrapper>,
+    windows: HashMap<config::window::Id, WM::WindowWrapper>,
 
     dynamic_css_provider: gtk::CssProvider,
 }
 
-impl<WM, ConfigWrapper, WindowWrapper> Application<WM, ConfigWrapper, WindowWrapper>
+impl<WM> Application<WM>
 where
-    WM: WindowManager<ConfigWrapper, WindowWrapper>,
-    ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
+    WM: WindowManager,
 {
-    pub fn new(window_manager: WM, config: config::Config<ConfigWrapper>) -> Self {
+    pub fn new(window_manager: WM, config: config::Config<WM::ConfigWrapper>) -> Self {
         Self {
             config,
             dbus: dbus::DBusWrapper::new().ok(),
@@ -46,7 +44,7 @@ where
         }
     }
 
-    fn load_config(path: &PathBuf) -> Result<Config<ConfigWrapper>, error::ConfigError> {
+    fn load_config(path: &PathBuf) -> Result<Config<WM::ConfigWrapper>, error::ConfigError> {
         let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
         let ext = path
@@ -334,7 +332,7 @@ where
             return;
         }
 
-        let wrapped_window = self.window_manager.create_window(&window_cfg.config);
+        let wrapped_window = WM::create_window(&window_cfg.config);
         let window = WM::unwrap_window(&wrapped_window);
 
         window.set_title(Some(&id));
@@ -420,16 +418,18 @@ where
     }
 }
 
-pub trait WindowManager<ConfigWrapper, WindowWrapper>
+pub trait WindowManager
 where
-    ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static,
     Self: 'static + Sized,
 {
+    type ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static;
+    type WindowWrapper;
+
     const CONFIG_PATH: &str = "azalea/config.ron";
     const STYLE_PATH: &str = "azalea/style.scss";
     const SOCKET_NAME: &str = "azalea.sock";
     const APP_ID: &str = "br.usp.ime.Azalea";
 
-    fn create_window(&self, config: &ConfigWrapper) -> WindowWrapper;
-    fn unwrap_window(window: &WindowWrapper) -> &gtk::Window;
+    fn create_window(config: &Self::ConfigWrapper) -> Self::WindowWrapper;
+    fn unwrap_window(window: &Self::WindowWrapper) -> &gtk::Window;
 }

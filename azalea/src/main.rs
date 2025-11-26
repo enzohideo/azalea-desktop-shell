@@ -24,8 +24,11 @@ pub enum WindowWrapper {
 
 pub struct WindowManager {}
 
-impl app::WindowManager<ConfigWrapper, WindowWrapper> for WindowManager {
-    fn create_window(&self, init: &ConfigWrapper) -> WindowWrapper {
+impl app::WindowManager for WindowManager {
+    type ConfigWrapper = ConfigWrapper;
+    type WindowWrapper = WindowWrapper;
+
+    fn create_window(init: &ConfigWrapper) -> WindowWrapper {
         match &init {
             ConfigWrapper::Default => {
                 let btn = gtk::Button::with_label("Hey");
