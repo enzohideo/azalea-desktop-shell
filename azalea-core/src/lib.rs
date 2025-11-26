@@ -4,4 +4,5 @@ pub mod config;
 pub mod dbus;
 pub mod error;
 use azalea_log as log;
+pub mod monitor;
 pub mod socket;
