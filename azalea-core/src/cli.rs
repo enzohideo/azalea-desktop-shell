@@ -70,11 +70,12 @@ pub mod window {
     pub enum Command {
         Create(Arguments),
         Toggle(Arguments),
+        Uuid,
     }
 
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
     pub struct Arguments {
-        pub id: crate::config::window::Id,
+        pub uuid: crate::config::window::Id,
     }
 }
 

@@ -27,3 +27,4 @@ gtk4-layer-shell.workspace = true
 
 thiserror.workspace = true
 grass = "0.13.4"
+uuid = "1.18.1"

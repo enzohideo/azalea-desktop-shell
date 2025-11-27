@@ -24,7 +24,7 @@ where
     config: config::Config<WM::ConfigWrapper>,
     dbus: Option<dbus::DBusWrapper>,
     window_manager: WM,
-    windows: HashMap<config::window::Id, WM::WindowWrapper>,
+    windows: HashMap<String, (config::window::Id, WM::WindowWrapper)>,
 
     dynamic_css_provider: gtk::CssProvider,
 }
@@ -259,18 +259,50 @@ where
                 return cli::Response::Error(format!("There's already an instance running."));
             }
             Command::Daemon(cli::daemon::Command::Stop) => app.quit(),
-            Command::Window(cli::window::Command::Create(arg)) => self.create_window(&arg.id, app),
-            Command::Window(cli::window::Command::Toggle(arg)) => {
-                let Some(wrapper) = self.windows.get(&arg.id) else {
-                    return cli::Response::Error(format!("Window with id {} not found", arg.id));
-                };
-                let window = WM::unwrap_window(wrapper);
-                window.set_visible(!window.get_visible());
-            }
+            Command::Window(window_cmd) => match window_cmd {
+                cli::window::Command::Create(arg) => self.create_window(&arg.uuid, app),
+                cli::window::Command::Toggle(arg) => {
+                    let Some((_, wrapper)) = self.windows.get(&arg.uuid) else {
+                        return cli::Response::Error(format!(
+                            "Window with id {} not found",
+                            arg.uuid
+                        ));
+                    };
+                    let window = WM::unwrap_window(wrapper);
+                    window.set_visible(!window.get_visible());
+                }
+                cli::window::Command::Uuid => {
+                    let uuids: HashMap<&String, HashMap<&str, String>> = self
+                        .windows
+                        .iter()
+                        .map(|(k, (template_id, window))| {
+                            let window = WM::unwrap_window(window);
+                            (
+                                k,
+                                HashMap::from([
+                                    (
+                                        "monitor",
+                                        window
+                                            .monitor()
+                                            .and_then(|m| m.model())
+                                            .unwrap_or_default()
+                                            .to_string(),
+                                    ),
+                                    ("template", template_id.to_string()),
+                                ]),
+                            )
+                        })
+                        .collect();
+                    return cli::Response::Success(format!(
+                        "{}",
+                        serde_json::to_string_pretty(&uuids).unwrap_or(format!("[]"))
+                    ));
+                }
+            },
             Command::Layer(cli::layer_shell::Command::Toggle(arg)) => self
                 .windows
                 .values()
-                .map(|win| WM::unwrap_window(win))
+                .map(|(_, win)| WM::unwrap_window(win))
                 .filter(|win| arg.cmp(win))
                 .for_each(|win| win.set_visible(!win.get_visible())),
             Command::Config(cli::config::Command::View { json }) => {
@@ -355,7 +387,10 @@ where
         app.add_window(window);
         window.present();
 
-        self.windows.insert(id.clone(), wrapped_window);
+        self.windows.insert(
+            uuid::Uuid::new_v4().to_string(),
+            (id.clone(), wrapped_window),
+        );
     }
 
     fn config_to_string(&self, json: bool) -> String {
