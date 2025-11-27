@@ -1,5 +1,5 @@
 use gtk::prelude::{BoxExt, ButtonExt, WidgetExt};
-use relm4::{FactorySender, prelude::FactoryComponent};
+use relm4::{FactorySender, RelmWidgetExt, prelude::FactoryComponent};
 
 use crate::{icon, service::dbus::bluez::Device};
 
@@ -50,6 +50,16 @@ impl FactoryComponent for BluetoothDeviceMenu {
                     icon::PLUG_CONNECTED
                 } else {
                     icon::PLUG_DISCONNECTED
+                },
+
+                #[watch]
+                inline_css: if self.device.is_connected {
+                    r#"
+                        color: var(--on-tertiary-container);
+                        background: var(--tertiary-container);
+                    "#
+                } else {
+                    ""
                 },
 
                 connect_clicked => Input::Connect
