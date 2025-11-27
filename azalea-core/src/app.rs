@@ -272,25 +272,23 @@ where
                     window.set_visible(!window.get_visible());
                 }
                 cli::window::Command::Uuid => {
-                    let uuids: HashMap<&String, HashMap<&str, String>> = self
+                    let uuids: Vec<HashMap<&str, String>> = self
                         .windows
                         .iter()
                         .map(|(k, (template_id, window))| {
                             let window = WM::unwrap_window(window);
-                            (
-                                k,
-                                HashMap::from([
-                                    (
-                                        "monitor",
-                                        window
-                                            .monitor()
-                                            .and_then(|m| m.model())
-                                            .unwrap_or_default()
-                                            .to_string(),
-                                    ),
-                                    ("template", template_id.to_string()),
-                                ]),
-                            )
+                            HashMap::from([
+                                ("uuid", k.clone()),
+                                (
+                                    "monitor",
+                                    window
+                                        .monitor()
+                                        .and_then(|m| m.model())
+                                        .unwrap_or_default()
+                                        .to_string(),
+                                ),
+                                ("template", template_id.clone()),
+                            ])
                         })
                         .collect();
                     return cli::Response::Success(format!(
