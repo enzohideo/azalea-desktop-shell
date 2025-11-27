@@ -15,6 +15,7 @@ mod menu;
 
 crate::init! {
     Model {
+        is_powered: bool,
         devices_menu: FactoryHashMap<String, menu::BluetoothDeviceMenu>,
         _event_listener_handle: LocalListenerHandle,
     }
@@ -25,6 +26,7 @@ crate::init! {
 #[derive(Debug)]
 pub enum Input {
     Connect(String, bool),
+    Power(bool),
     Bluez(service::dbus::bluez::Output),
 }
 
@@ -41,26 +43,58 @@ impl Component for Model {
     type CommandOutput = CommandOutput;
 
     view! {
-        gtk::Box {
-            gtk::MenuButton {
-                set_hexpand: false,
-                set_vexpand: false,
-                set_valign: gtk::Align::Center,
+        gtk::MenuButton {
+            set_hexpand: false,
+            set_vexpand: false,
+            set_valign: gtk::Align::Center,
 
-                set_direction: gtk::ArrowType::Up,
-                set_icon_name: icon::BLUETOOTH, // TODO: Change according to status
+            set_direction: gtk::ArrowType::Up,
 
-                #[wrap(Some)]
-                set_popover = &gtk::Popover {
-                    set_position: gtk::PositionType::Right,
+            #[watch]
+            set_icon_name: if model.is_powered { icon::BLUETOOTH } else { icon::BLUETOOTH_X },
+
+            #[wrap(Some)]
+            set_popover = &gtk::Popover {
+                set_position: gtk::PositionType::Right,
+
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
 
                     gtk::Box {
-                        #[local_ref]
-                        devices_widget -> gtk::Box {
-                            set_orientation: gtk::Orientation::Vertical,
-                            set_spacing: 5,
-                        }
+                        inline_css: r#"
+                            background: var(--secondary-container);
+                            padding: 5px 10px 5px 10px;
+                            border-radius: 5px;
+                        "#,
+                        gtk::Label::new(Some("Bluetooth")) {
+                            inline_css: r#"
+                                font-weight: bold;
+                                color: var(--on-secondary-container);
+                            "#,
+                            set_halign: gtk::Align::Start,
+                            set_hexpand: true,
+                        },
+                        gtk::Switch {
+                            set_halign: gtk::Align::End,
+
+                            #[watch]
+                            #[block_signal(toggle_state)]
+                            set_active: model.is_powered,
+
+                            connect_state_set[sender] => move |_, on| {
+                                sender.input(Input::Power(on));
+                                false.into()
+                            } @toggle_state,
+                        },
                     },
+
+                    gtk::Separator {},
+
+                    #[local_ref]
+                    devices_widget -> gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_spacing: 5,
+                    }
                 },
             },
         },
@@ -72,6 +106,7 @@ impl Component for Model {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
+            is_powered: true,
             devices_menu: FactoryHashMap::builder()
                 .launch(gtk::Box::default())
                 .forward(sender.input_sender(), |output| match output {
@@ -112,7 +147,13 @@ impl Component for Model {
                         menu_entry.device.is_connected = connected;
                     }
                 }
+                service::dbus::bluez::Output::Powered(on) => {
+                    self.is_powered = on;
+                }
             },
+            Input::Power(on) => {
+                service::dbus::bluez::Service::send(service::dbus::bluez::Input::Power(on));
+            }
         }
     }
 

@@ -27,6 +27,7 @@ pub type DeviceAdress = String;
 
 #[derive(Clone, Debug)]
 pub enum Input {
+    Power(bool),
     Adapters(flume::Sender<Vec<AdapterName>>),
     Devices(flume::Sender<HashMap<String, Device>>),
     Connect(DeviceAdress, bool),
@@ -37,6 +38,7 @@ pub enum Event {}
 #[derive(Clone, Debug)]
 pub enum Output {
     Connected(DeviceAdress, bool),
+    Powered(bool),
 }
 
 impl azalea_service::Service for Service {
@@ -81,6 +83,17 @@ impl azalea_service::Service for Service {
         output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
+            Input::Power(on) => {
+                if let Err(e) = self.adapter.set_powered(on).await {
+                    azalea_log::warning!(
+                        "Could not power off bluetooth adapter {}: {}",
+                        self.adapter.name(),
+                        e
+                    );
+                } else {
+                    drop(output_sender.send(Output::Powered(on)));
+                }
+            }
             Input::Adapters(sender) => {
                 let names = self.session.adapter_names().await.unwrap_or_default();
                 drop(sender.send(names));
