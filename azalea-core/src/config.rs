@@ -62,26 +62,31 @@ pub mod layer_shell {
 }
 
 pub mod window {
+    use crate::monitor::Monitor;
+
     use super::layer_shell;
 
     pub type Id = String;
 
-    #[derive(serde::Serialize, serde::Deserialize, Debug)]
+    /// Template configuration for a window
+    #[derive(Clone, serde::Serialize, serde::Deserialize, Debug)]
     pub struct Config<ConfigWrapper>
     where
-        ConfigWrapper: std::fmt::Debug,
+        ConfigWrapper: std::fmt::Debug + Clone,
     {
         pub config: ConfigWrapper,
         pub layer_shell: Option<layer_shell::Config>,
         #[serde(default)]
         pub lazy: bool,
+        #[serde(default)]
+        pub monitor: Monitor,
     }
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config<ConfigWrapper>
 where
-    ConfigWrapper: std::fmt::Debug,
+    ConfigWrapper: std::fmt::Debug + Clone,
 {
     pub windows: HashMap<window::Id, window::Config<ConfigWrapper>>,
     // TODO: Add different layouts (which windows are active)

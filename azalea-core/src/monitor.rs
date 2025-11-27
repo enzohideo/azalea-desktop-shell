@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use gtk::{
     gdk::{
         self,
@@ -11,20 +13,27 @@ use gtk::{
 pub type Id = String;
 
 /// Used to find a specific monitor
-#[derive(Default, serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(Default, clap::Parser, serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct MonitorMatch {
     connector: Option<Id>,
     manufacturer: Option<String>,
     model: Option<String>,
 }
 
+impl From<gdk::Monitor> for MonitorMatch {
+    fn from(value: gdk::Monitor) -> Self {
+        Self {
+            connector: value.connector().map(|v| v.to_string()),
+            manufacturer: value.manufacturer().map(|v| v.to_string()),
+            model: value.model().map(|v| v.to_string()),
+        }
+    }
+}
+
 #[derive(Default, serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub enum Monitor {
     /// Monitor is determined on-the-fly (good for popups)
-    ///
-    /// Dynamic(true): lazy, create when needed
-    /// Dynamic(false): non-lazy, create when app starts
-    Dynamic(bool),
+    Dynamic,
 
     /// Stay attached to a single monitor
     Single(MonitorMatch),
@@ -101,4 +110,59 @@ impl MonitorMatch {
 
         return matched_monitors;
     }
+}
+
+pub fn monitors() -> Vec<gdk::Monitor> {
+    let monitors = gdk::Display::default().unwrap().monitors();
+    let mut output = vec![];
+
+    for i in 0..monitors.n_items() {
+        let Some(monitor): Option<gdk::Monitor> = monitors.item(i).and_downcast() else {
+            continue;
+        };
+        output.push(monitor);
+    }
+
+    output
+}
+
+pub fn monitors_to_string() -> String {
+    let output: Vec<HashMap<&str, String>> = monitors()
+        .iter()
+        .map(|monitor| {
+            HashMap::from([
+                (
+                    "connector",
+                    monitor
+                        .connector()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "description",
+                    monitor
+                        .description()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "manufacturer",
+                    monitor
+                        .manufacturer()
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
+                ),
+                (
+                    "model",
+                    monitor.model().map(|v| v.to_string()).unwrap_or_default(),
+                ),
+            ])
+        })
+        .collect();
+
+    serde_json::to_string_pretty(&output).unwrap()
+}
+
+pub fn get_monitor(index: u32) -> Option<gdk::Monitor> {
+    gdk::Display::default().and_then(|display| display.monitors().item(index).and_downcast())
 }

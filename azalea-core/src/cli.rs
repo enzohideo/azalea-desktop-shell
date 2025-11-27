@@ -66,16 +66,23 @@ pub mod daemon {
 }
 
 pub mod window {
+    use crate::config;
+
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
     pub enum Command {
-        Create(Arguments),
-        Toggle(Arguments),
+        Create(CreateArgs),
+        Toggle(ToggleArgs),
         Uuid,
     }
 
     #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
-    pub struct Arguments {
-        pub uuid: crate::config::window::Id,
+    pub struct ToggleArgs {
+        pub uuid: String,
+    }
+
+    #[derive(clap::Parser, serde::Serialize, serde::Deserialize, Debug)]
+    pub struct CreateArgs {
+        pub id: config::window::Id,
     }
 }
 

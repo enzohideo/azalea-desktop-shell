@@ -7,11 +7,11 @@ use azalea::{
     },
     shell::{self, icon, window::taskbar},
 };
-use azalea_core::config::Config;
+use azalea_core::{config::Config, monitor::Monitor};
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum ConfigWrapper {
     Default,
     Taskbar(taskbar::Config),
@@ -100,6 +100,8 @@ fn main() {
             }),
 
             lazy: false,
+
+            monitor: Monitor::All,
         },
     )]);
 

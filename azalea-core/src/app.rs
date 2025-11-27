@@ -10,7 +10,7 @@ use gtk4_layer_shell::LayerShell;
 use crate::{
     cli,
     config::{self, Config},
-    dbus, error, log,
+    dbus, error, log, monitor,
     socket::{self, r#async::UnixStreamWrapper},
 };
 
@@ -121,7 +121,7 @@ where
                 }
             }
             Command::Monitors => {
-                println!("{}", Self::monitors_to_string());
+                println!("{}", monitor::monitors_to_string());
                 return;
             }
             Command::Config(cli::config::Command::View { json }) => {
@@ -159,27 +159,7 @@ where
 
             pong_tx.send(app_guard).expect("Daemon could not pong!");
 
-            {
-                let config_window_ids: Vec<config::window::Id> = state
-                    .borrow()
-                    .config
-                    .windows
-                    .keys()
-                    .map(|v| v.to_owned())
-                    .collect();
-                let mut state = state.borrow_mut();
-                for id in config_window_ids {
-                    let Some(window_cfg) = state.config.windows.get(&id) else {
-                        continue;
-                    };
-
-                    if window_cfg.lazy {
-                        continue;
-                    }
-
-                    state.create_window(&id, app)
-                }
-            }
+            state.borrow_mut().create_all_windows(app);
 
             Self::load_style(&gtk::CssProvider::new(), None);
 
@@ -260,7 +240,7 @@ where
             }
             Command::Daemon(cli::daemon::Command::Stop) => app.quit(),
             Command::Window(window_cmd) => match window_cmd {
-                cli::window::Command::Create(arg) => self.create_window(&arg.uuid, app),
+                cli::window::Command::Create(arg) => self.create_window(&arg.id, None, app),
                 cli::window::Command::Toggle(arg) => {
                     let Some((_, wrapper)) = self.windows.get(&arg.uuid) else {
                         return cli::Response::Error(format!(
@@ -307,7 +287,7 @@ where
                 return cli::Response::Success(self.config_to_string(json));
             }
             Command::Monitors => {
-                return cli::Response::Success(Self::monitors_to_string());
+                return cli::Response::Success(monitor::monitors_to_string());
             }
             Command::Style(command) => match command {
                 cli::style::Command::Reload { file } => {
@@ -351,7 +331,44 @@ where
         }
     }
 
-    fn create_window(&mut self, id: &config::window::Id, app: &gtk::Application) {
+    fn create_all_windows(&mut self, app: &gtk::Application) {
+        // TODO: Check if window already exists (match monitor and window id)
+        for (id, cfg) in self.config.windows.clone().iter() {
+            if cfg.lazy {
+                continue;
+            }
+
+            match &cfg.monitor {
+                monitor::Monitor::Dynamic => {
+                    self.create_window(&id, None, app);
+                }
+                monitor::Monitor::Single(monitor_match) => {
+                    for monitor in monitor_match.find_matches() {
+                        self.create_window(&id, Some(monitor), app);
+                    }
+                }
+                monitor::Monitor::Multi(monitor_matches) => {
+                    for monitor_match in monitor_matches {
+                        for monitor in monitor_match.find_matches() {
+                            self.create_window(&id, Some(monitor), app);
+                        }
+                    }
+                }
+                monitor::Monitor::All => {
+                    for monitor in monitor::monitors() {
+                        self.create_window(&id, Some(monitor), app);
+                    }
+                }
+            }
+        }
+    }
+
+    fn create_window(
+        &mut self,
+        id: &config::window::Id,
+        monitor: Option<gdk::Monitor>,
+        app: &gtk::Application,
+    ) {
         let Some(window_cfg) = self.config.windows.get(id) else {
             log::warning!("Window configuration not found for id {}", id);
             return;
@@ -371,7 +388,7 @@ where
             window.init_layer_shell();
             window.set_namespace(Some(&layer_shell.namespace));
             if let Some(monitor) = layer_shell.monitor {
-                window.set_monitor(Self::get_monitor(monitor).as_ref())
+                window.set_monitor(monitor::get_monitor(monitor).as_ref())
             }
             window.set_layer((&layer_shell.layer).into());
             for anchor in &layer_shell.anchors {
@@ -381,6 +398,8 @@ where
                 window.auto_exclusive_zone_enable();
             }
         }
+
+        window.set_monitor(monitor.as_ref());
 
         app.add_window(window);
         window.present();
@@ -404,58 +423,17 @@ where
             .unwrap()
         }
     }
-
-    fn monitors_to_string() -> String {
-        let monitors = gdk::Display::default().unwrap().monitors();
-        let mut output = vec![];
-
-        for i in 0..monitors.n_items() {
-            let Some(monitor): Option<gdk::Monitor> = monitors.item(i).and_downcast() else {
-                continue;
-            };
-
-            output.push(HashMap::from([
-                (
-                    "connector".to_string(),
-                    monitor
-                        .connector()
-                        .map(|v| v.to_string())
-                        .unwrap_or_default(),
-                ),
-                (
-                    "description".to_string(),
-                    monitor
-                        .description()
-                        .map(|v| v.to_string())
-                        .unwrap_or_default(),
-                ),
-                (
-                    "manufacturer".to_string(),
-                    monitor
-                        .manufacturer()
-                        .map(|v| v.to_string())
-                        .unwrap_or_default(),
-                ),
-                (
-                    "model".to_string(),
-                    monitor.model().map(|v| v.to_string()).unwrap_or_default(),
-                ),
-            ]));
-        }
-
-        serde_json::to_string_pretty(&output).unwrap()
-    }
-
-    fn get_monitor(index: u32) -> Option<gdk::Monitor> {
-        gdk::Display::default().and_then(|display| display.monitors().item(index).and_downcast())
-    }
 }
 
 pub trait WindowManager
 where
     Self: 'static + Sized,
 {
-    type ConfigWrapper: serde::Serialize + serde::de::DeserializeOwned + std::fmt::Debug + 'static;
+    type ConfigWrapper: serde::Serialize
+        + serde::de::DeserializeOwned
+        + std::fmt::Debug
+        + Clone
+        + 'static;
     type WindowWrapper;
 
     const CONFIG_PATH: &str = "azalea/config.ron";
