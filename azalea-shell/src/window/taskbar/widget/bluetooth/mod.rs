@@ -61,16 +61,18 @@ impl Component for Model {
                     set_orientation: gtk::Orientation::Vertical,
 
                     gtk::Box {
-                        inline_css: r#"
-                            background: var(--secondary-container);
-                            padding: 5px 10px 5px 10px;
-                            border-radius: 5px;
-                        "#,
                         gtk::Label::new(Some("Bluetooth")) {
                             inline_css: r#"
                                 font-weight: bold;
-                                color: var(--on-secondary-container);
                             "#,
+
+                            #[watch]
+                            set_css_classes: if model.is_powered {
+                                &[ "primary-fg" ]
+                            } else {
+                                &[]
+                            },
+
                             set_halign: gtk::Align::Start,
                             set_hexpand: true,
                         },

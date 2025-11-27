@@ -54,7 +54,7 @@ impl FactoryComponent for BluetoothDeviceMenu {
 
                 #[watch]
                 set_css_classes: if self.device.is_connected {
-                    &[ "primary-container-button" ]
+                    &[ "primary-fg" ]
                 } else {
                     &[]
                 },
