@@ -81,36 +81,6 @@ button {
 
   transition: opacity 0.1s linear;
 
-  &.primary-button {
-    color: var(--on-primary);
-    background: var(--primary);
-  }
-
-  &.secondary-button {
-    color: var(--on-secondary);
-    background: var(--secondary);
-  }
-
-  &.tertiary-button {
-    color: var(--on-tertiary);
-    background: var(--tertiary);
-  }
-
-  &.primary-container-button {
-    color: var(--on-primary-container);
-    background: var(--primary-container);
-  }
-
-  &.secondary-container-button {
-    color: var(--on-secondary-container);
-    background: var(--secondary-container);
-  }
-
-  &.tertiary-container-button {
-    color: var(--on-tertiary-container);
-    background: var(--tertiary-container);
-  }
-
   &:hover {
     color: var(--on-surface-variant);
     background: var(--surface-variant);
@@ -118,36 +88,6 @@ button {
 
   &:checked {
     background: unquote("mix(var(--surface), var(--surface-container), 0.75)");
-
-    &.primary-button {
-      background: unquote("mix(var(--primary), var(--surface), 0.75)");
-    }
-
-    &.secondary-button {
-      background: unquote("mix(var(--secondary), var(--surface), 0.75)");
-    }
-
-    &.tertiary-button {
-      background: unquote("mix(var(--tertiary), var(--surface), 0.75)");
-    }
-
-    &.primary-container-button {
-      background: unquote(
-        "mix(var(--primary), var(--surface-container), 0.75)"
-      );
-    }
-
-    &.secondary-container-button {
-      background: unquote(
-        "mix(var(--secondary), var(--surface-container), 0.75)"
-      );
-    }
-
-    &.tertiary-container-button {
-      background: unquote(
-        "mix(var(--tertiary), var(--surface-container), 0.75)"
-      );
-    }
   }
 }
 
@@ -173,7 +113,69 @@ switch {
   &:checked {
     border: 3px solid var(--primary);
     background: var(--primary);
+  }
+}
 
+window {
+  background: var(--surface);
+}
+
+* {
+  .primary-fg {
+    color: var(--primary);
+  }
+
+  .secondary-fg {
+    color: var(--secondary);
+  }
+
+  .tertiary-fg {
+    color: var(--tertiary);
+  }
+
+  .primary-bg {
+    background: var(--primary);
+  }
+
+  .secondary-bg {
+    background: var(--secondary);
+  }
+
+  .tertiary-bg {
+    background: var(--tertiary);
+  }
+
+  .primary {
+    color: var(--on-primary);
+    background: var(--primary);
+  }
+
+  .secondary {
+    color: var(--on-secondary);
+    background: var(--secondary);
+  }
+
+  .tertiary {
+    color: var(--on-tertiary);
+    background: var(--tertiary);
+  }
+
+  .primary-container {
+    color: var(--on-primary-container);
+    background: var(--primary-container);
+  }
+
+  .secondary-container {
+    color: var(--on-secondary-container);
+    background: var(--secondary-container);
+  }
+
+  .tertiary-container {
+    color: var(--on-tertiary-container);
+    background: var(--tertiary-container);
+  }
+
+  &:checked {
     &.primary-button {
       border: 3px solid var(--primary);
       background: var(--primary);
@@ -206,6 +208,6 @@ switch {
   }
 }
 
-window {
-  background: var(--surface);
+.bubble {
+  border-radius: 5px;
 }
