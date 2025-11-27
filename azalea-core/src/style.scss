@@ -51,6 +51,10 @@
   --tertiary-fixed-dim: #4f2d59;
 }
 
+* {
+  border: none;
+}
+
 text selection {
   background: var(--tertiary);
   color: var(--on-tertiary);
@@ -93,6 +97,21 @@ popover {
 
 box {
   all: unset;
+}
+
+switch {
+  background: gray;
+  border: 3px solid gray;
+
+
+  slider {
+    background: white;
+  }
+
+  &:checked {
+    border: 3px solid var(--primary);
+    background: var(--primary);
+  }
 }
 
 window {
