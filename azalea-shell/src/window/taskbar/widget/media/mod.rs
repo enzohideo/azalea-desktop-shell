@@ -242,10 +242,19 @@ impl Component for Model {
                 let Some(player) = self.players.get_mut(&output.name) else {
                     return;
                 };
+                let is_selected = if let Some(selected) = &self.selected {
+                    *selected == output.name
+                } else {
+                    false
+                };
                 use service::dbus::mpris::Event;
                 match output.event {
                     Event::Volume(_) => {}
-                    Event::Position(position) => self.position = position as f64,
+                    Event::Position(position) => {
+                        if is_selected {
+                            self.position = position as f64
+                        }
+                    }
                     Event::Metadata(metadata) => {
                         player.artist = metadata
                             .artist
