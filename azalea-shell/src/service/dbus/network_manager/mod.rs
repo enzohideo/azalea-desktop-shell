@@ -14,6 +14,7 @@ pub struct Service {
 }
 
 pub struct Streams {
+    enable: PropertyStream<'static, bool>,
     state: PropertyStream<'static, NMState>,
     connectivity: PropertyStream<'static, NMConnectivityState>,
 }
@@ -26,15 +27,18 @@ pub struct Init {
 #[derive(Clone, Debug)]
 pub enum Input {
     Update,
+    Enable(bool),
 }
 
 pub enum Event {
+    NetworkingEnabledChanged(PropertyChanged<'static, bool>),
     StateChanged(PropertyChanged<'static, NMState>),
     ConnectivityChanged(PropertyChanged<'static, NMConnectivityState>),
 }
 
 #[derive(Clone, Debug)]
 pub enum Output {
+    NetworkingEnabledChanged(bool),
     StateChanged(NMState),
     ConnectivityChanged(NMConnectivityState),
 }
@@ -66,6 +70,7 @@ impl azalea_service::Service for Service {
 
         Self {
             streams: Streams {
+                enable: proxy.receive_networking_enabled_changed().await,
                 state: proxy.receive_state_changed().await,
                 connectivity: proxy.receive_connectivity_changed().await,
             },
@@ -85,12 +90,19 @@ impl azalea_service::Service for Service {
                     self.proxy.connectivity().await.unwrap(),
                 )));
             }
+            Input::Enable(on) => {
+                if let Err(e) = self.proxy.enable(on).await {
+                    azalea_log::warning!("Failed to (dis)enable network: {}", e)
+                }
+            }
         }
     }
 
     async fn event_generator(&mut self) -> Self::Event {
         loop {
             tokio::select! {
+                Some(prop) = self.streams.enable.next() =>
+                    return Event::NetworkingEnabledChanged(prop),
                 Some(prop) = self.streams.state.next() =>
                     return Event::StateChanged(prop),
                 Some(prop) = self.streams.connectivity.next() =>
@@ -108,6 +120,9 @@ impl azalea_service::Service for Service {
         let output = match event {
             Event::StateChanged(prop) => Output::StateChanged(prop.get().await?),
             Event::ConnectivityChanged(prop) => Output::ConnectivityChanged(prop.get().await?),
+            Event::NetworkingEnabledChanged(prop) => {
+                Output::NetworkingEnabledChanged(prop.get().await?)
+            }
         };
         output_sender.send(output)?;
         Ok(())

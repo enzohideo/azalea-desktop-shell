@@ -13,6 +13,15 @@ pub trait NetworkManager {
     fn enable(&self, enable: bool) -> zbus::Result<()>;
 
     #[zbus(property)]
+    fn networking_enabled(&self) -> zbus::Result<bool>;
+
+    #[zbus(property)]
+    fn wireless_enabled(&self) -> zbus::Result<bool>;
+
+    #[zbus(property)]
+    fn wwan_enabled(&self) -> zbus::Result<bool>;
+
+    #[zbus(property)]
     fn version(&self) -> zbus::Result<String>;
 
     #[zbus(property)]
