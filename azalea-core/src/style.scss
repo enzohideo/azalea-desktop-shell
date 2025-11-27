@@ -69,23 +69,82 @@ button {
   border: unset;
   box-shadow: unset;
 
-  padding: 2px;
+  padding: 2px 4px 2px 4px;
   margin: 0;
 
   color: var(--on-surface);
   background: var(--surface);
 
   transition: opacity 0.1s linear;
-}
 
-button:hover {
-  color: var(--on-surface-variant);
-  background: var(--surface-variant);
-}
+  &.primary-button {
+    color: var(--on-primary);
+    background: var(--primary);
+  }
 
-button:checked {
-  color: var(--on-surface-variant);
-  background: unquote("mix(var(--primary), var(--surface-container), 0.75)");
+  &.secondary-button {
+    color: var(--on-secondary);
+    background: var(--secondary);
+  }
+
+  &.tertiary-button {
+    color: var(--on-tertiary);
+    background: var(--tertiary);
+  }
+
+  &.primary-container-button {
+    color: var(--on-primary-container);
+    background: var(--primary-container);
+  }
+
+  &.secondary-container-button {
+    color: var(--on-secondary-container);
+    background: var(--secondary-container);
+  }
+
+  &.tertiary-container-button {
+    color: var(--on-tertiary-container);
+    background: var(--tertiary-container);
+  }
+
+  &:hover {
+    color: var(--on-surface-variant);
+    background: var(--surface-variant);
+  }
+
+  &:checked {
+    background: unquote("mix(var(--surface), var(--surface-container), 0.75)");
+
+    &.primary-button {
+      background: unquote("mix(var(--primary), var(--surface), 0.75)");
+    }
+
+    &.secondary-button {
+      background: unquote("mix(var(--secondary), var(--surface), 0.75)");
+    }
+
+    &.tertiary-button {
+      background: unquote("mix(var(--tertiary), var(--surface), 0.75)");
+    }
+
+    &.primary-container-button {
+      background: unquote(
+        "mix(var(--primary), var(--surface-container), 0.75)"
+      );
+    }
+
+    &.secondary-container-button {
+      background: unquote(
+        "mix(var(--secondary), var(--surface-container), 0.75)"
+      );
+    }
+
+    &.tertiary-container-button {
+      background: unquote(
+        "mix(var(--tertiary), var(--surface-container), 0.75)"
+      );
+    }
+  }
 }
 
 popover {
@@ -103,7 +162,6 @@ switch {
   background: gray;
   border: 3px solid gray;
 
-
   slider {
     background: white;
   }
@@ -111,6 +169,36 @@ switch {
   &:checked {
     border: 3px solid var(--primary);
     background: var(--primary);
+
+    &.primary-button {
+      border: 3px solid var(--primary);
+      background: var(--primary);
+    }
+
+    &.secondary-button {
+      border: 3px solid var(--secondary);
+      background: var(--secondary);
+    }
+
+    &.tertiary-button {
+      border: 3px solid var(--tertiary);
+      background: var(--tertiary);
+    }
+
+    &.primary-container-button {
+      border: 3px solid var(--primary-container);
+      background: var(--primary-container);
+    }
+
+    &.secondary-container-button {
+      border: 3px solid var(--secondary-container);
+      background: var(--secondary-container);
+    }
+
+    &.tertiary-container-button {
+      border: 3px solid var(--tertiary-container);
+      background: var(--tertiary-container);
+    }
   }
 }
 
