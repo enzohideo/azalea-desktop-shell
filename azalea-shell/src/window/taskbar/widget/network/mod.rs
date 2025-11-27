@@ -1,5 +1,6 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
-use relm4::{Component, ComponentParts, ComponentSender, component};
+use gtk::prelude::*;
+use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt, component};
 
 use crate::{
     icon,
@@ -11,8 +12,8 @@ use crate::{
 
 crate::init! {
     Model {
-        state: NMState,
-        connectivity: NMConnectivityState,
+        enabled: bool,
+        state_connectivity: (NMState, NMConnectivityState),
         _nm_handle: LocalListenerHandle,
     }
 
@@ -21,6 +22,7 @@ crate::init! {
 
 #[derive(Debug)]
 pub enum Input {
+    Enable(bool),
     NetworkManager(network_manager::Output),
 }
 
@@ -32,18 +34,73 @@ impl Component for Model {
     type CommandOutput = ();
 
     view! {
-        gtk::Image {
+        gtk::MenuButton {
+            set_hexpand: false,
+            set_vexpand: false,
+            set_valign: gtk::Align::Center,
+
             #[watch]
-            set_icon_name: Some(match model.state {
-                NMState::NMStateUnknown => icon::WIFI_QUESTION_MARK,
-                NMState::NMStateAsleep => icon::WIFI_SLEEP,
-                NMState::NMStateDisconnected => icon::WIFI_X,
-                NMState::NMStateDisconnecting => icon::WIFI_DOTS,
-                NMState::NMStateConnecting => icon::WIFI_DOTS,
-                NMState::NMStateConnectedLocal => icon::WIFI_3,
-                NMState::NMStateConnectedSite => icon::WIFI_3,
-                NMState::NMStateConnectedGlobal => icon::WIFI_3,
-            }),
+            set_icon_name: match model.state_connectivity {
+                (NMState::NMStateUnknown        , _) => icon::WIFI_QUESTION_MARK,
+                (NMState::NMStateAsleep         , _)=> icon::WIFI_SLEEP,
+                (NMState::NMStateDisconnected   , _)=> icon::WIFI_X,
+                (NMState::NMStateDisconnecting  , _)=> icon::WIFI_DOTS,
+                (NMState::NMStateConnecting     , _)=> icon::WIFI_DOTS,
+                (NMState::NMStateConnectedLocal , _)=> icon::WIFI_NONE,
+                (NMState::NMStateConnectedSite  , _)=> icon::WIFI_NONE,
+                (NMState::NMStateConnectedGlobal, NMConnectivityState::NMConnectivityFull)=> icon::WIFI_3,
+                (NMState::NMStateConnectedGlobal, NMConnectivityState::NMConnectivityLimited)=> icon::WIFI_2,
+                (NMState::NMStateConnectedGlobal, _)=> icon::WIFI_0,
+            },
+
+            #[wrap(Some)]
+            set_popover = &gtk::Popover {
+                set_position: gtk::PositionType::Right,
+
+                gtk::Box {
+                    set_orientation: gtk::Orientation::Vertical,
+
+                    gtk::Box {
+                        set_spacing: 12,
+
+                        inline_css: r#"
+                            background: var(--secondary-container);
+                            padding: 5px 10px 5px 10px;
+                            border-radius: 5px;
+                        "#,
+
+                        gtk::Label::new(Some("Network")) {
+                            inline_css: r#"
+                                font-weight: bold;
+                                color: var(--on-secondary-container);
+                            "#,
+                            set_halign: gtk::Align::Start,
+                            set_hexpand: true,
+                        },
+
+                        gtk::Switch {
+                            set_halign: gtk::Align::End,
+
+                            #[watch]
+                            #[block_signal(toggle_state)]
+                            set_active: model.enabled,
+
+                            connect_state_set[sender] => move |_, on| {
+                                sender.input(Input::Enable(on));
+                                false.into()
+                            } @toggle_state,
+                        },
+                    },
+
+                    gtk::Separator {},
+
+                    // #[local_ref]
+                    // devices_widget -> gtk::Box {
+                    //     set_orientation: gtk::Orientation::Vertical,
+                    //     set_spacing: 5,
+                    // }
+                },
+            },
         },
     }
 
@@ -53,8 +110,8 @@ impl Component for Model {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
-            state: Default::default(),
-            connectivity: Default::default(),
+            enabled: true,
+            state_connectivity: Default::default(),
             _nm_handle: network_manager::Service::forward_local(
                 sender.input_sender().clone(),
                 Input::NetworkManager,
@@ -72,11 +129,15 @@ impl Component for Model {
         use network_manager::Output;
         match message {
             Input::NetworkManager(nm_msg) => match nm_msg {
-                Output::StateChanged(nmstate) => self.state = nmstate,
+                Output::NetworkingEnabledChanged(on) => self.enabled = on,
+                Output::StateChanged(nmstate) => self.state_connectivity.0 = nmstate,
                 Output::ConnectivityChanged(nmconnectivity_state) => {
-                    self.connectivity = nmconnectivity_state
+                    self.state_connectivity.1 = nmconnectivity_state
                 }
             },
+            Input::Enable(on) => {
+                network_manager::Service::send(network_manager::Input::Enable(on));
+            }
         }
     }
 
