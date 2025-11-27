@@ -22,9 +22,9 @@ pub enum WindowWrapper {
     Taskbar(relm4::component::Controller<taskbar::Model>),
 }
 
-pub struct WindowManager {}
+pub struct AzaleaAppExt {}
 
-impl app::WindowManager for WindowManager {
+impl app::AzaleaAppExt for AzaleaAppExt {
     type ConfigWrapper = ConfigWrapper;
     type WindowWrapper = WindowWrapper;
 
@@ -105,5 +105,5 @@ fn main() {
         },
     )]);
 
-    app::Application::new(WindowManager {}, Config { windows }).run();
+    app::AzaleaApp::<AzaleaAppExt>::new(Config { windows }).run();
 }

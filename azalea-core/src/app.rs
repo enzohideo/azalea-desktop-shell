@@ -16,28 +16,26 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
-pub struct Application<WM>
+pub struct AzaleaApp<WM>
 where
-    WM: WindowManager,
+    WM: AzaleaAppExt,
     Self: 'static + Sized,
 {
     config: config::Config<WM::ConfigWrapper>,
     dbus: Option<dbus::DBusWrapper>,
-    window_manager: WM,
     windows: HashMap<String, (config::window::Id, WM::WindowWrapper)>,
 
     dynamic_css_provider: gtk::CssProvider,
 }
 
-impl<WM> Application<WM>
+impl<WM> AzaleaApp<WM>
 where
-    WM: WindowManager,
+    WM: AzaleaAppExt,
 {
-    pub fn new(window_manager: WM, config: config::Config<WM::ConfigWrapper>) -> Self {
+    pub fn new(config: config::Config<WM::ConfigWrapper>) -> Self {
         Self {
             config,
             dbus: dbus::DBusWrapper::new().ok(),
-            window_manager,
             windows: Default::default(),
 
             dynamic_css_provider: gtk::CssProvider::new(),
@@ -425,7 +423,7 @@ where
     }
 }
 
-pub trait WindowManager
+pub trait AzaleaAppExt
 where
     Self: 'static + Sized,
 {
