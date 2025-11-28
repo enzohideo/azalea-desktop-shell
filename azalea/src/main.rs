@@ -64,13 +64,13 @@ fn main() {
             config: ConfigWrapper::Taskbar({
                 use taskbar::{
                     Config,
-                    widget::{ConfigWrapper::*, bluetooth, media, network, time},
+                    widget::{ConfigWrapper::*, bluetooth, media, network, search, time},
                 };
 
                 Config {
                     spacing: 8,
 
-                    start: vec![],
+                    start: vec![Search(search::Config { top_down: false })],
 
                     center: vec![Media(media::Config {})],
 

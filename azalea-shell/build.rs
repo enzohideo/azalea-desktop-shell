@@ -22,6 +22,8 @@ fn main() {
             "bluetooth-x",
             "plug-connected-filled",
             "plug-disconnected-filled",
+            "apps-filled",
+            "search-filled",
         ],
     );
 }

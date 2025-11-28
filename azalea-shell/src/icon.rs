@@ -7,6 +7,7 @@ pub use icons::LAST as NEXT;
 pub use icons::PAUSE;
 pub use icons::PLAY;
 
+pub use icons::APPS_FILLED as APPS;
 pub use icons::BLUETOOTH;
 pub use icons::BLUETOOTH_X;
 pub use icons::PLUG_CONNECTED_FILLED as PLUG_CONNECTED;
@@ -19,6 +20,7 @@ pub use icons::RADIOWAVES_5 as WIFI_X;
 pub use icons::RADIOWAVES_DOTS as WIFI_DOTS;
 pub use icons::RADIOWAVES_NONE as WIFI_NONE;
 pub use icons::RADIOWAVES_QUESTION_MARK as WIFI_QUESTION_MARK;
+pub use icons::SEARCH_FILLED as SEARCH;
 pub use icons::WAVES_7 as WIFI_SLEEP;
 
 pub fn init() {

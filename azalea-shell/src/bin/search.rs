@@ -5,8 +5,6 @@ use azalea_shell::service;
 async fn main() {
     service::search::Service::init(service::search::Init {});
 
-    service::search::Service::send(service::search::Input::GetAllApplications);
-
     service::search::Service::listen(|out| {
         azalea_log::message!("Search output received:\n{out:#?}");
         true
