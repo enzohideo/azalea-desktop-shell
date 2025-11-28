@@ -53,7 +53,8 @@ pub enum Input {
     /// Search only for applications
     SearchApplication(String),
 
-    GetAllApplications,
+    /// Get all applications in case you want to search "locally"
+    GetAllApplications(flume::Sender<Vec<AppInfo>>),
 }
 
 #[derive(Clone, Debug)]
@@ -101,14 +102,14 @@ impl azalea_service::Service for Service {
                     )),
                 );
             }
-            Input::GetAllApplications => {
+            Input::GetAllApplications(sender) => {
                 drop(
-                    output_sender.send(Output::Applications(
+                    sender.send(
                         self.applications
                             .values()
                             .map(|app| app.to_owned())
                             .collect(),
-                    )),
+                    ),
                 );
             }
             Input::LaunchApplication(app_id) => {
@@ -116,9 +117,13 @@ impl azalea_service::Service for Service {
                     azalea_log::warning!("Application not found: {app_id}");
                     return;
                 };
-                match std::process::Command::new(&app.command).spawn() {
-                    Ok(_) => azalea_log::debug!("Launched application: {:?}", app.command),
-                    Err(e) => azalea_log::warning!("Failed to launch application: {e}"),
+                // TODO: Fork
+                match std::process::Command::new(&app.executable).spawn() {
+                    Ok(_) => azalea_log::debug!("Launched application: {:?}", app.executable),
+                    Err(e) => azalea_log::warning!(
+                        "Failed to launch application {:?}: {e}",
+                        app.executable
+                    ),
                 }
             }
         }
