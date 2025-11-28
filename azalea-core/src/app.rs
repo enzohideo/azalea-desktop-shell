@@ -372,11 +372,6 @@ where
             return;
         };
 
-        if let Some(_) = self.windows.get(id) {
-            log::warning!("Window already exists with id {}", id);
-            return;
-        }
-
         let wrapped_window = WM::create_window(&window_cfg.config);
         let window = WM::unwrap_window(&wrapped_window);
 
