@@ -10,6 +10,8 @@ pub use icons::PLAY;
 pub use icons::APPS_FILLED as APPS;
 pub use icons::BLUETOOTH;
 pub use icons::BLUETOOTH_X;
+pub use icons::BRIGHTNESS_HIGH_FILLED as BRIGHTNESS;
+pub use icons::MEGAPHONE_FILLED as AUDIO;
 pub use icons::PLUG_CONNECTED_FILLED as PLUG_CONNECTED;
 pub use icons::PLUG_DISCONNECTED_FILLED as PLUG_DISCONNECTED;
 pub use icons::RADIOWAVES_1 as WIFI_3;

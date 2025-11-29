@@ -24,6 +24,8 @@ fn main() {
             "plug-disconnected-filled",
             "apps-filled",
             "search-filled",
+            "brightness-high-filled",
+            "megaphone-filled",
         ],
     );
 }
