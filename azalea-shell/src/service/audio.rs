@@ -42,19 +42,28 @@ impl azalea_service::Service for Service {
     type Event = ();
     type Output = Output;
 
+    // TODO: Fix audio polling
+    const DISABLE_EVENTS: bool = true;
+
     async fn new(
         init: Self::Init,
         _: flume::Sender<Self::Input>,
-        _: broadcast::Sender<Self::Output>,
+        output_sender: broadcast::Sender<Self::Output>,
     ) -> Self {
         let mixer = alsa::mixer::Mixer::new("default", false).unwrap();
 
-        Self {
+        let mut this = Self {
             mixer,
             selem_id: SelemId::new(&init.selem_name, 0),
             interval_duration: init.interval_duration,
             previous_volume: 0,
+        };
+
+        if let Some(volume) = this.get_system_volume() {
+            drop(output_sender.send(Output::SystemVolume(volume)));
         }
+
+        this
     }
 
     async fn message(
@@ -86,6 +95,16 @@ impl azalea_service::Service for Service {
         _event: Self::Event,
         output_sender: &tokio::sync::broadcast::Sender<Self::Output>,
     ) -> azalea_service::Result<()> {
+        if let Some(volume) = self.get_system_volume() {
+            output_sender.send(Output::SystemVolume(volume))?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Service {
+    fn get_system_volume(&mut self) -> Option<f64> {
         if let Some(selem) = self.mixer.find_selem(&self.selem_id) {
             let mut count = 0;
             let mut acc_volume = 0;
@@ -102,11 +121,11 @@ impl azalea_service::Service for Service {
 
             if self.previous_volume != volume_int {
                 let volume_percent = volume_int as f64 / ((max_volume - min_volume) as f64);
-                output_sender.send(Output::SystemVolume(volume_percent))?;
                 self.previous_volume = volume_int;
+                return Some(volume_percent);
             }
         }
 
-        Ok(())
+        None
     }
 }
