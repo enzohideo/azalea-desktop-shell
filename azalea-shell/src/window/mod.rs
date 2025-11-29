@@ -1,4 +1,5 @@
 pub mod taskbar;
+pub mod wallpaper;
 
 #[derive(Debug, Clone)]
 pub struct Init<Model>

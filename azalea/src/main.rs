@@ -71,51 +71,79 @@ impl app::AzaleaAppExt for AzaleaAppExt {
 fn main() {
     icon::init();
 
-    let windows = HashMap::from([(
-        format!("bottom-taskbar"),
-        config::window::Config {
-            config: ConfigWrapper::Taskbar({
-                use taskbar::{
-                    Config,
-                    widget::{ConfigWrapper::*, bluetooth, media, network, search, time},
-                };
+    let windows = HashMap::from([
+        (
+            format!("wallpaper"),
+            config::window::Config {
+                config: ConfigWrapper::Wallpaper(wallpaper::Config {
+                    image: gtk::glib::home_dir()
+                        .join("wallpapers/kasane-teto/52a30bcedb0a1a16ea9f9c02472dfe20daf0ed26.png")
+                        .to_string_lossy()
+                        .to_string(),
+                }),
 
-                Config {
-                    spacing: 8,
+                layer_shell: Some({
+                    use config::layer_shell::{Anchor, Config, Layer};
 
-                    start: vec![Search(search::Config { top_down: false })],
+                    Config {
+                        namespace: format!("wallpaper"),
+                        layer: Layer::Background,
+                        anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom, Anchor::Top],
+                        auto_exclusive_zone: false,
+                    }
+                }),
 
-                    center: vec![Media(media::Config {})],
+                lazy: false,
 
-                    end: vec![
-                        Bluetooth(bluetooth::Config {}),
-                        Network(network::Config {}),
-                        Time(time::Config {
-                            format: format!("%d/%m/%y"),
-                        }),
-                        Time(time::Config {
-                            format: format!("%H:%M:%S"),
-                        }),
-                    ],
-                }
-            }),
+                monitor: Monitor::All,
+            },
+        ),
+        (
+            format!("bottom-taskbar"),
+            config::window::Config {
+                config: ConfigWrapper::Taskbar({
+                    use taskbar::{
+                        Config,
+                        widget::{ConfigWrapper::*, bluetooth, media, network, search, time},
+                    };
 
-            layer_shell: Some({
-                use config::layer_shell::{Anchor, Config, Layer};
+                    Config {
+                        spacing: 8,
 
-                Config {
-                    namespace: format!("taskbar"),
-                    layer: Layer::Top,
-                    anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
-                    auto_exclusive_zone: true,
-                }
-            }),
+                        start: vec![Search(search::Config { top_down: false })],
 
-            lazy: false,
+                        center: vec![Media(media::Config {})],
 
-            monitor: Monitor::All,
-        },
-    )]);
+                        end: vec![
+                            Bluetooth(bluetooth::Config {}),
+                            Network(network::Config {}),
+                            Time(time::Config {
+                                format: format!("%d/%m/%y"),
+                            }),
+                            Time(time::Config {
+                                format: format!("%H:%M:%S"),
+                            }),
+                        ],
+                    }
+                }),
+
+                layer_shell: Some({
+                    use config::layer_shell::{Anchor, Config, Layer};
+
+                    Config {
+                        namespace: format!("taskbar"),
+                        layer: Layer::Top,
+                        anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
+                        auto_exclusive_zone: true,
+                    }
+                }),
+
+                lazy: false,
+
+                monitor: Monitor::All,
+            },
+        ),
+    ]);
 
     app::AzaleaApp::<AzaleaAppExt>::new(Config { windows }).run();
 }
