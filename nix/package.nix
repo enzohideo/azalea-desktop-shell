@@ -53,6 +53,7 @@ let
         ../Cargo.toml
         ../Cargo.lock
         ../azalea-core/src/style.scss
+        ../assets
         (craneLib.fileset.commonCargoSources ../azalea-core)
         (craneLib.fileset.commonCargoSources ../azalea-derive)
         (craneLib.fileset.commonCargoSources ../azalea-log)
