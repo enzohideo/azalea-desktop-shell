@@ -189,6 +189,7 @@ impl Component for Model {
 
             art_cover: image::Model::builder()
                 .launch(image::Init {
+                    fallback: None,
                     width: None,
                     height: Some(30),
                 })

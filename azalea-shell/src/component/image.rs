@@ -12,12 +12,14 @@ use relm4::gtk::{gdk, gdk_pixbuf};
 use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt, component};
 
 pub struct Model {
+    fallback: Option<gdk::Texture>,
     image: Option<gdk::Texture>,
     width: Option<i32>,
     height: Option<i32>,
 }
 
 pub struct Init {
+    pub fallback: Option<gdk::Texture>,
     pub width: Option<i32>,
     pub height: Option<i32>,
 }
@@ -45,7 +47,7 @@ impl Component for Model {
             inline_css: "border-radius: 6px;",
 
             #[wrap(Some)]
-            set_child = if model.image.is_none() {
+            set_child = if model.image.is_none() && model.fallback.is_none() {
                 gtk::Spinner {
                     set_halign: gtk::Align::Center,
                     set_valign: gtk::Align::Center,
@@ -54,7 +56,11 @@ impl Component for Model {
             } else {
                 gtk::Picture {
                     #[watch]
-                    set_paintable: model.image.as_ref(),
+                    set_paintable: if model.image.is_some() {
+                        model.image.as_ref()
+                    } else {
+                        model.fallback.as_ref()
+                    },
                     set_can_shrink: true,
                 }
             },
@@ -70,6 +76,7 @@ impl Component for Model {
         _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Self {
+            fallback: init.fallback,
             image: None,
             width: init.width,
             height: init.height,

@@ -75,12 +75,7 @@ fn main() {
         (
             format!("wallpaper"),
             config::window::Config {
-                config: ConfigWrapper::Wallpaper(wallpaper::Config {
-                    image: gtk::glib::home_dir()
-                        .join("wallpapers/kasane-teto/52a30bcedb0a1a16ea9f9c02472dfe20daf0ed26.png")
-                        .to_string_lossy()
-                        .to_string(),
-                }),
+                config: ConfigWrapper::Wallpaper(wallpaper::Config { image: None }),
 
                 layer_shell: Some({
                     use config::layer_shell::{Anchor, Config, ExclusiveZone, Layer};

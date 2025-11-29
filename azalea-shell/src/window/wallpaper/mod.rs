@@ -9,7 +9,7 @@ crate::init! {
     }
 
     Config {
-        image: String,
+        image: Option<String>,
     }
 }
 
@@ -40,13 +40,21 @@ impl Component for Model {
         let model = Model {
             image: image::Model::builder()
                 .launch(image::Init {
+                    fallback: Some(
+                        gtk::gdk::Texture::from_bytes(&gtk::glib::Bytes::from_static(
+                            include_bytes!("../../../../assets/azalea-wallpaper.jpg"),
+                        ))
+                        .unwrap(),
+                    ),
                     width: None,
                     height: None,
                 })
                 .detach(),
         };
 
-        sender.input(Input::Update(init.config.image));
+        if let Some(image) = init.config.image {
+            sender.input(Input::Update(image));
+        }
 
         let image_widget: &gtk::Widget = model.image.widget().upcast_ref();
         let widgets = view_output!();
