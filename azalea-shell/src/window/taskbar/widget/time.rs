@@ -9,7 +9,7 @@ crate::init! {
     Model {
         time: Time,
         format: String,
-        _time_handle: LocalListenerHandle,
+        _service_handle: LocalListenerHandle,
     }
 
     Config {
@@ -18,16 +18,16 @@ crate::init! {
 }
 
 #[derive(Debug)]
-pub enum Message {
+pub enum Input {
     Time(Time),
 }
 
 #[component(pub)]
 impl Component for Model {
     type Init = Init;
-    type Input = Message;
+    type Input = Input;
     type Output = ();
-    type CommandOutput = Message;
+    type CommandOutput = Input;
 
     view! {
         gtk::Label {
@@ -46,20 +46,19 @@ impl Component for Model {
         let model = Model {
             format: format.clone(),
             time: chrono::Local::now(),
-            _time_handle: service::time::Service::filtered_forward_local(
+            _service_handle: service::time::Service::filtered_forward_local(
                 sender.input_sender().clone(),
                 move |event| {
                     use service::time::Output;
 
-                    let format_contains_time = |date_time: chrono::DateTime<chrono::Local>,
-                                                time: &str|
-                     -> Option<Message> {
-                        if format.contains(time) {
-                            Some(Message::Time(date_time))
-                        } else {
-                            None
-                        }
-                    };
+                    let format_contains_time =
+                        |date_time: chrono::DateTime<chrono::Local>, time: &str| -> Option<Input> {
+                            if format.contains(time) {
+                                Some(Input::Time(date_time))
+                            } else {
+                                None
+                            }
+                        };
 
                     match event {
                         Output::Second(date_time) => format_contains_time(date_time, "%S"),
@@ -77,7 +76,7 @@ impl Component for Model {
 
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
-            Message::Time(time) => self.time = time,
+            Input::Time(time) => self.time = time,
         }
     }
 
@@ -88,7 +87,7 @@ impl Component for Model {
         _root: &Self::Root,
     ) {
         match message {
-            Message::Time(time) => self.time = time,
+            Input::Time(time) => self.time = time,
         }
     }
 }
