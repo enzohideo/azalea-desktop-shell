@@ -3,15 +3,13 @@ use gtk::prelude::*;
 use relm4::{Component, ComponentParts, ComponentSender, component, prelude::FactoryVecDeque};
 
 use crate::{
-    icon,
+    factory, icon,
     service::{self, search::AppInfo},
 };
 
-mod apps;
-
 crate::init! {
     Model {
-        apps: FactoryVecDeque<apps::Entry>,
+        apps: FactoryVecDeque<factory::search::apps::Model>,
         _service_handle: LocalListenerHandle,
     }
 
@@ -113,7 +111,8 @@ impl Component for Model {
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             Input::Search(message) => {
-                self.apps.broadcast(apps::Input::Filter(message));
+                self.apps
+                    .broadcast(factory::search::apps::Input::Filter(message));
             }
             Input::SearchResults(_output) => todo!(),
             Input::SelectFirst => todo!(),

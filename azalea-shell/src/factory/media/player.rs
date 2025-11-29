@@ -3,11 +3,12 @@ use relm4::{
     FactorySender,
     prelude::{DynamicIndex, FactoryComponent},
 };
+use zbus_names::OwnedBusName;
 
-use super::PlayerName;
+pub type PlayerName = OwnedBusName;
 
 #[derive(Debug)]
-pub struct MenuName {
+pub struct Model {
     name: PlayerName,
 }
 
@@ -22,7 +23,7 @@ pub enum Output {
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for MenuName {
+impl FactoryComponent for Model {
     type Init = PlayerName;
     type Input = Input;
     type Output = Output;

@@ -4,7 +4,7 @@ use relm4::{FactorySender, prelude::FactoryComponent};
 use crate::{icon, service::dbus::bluez::Device};
 
 #[derive(Debug)]
-pub struct BluetoothDeviceMenu {
+pub struct Model {
     pub device: Device,
 }
 
@@ -19,7 +19,7 @@ pub enum Output {
 }
 
 #[relm4::factory(pub)]
-impl FactoryComponent for BluetoothDeviceMenu {
+impl FactoryComponent for Model {
     type Index = String;
     type Init = Device;
     type Input = Input;

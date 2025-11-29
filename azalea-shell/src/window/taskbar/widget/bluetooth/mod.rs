@@ -7,16 +7,14 @@ use relm4::{
 };
 
 use crate::{
-    icon,
+    factory, icon,
     service::{self, dbus::bluez::Device},
 };
-
-mod menu;
 
 crate::init! {
     Model {
         is_powered: bool,
-        devices_menu: FactoryHashMap<String, menu::BluetoothDeviceMenu>,
+        devices_menu: FactoryHashMap<String, factory::bluetooth::device::Model>,
         _event_listener_handle: LocalListenerHandle,
     }
 
@@ -112,7 +110,7 @@ impl Component for Model {
             devices_menu: FactoryHashMap::builder()
                 .launch(gtk::Box::default())
                 .forward(sender.input_sender(), |output| match output {
-                    menu::Output::Connect(device, connect) => {
+                    factory::bluetooth::device::Output::Connect(device, connect) => {
                         Input::Connect(device.address, connect)
                     }
                 }),

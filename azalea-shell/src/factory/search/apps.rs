@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct Entry {
+pub struct Model {
     visible: bool,
     app_info: AppInfo,
 }
@@ -26,7 +26,7 @@ pub enum Input {
 pub enum Output {}
 
 #[relm4::factory(pub)]
-impl FactoryComponent for Entry {
+impl FactoryComponent for Model {
     type Init = AppInfo;
     type Input = Input;
     type Output = Output;

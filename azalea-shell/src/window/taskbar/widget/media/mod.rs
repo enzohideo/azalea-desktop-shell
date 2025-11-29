@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
-use crate::service::{
-    self,
-    dbus::mpris::{
-        self, OwnedBusName,
-        proxy::{PlaybackRate, PlaybackStatus},
+use crate::{
+    factory::{self, media::player::PlayerName},
+    service::{
+        self,
+        dbus::mpris::{
+            self,
+            proxy::{PlaybackRate, PlaybackStatus},
+        },
     },
 };
 use azalea_service::{LocalListenerHandle, StaticHandler};
@@ -18,7 +21,6 @@ use relm4::{
 };
 
 use crate::{component::image, icon};
-mod menu;
 
 struct Player {
     status: PlaybackStatus,
@@ -42,15 +44,13 @@ impl Default for Player {
     }
 }
 
-type PlayerName = OwnedBusName;
-
 crate::init! {
     Model {
         position: f64,
         selected: Option<PlayerName>,
         players: HashMap<PlayerName, Player>,
         art_cover: relm4::Controller<image::Model>,
-        menu: FactoryVecDeque<menu::MenuName>,
+        menu: FactoryVecDeque<factory::media::player::Model>,
         _event_listener_handle: LocalListenerHandle,
     }
 
@@ -197,7 +197,7 @@ impl Component for Model {
             menu: FactoryVecDeque::builder()
                 .launch(gtk::Box::default())
                 .forward(sender.input_sender(), |output| match output {
-                    menu::Output::Select(name) => Input::Select(name),
+                    factory::media::player::Output::Select(name) => Input::Select(name),
                 }),
 
             _event_listener_handle: mpris::Service::forward_local(
