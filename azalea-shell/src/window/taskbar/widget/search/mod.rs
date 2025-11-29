@@ -1,8 +1,6 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
-use relm4::{
-    Component, ComponentParts, ComponentSender, component, prelude::FactoryVecDeque,
-};
+use relm4::{Component, ComponentParts, ComponentSender, component, prelude::FactoryVecDeque};
 
 use crate::{
     icon,

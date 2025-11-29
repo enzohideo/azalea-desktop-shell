@@ -1,6 +1,6 @@
 use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
-use widget::{WidgetWrapper, build_widget};
+use widget::WidgetWrapper;
 
 pub mod widget;
 
@@ -56,22 +56,22 @@ impl SimpleComponent for Model {
         let mut model = Model { widgets: vec![] };
         let widgets = view_output!();
 
-        for widget_kind in init.config.start {
-            let (wrapper, widget) = build_widget(widget_kind);
+        for widget_config in init.config.start {
+            let (wrapper, widget) = widget_config.build_widget();
             model.widgets.push(wrapper);
             widgets.start_widget.append(&widget);
             widgets.start_widget.set_spacing(init.config.spacing);
         }
 
-        for widget_kind in init.config.center {
-            let (wrapper, widget) = build_widget(widget_kind);
+        for widget_config in init.config.center {
+            let (wrapper, widget) = widget_config.build_widget();
             model.widgets.push(wrapper);
             widgets.center_widget.append(&widget);
             widgets.center_widget.set_spacing(init.config.spacing);
         }
 
-        for widget_kind in init.config.end {
-            let (wrapper, widget) = build_widget(widget_kind);
+        for widget_config in init.config.end {
+            let (wrapper, widget) = widget_config.build_widget();
             model.widgets.push(wrapper);
             widgets.end_widget.append(&widget);
             widgets.end_widget.set_spacing(init.config.spacing);

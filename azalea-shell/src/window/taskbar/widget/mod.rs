@@ -21,16 +21,18 @@ macro_rules! register_widgets {
         }
 
         #[allow(dead_code)]
-        pub fn build_widget(dto: ConfigWrapper) -> (WidgetWrapper, gtk::Widget) {
-            match dto {
-                $(ConfigWrapper::$window(config) => {
-                    let builder = <$model>::builder();
-                    let widget = builder.root.clone();
-                    let wrapper = WidgetWrapper::$window(
-                        builder.launch($crate::window::Init::new(config))
-                    );
-                    (wrapper, gtk::glib::object::Cast::upcast::<gtk::Widget>(widget))
-                },)+
+        impl ConfigWrapper {
+            pub fn build_widget(self) -> (WidgetWrapper, gtk::Widget) {
+                match self {
+                    $(ConfigWrapper::$window(config) => {
+                        let builder = <$model>::builder();
+                        let widget = builder.root.clone();
+                        let wrapper = WidgetWrapper::$window(
+                            builder.launch($crate::window::Init::new(config))
+                        );
+                        (wrapper, gtk::glib::object::Cast::upcast::<gtk::Widget>(widget))
+                    },)+
+                }
             }
         }
     };
