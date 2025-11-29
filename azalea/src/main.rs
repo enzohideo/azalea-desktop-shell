@@ -8,6 +8,7 @@ use azalea::{
     shell::{self, icon, window::taskbar},
 };
 use azalea_core::{config::Config, monitor::Monitor};
+use azalea_shell::window::wallpaper;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
@@ -15,11 +16,13 @@ use relm4::{Component, ComponentController};
 pub enum ConfigWrapper {
     Default,
     Taskbar(taskbar::Config),
+    Wallpaper(wallpaper::Config),
 }
 
 pub enum WindowWrapper {
     Default(gtk::Window),
     Taskbar(relm4::component::Controller<taskbar::Model>),
+    Wallpaper(relm4::component::Controller<wallpaper::Model>),
 }
 
 pub struct AzaleaAppExt {}
@@ -44,6 +47,15 @@ impl app::AzaleaAppExt for AzaleaAppExt {
                     .detach();
                 WindowWrapper::Taskbar(controller)
             }
+            ConfigWrapper::Wallpaper(config) => {
+                let builder = wallpaper::Model::builder();
+                let controller = builder
+                    .launch(shell::window::Init::<wallpaper::Model> {
+                        config: config.clone(),
+                    })
+                    .detach();
+                WindowWrapper::Wallpaper(controller)
+            }
         }
     }
 
@@ -51,6 +63,7 @@ impl app::AzaleaAppExt for AzaleaAppExt {
         match window {
             WindowWrapper::Default(window) => window,
             WindowWrapper::Taskbar(controller) => controller.widget(),
+            WindowWrapper::Wallpaper(controller) => controller.widget(),
         }
     }
 }
@@ -95,7 +108,6 @@ fn main() {
                     layer: Layer::Top,
                     anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
                     auto_exclusive_zone: true,
-                    monitor: Some(0),
                 }
             }),
 

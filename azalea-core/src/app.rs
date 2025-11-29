@@ -380,9 +380,6 @@ where
         if let Some(layer_shell) = &window_cfg.layer_shell {
             window.init_layer_shell();
             window.set_namespace(Some(&layer_shell.namespace));
-            if let Some(monitor) = layer_shell.monitor {
-                window.set_monitor(monitor::get_monitor(monitor).as_ref())
-            }
             window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::OnDemand);
             window.set_layer((&layer_shell.layer).into());
             for anchor in &layer_shell.anchors {

@@ -55,9 +55,6 @@ pub mod layer_shell {
 
         #[clap(long)]
         pub auto_exclusive_zone: bool,
-
-        #[serde(default)]
-        pub monitor: Option<u32>,
     }
 }
 
