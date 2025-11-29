@@ -92,8 +92,7 @@ button {
 }
 
 popover {
-  & contents,
-  arrow {
+  contents, arrow {
     background: var(--surface);
   }
 }
