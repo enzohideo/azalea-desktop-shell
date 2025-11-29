@@ -164,7 +164,7 @@ impl Model {
                 .into(),
             file => {
                 let mut buffer = vec![];
-                File::open(file.strip_prefix("file://")?)
+                File::open(file.strip_prefix("file://").unwrap_or(file))
                     .ok()?
                     .read_to_end(&mut buffer)
                     .ok()?;
