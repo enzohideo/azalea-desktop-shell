@@ -54,7 +54,7 @@ impl FactoryComponent for Model {
 
                 #[watch]
                 set_css_classes: if self.device.is_connected {
-                    &[ "primary-fg" ]
+                    &[ "primary-container" ]
                 } else {
                     &[]
                 },
