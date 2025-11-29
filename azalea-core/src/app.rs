@@ -265,6 +265,13 @@ where
                                         .unwrap_or_default()
                                         .to_string(),
                                 ),
+                                (
+                                    "namespace",
+                                    window
+                                        .namespace()
+                                        .map(|m| m.to_string())
+                                        .unwrap_or(String::new()),
+                                ),
                                 ("template", template_id.clone()),
                             ])
                         })
