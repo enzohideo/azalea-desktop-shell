@@ -385,8 +385,16 @@ where
             for anchor in &layer_shell.anchors {
                 window.set_anchor(anchor.into(), true);
             }
-            if layer_shell.auto_exclusive_zone {
-                window.auto_exclusive_zone_enable();
+            match layer_shell.exclusive_zone {
+                config::layer_shell::ExclusiveZone::Auto => {
+                    window.auto_exclusive_zone_enable();
+                }
+                config::layer_shell::ExclusiveZone::Ignore => {
+                    window.set_exclusive_zone(-1);
+                }
+                config::layer_shell::ExclusiveZone::Normal => {
+                    window.set_exclusive_zone(0);
+                }
             }
         }
 

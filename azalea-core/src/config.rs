@@ -43,6 +43,19 @@ pub mod layer_shell {
         }
     }
 
+    #[derive(clap::ValueEnum, Default, serde::Serialize, serde::Deserialize, Debug, Clone)]
+    pub enum ExclusiveZone {
+        /// Let gtk-layer-shell calculate it
+        Auto,
+
+        /// -1
+        Ignore,
+
+        /// 0
+        #[default]
+        Normal,
+    }
+
     #[derive(Parser, serde::Serialize, serde::Deserialize, Debug, Clone)]
     pub struct Config {
         pub namespace: Namespace,
@@ -54,7 +67,7 @@ pub mod layer_shell {
         pub anchors: Vec<Anchor>,
 
         #[clap(long)]
-        pub auto_exclusive_zone: bool,
+        pub exclusive_zone: ExclusiveZone,
     }
 }
 

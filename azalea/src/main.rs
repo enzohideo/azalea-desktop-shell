@@ -83,13 +83,13 @@ fn main() {
                 }),
 
                 layer_shell: Some({
-                    use config::layer_shell::{Anchor, Config, Layer};
+                    use config::layer_shell::{Anchor, Config, ExclusiveZone, Layer};
 
                     Config {
                         namespace: format!("wallpaper"),
                         layer: Layer::Background,
                         anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom, Anchor::Top],
-                        auto_exclusive_zone: false,
+                        exclusive_zone: ExclusiveZone::Ignore,
                     }
                 }),
 
@@ -128,13 +128,13 @@ fn main() {
                 }),
 
                 layer_shell: Some({
-                    use config::layer_shell::{Anchor, Config, Layer};
+                    use config::layer_shell::{Anchor, Config, ExclusiveZone, Layer};
 
                     Config {
                         namespace: format!("taskbar"),
                         layer: Layer::Top,
                         anchors: vec![Anchor::Left, Anchor::Right, Anchor::Bottom],
-                        auto_exclusive_zone: true,
+                        exclusive_zone: ExclusiveZone::Auto,
                     }
                 }),
 
