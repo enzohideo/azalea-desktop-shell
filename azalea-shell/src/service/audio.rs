@@ -69,7 +69,7 @@ impl azalea_service::Service for Service {
     async fn message(
         &mut self,
         input: Self::Input,
-        _output_sender: &broadcast::Sender<Self::Output>,
+        output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
             Input::SystemVolume(volume_percent) => {
@@ -79,6 +79,8 @@ impl azalea_service::Service for Service {
                     let _ = selem.set_playback_volume_all(
                         (volume_percent * (max_volume - min_volume) as f64) as i64 + min_volume,
                     );
+
+                    drop(output_sender.send(Output::SystemVolume(volume_percent)));
                 } else {
                     azalea_log::warning!("[AUDIO]: Failed to find Master selem");
                 }

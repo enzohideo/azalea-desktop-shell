@@ -87,8 +87,8 @@ impl SimpleComponent for Model {
         match input {
             Input::Scroll(delta) => {
                 let volume = self.system_volume - delta * 0.01;
-                if volume >= 0. && volume <= 100. {
-                    self.system_volume -= delta * 0.01;
+                if volume >= 0. && volume <= 1. {
+                    self.system_volume = volume;
                     service::audio::Service::send(service::audio::Input::SystemVolume(
                         self.system_volume,
                     ));
