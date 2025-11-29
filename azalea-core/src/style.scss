@@ -77,7 +77,7 @@ button {
   margin: 0;
 
   color: var(--on-surface);
-  background: var(--surface);
+  background: transparent;
 
   transition: opacity 0.1s linear;
 
@@ -116,7 +116,7 @@ switch {
 }
 
 window {
-  background: var(--surface);
+  background: unquote("mix(var(--surface), transparent, 0.2)");
 }
 
 * {
