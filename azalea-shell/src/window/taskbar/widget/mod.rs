@@ -4,6 +4,7 @@ pub mod bluetooth;
 pub mod media;
 pub mod network;
 pub mod search;
+pub mod separator;
 pub mod time;
 
 register_widgets!(
@@ -11,5 +12,6 @@ register_widgets!(
     Media, media::Model;
     Network, network::Model;
     Search, search::Model;
+    Separator, separator::Model;
     Time, time::Model;
 );

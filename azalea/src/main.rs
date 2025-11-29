@@ -104,7 +104,9 @@ fn main() {
                 config: ConfigWrapper::Taskbar({
                     use taskbar::{
                         Config,
-                        widget::{ConfigWrapper::*, bluetooth, media, network, search, time},
+                        widget::{
+                            ConfigWrapper::*, bluetooth, media, network, search, separator, time,
+                        },
                     };
 
                     Config {
@@ -116,10 +118,13 @@ fn main() {
 
                         end: vec![
                             Bluetooth(bluetooth::Config {}),
+                            Separator(separator::Config { separator: None }),
                             Network(network::Config {}),
+                            Separator(separator::Config { separator: None }),
                             Time(time::Config {
                                 format: format!("%d/%m/%y"),
                             }),
+                            Separator(separator::Config { separator: None }),
                             Time(time::Config {
                                 format: format!("%H:%M:%S"),
                             }),
