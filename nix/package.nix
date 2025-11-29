@@ -10,6 +10,7 @@
   clang,
   mold-wrapped,
   dbus,
+  alsa-lib,
 }:
 
 let
@@ -32,6 +33,7 @@ let
       gtk4-layer-shell
       openssl
       dbus
+      alsa-lib
     ];
 
     NIX_OUTPATH_USED_AS_RANDOM_SEED = "aaaaaaaaaa";

@@ -65,6 +65,7 @@
               gtk4-layer-shell
               openssl # reqwest
               dbus # bluer
+              alsa-lib # volume
 
               cloc
             ];

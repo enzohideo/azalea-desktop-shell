@@ -60,5 +60,6 @@ the dependencies yourself.
 - gtk4-layer-shell
 - openssl
 - dbus
+- alsa
 - clang
 - mold
