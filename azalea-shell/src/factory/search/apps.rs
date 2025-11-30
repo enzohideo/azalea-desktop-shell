@@ -20,6 +20,7 @@ pub struct Model {
 pub enum Input {
     Click,
     Filter(String),
+    FilterShowAll(String),
 }
 
 #[derive(Debug)]
@@ -79,6 +80,10 @@ impl FactoryComponent for Model {
             Input::Filter(search) => {
                 self.visible =
                     search.len() > 0 && self.app_info.name.to_lowercase().starts_with(&search)
+            }
+            Input::FilterShowAll(search) => {
+                self.visible =
+                    search.len() == 0 || self.app_info.name.to_lowercase().starts_with(&search)
             }
         };
     }
