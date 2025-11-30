@@ -1,6 +1,8 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
-use relm4::{Component, ComponentParts, ComponentSender, component, prelude::FactoryVecDeque};
+use relm4::{
+    Component, ComponentParts, ComponentSender, RelmWidgetExt, component, prelude::FactoryVecDeque,
+};
 
 use crate::{
     factory, icon,
@@ -9,6 +11,7 @@ use crate::{
 
 crate::init! {
     Model {
+        search: String,
         apps: FactoryVecDeque<factory::search::apps::Model>,
         _service_handle: LocalListenerHandle,
     }
@@ -40,27 +43,39 @@ impl Component for Model {
 
     view! {
         gtk::MenuButton {
-            set_icon_name: icon::SEARCH,
+
+            #[wrap(Some)]
+            set_child= &gtk::Box {
+                gtk::Image {
+                    set_icon_name: Some(icon::SEARCH),
+                },
+
+                gtk::Label {
+                    #[watch]
+                    set_label: &model.search,
+                },
+            },
 
             #[wrap(Some)]
             set_popover = &gtk::Popover {
                 set_has_arrow: false,
 
+                connect_closed => move |_| {
+                    entry_clone.set_text("");
+                },
+
                 gtk::Box {
                     set_orientation: gtk::Orientation::Vertical,
 
-                    gtk::Box {
-                        set_spacing: 12,
-
-                        gtk::Image {
-                            set_icon_name: Some(icon::SEARCH),
-                        },
-
-                        gtk::Entry {
-                            connect_activate => Input::SelectFirst,
-                            connect_changed[sender] => move |entry| {
-                                sender.input(Input::Search(entry.text().to_string()));
-                            },
+                    #[local_ref]
+                    entry -> gtk::Entry {
+                        set_vexpand: false,
+                        set_width_request: 0,
+                        set_width_chars: 0,
+                        inline_css: "color: transparent; max-width: 0;",
+                        connect_activate => Input::SelectFirst,
+                        connect_changed[sender] => move |entry| {
+                            sender.input(Input::Search(entry.text().to_string()));
                         },
                     },
 
@@ -85,6 +100,7 @@ impl Component for Model {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
+            search: format!(""),
             apps: FactoryVecDeque::builder()
                 .launch(gtk::Box::default())
                 .detach(),
@@ -102,6 +118,8 @@ impl Component for Model {
             CommandOutput::SetApplications(applications)
         });
 
+        let entry = gtk::Entry::new();
+        let entry_clone = entry.clone();
         let search_result = model.apps.widget();
         let widgets = view_output!();
 
@@ -111,6 +129,7 @@ impl Component for Model {
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match message {
             Input::Search(message) => {
+                self.search = message.clone();
                 self.apps
                     .broadcast(factory::search::apps::Input::Filter(message));
             }
