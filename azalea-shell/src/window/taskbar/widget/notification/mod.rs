@@ -31,7 +31,6 @@ impl SimpleComponent for Model {
 
     view! {
         gtk::MenuButton {
-
             #[wrap(Some)]
             set_child= &gtk::Label {
                 set_label: "notifications",
@@ -75,7 +74,10 @@ impl SimpleComponent for Model {
 
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
         match message {
-            Input::Close(_id) => todo!(),
+            Input::Close(id) => {
+                self.notifications.remove(&id);
+                // TODO: Call Close method in notification service
+            }
             Input::Notifications(message) => match message {
                 notification::Output::Notification(notification) => {
                     self.notifications.insert(notification.id, notification);
