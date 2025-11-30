@@ -68,13 +68,21 @@ impl Notifications {
             "[NOTIFICATIONS]: Received notification: {app_name} {app_icon} {summary} {body}"
         );
 
-        drop(self.tx.send_async(Event::Notify(Notification {
-            id,
-            app_name,
-            app_icon,
-            summary,
-            body,
-        })));
+        if let Err(e) = self
+            .tx
+            .send_async(Event::Notify(Notification {
+                id,
+                app_name,
+                app_icon,
+                summary,
+                body,
+            }))
+            .await
+        {
+            azalea_log::warning!(
+                "[NOTIFICATIONS]: Failed to send notification from zbus to main service: {e}"
+            );
+        };
 
         id
     }

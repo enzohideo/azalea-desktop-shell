@@ -5,6 +5,7 @@ pub mod bluetooth;
 pub mod brightness;
 pub mod media;
 pub mod network;
+pub mod notification;
 pub mod search;
 pub mod separator;
 pub mod time;
@@ -15,6 +16,7 @@ register_widgets!(
     Bluetooth, bluetooth::Model;
     Media, media::Model;
     Network, network::Model;
+    Notification, notification::Model;
     Search, search::Model;
     Separator, separator::Model;
     Time, time::Model;

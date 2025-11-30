@@ -99,7 +99,7 @@ fn main() {
                 config: ConfigWrapper::Taskbar({
                     use taskbar::{
                         Config,
-                        widget::{ConfigWrapper::*, search, time},
+                        widget::{ConfigWrapper::*, notification, search, time},
                     };
 
                     Config {
@@ -111,7 +111,7 @@ fn main() {
                             format: format!("%A, %B %d, %Y"),
                         })],
 
-                        end: vec![],
+                        end: vec![Notification(notification::Config {})],
                     }
                 }),
 
