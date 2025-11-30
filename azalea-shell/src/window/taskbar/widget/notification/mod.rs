@@ -42,6 +42,8 @@ impl SimpleComponent for Model {
 
                 #[local_ref]
                 notifications_widget -> gtk::Box {
+                    add_css_class: "azalea-surface",
+                    add_css_class: "azalea-semi-transparent",
                     set_orientation: gtk::Orientation::Vertical,
                     set_spacing: 5,
                 }

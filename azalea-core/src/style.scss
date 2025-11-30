@@ -95,7 +95,7 @@ button {
 popover {
   contents,
   arrow {
-    background: var(--surface);
+    background: unquote("mix(var(--surface), transparent, 0.2)");
   }
 }
 

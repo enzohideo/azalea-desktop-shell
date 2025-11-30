@@ -33,23 +33,43 @@ impl FactoryComponent for Model {
     view! {
         #[root]
         gtk::Box {
-            append: self.image.widget(),
+            gtk::Frame {
+                set_child: Some(self.image.widget()),
+            },
 
             gtk::Box {
+                set_css_classes: &[
+                    "azalea-padding",
+                ],
                 set_orientation: gtk::Orientation::Vertical,
+                set_spacing: 12,
+                set_vexpand: true,
 
                 gtk::Label {
+                    set_css_classes: &[
+                        "primary-fg",
+                    ],
                     #[watch]
                     set_label: &self.notification.summary,
+
+                    set_width_chars: 5,
+                    set_ellipsize: gtk::pango::EllipsizeMode::End,
+                    set_halign: gtk::Align::Start,
+                    set_valign: gtk::Align::Start,
                 },
 
                 gtk::Label {
                     #[watch]
                     set_label: &self.notification.body,
+
+                    set_wrap: true,
+                    set_halign: gtk::Align::Start,
+                    set_valign: gtk::Align::Center,
                 },
             },
 
             gtk::Button {
+                set_halign: gtk::Align::End,
                 set_valign: gtk::Align::Center,
                 set_label: "X",
                 connect_clicked => Input::Close
@@ -63,7 +83,7 @@ impl FactoryComponent for Model {
                 .launch(image::Init {
                     fallback: None,
                     width: None,
-                    height: Some(30),
+                    height: Some(100),
                 })
                 .detach(),
             notification: notification.clone(),
