@@ -122,6 +122,7 @@ impl SimpleComponent for Model {
             }
             Input::Close(id) => {
                 self.notifications.remove(&id);
+                self.num_unread -= 1;
                 // TODO: Call Close method in notification service
             }
             Input::Notifications(message) => match message {
