@@ -93,7 +93,8 @@ button {
 }
 
 popover {
-  contents, arrow {
+  contents,
+  arrow {
     background: var(--surface);
   }
 }
@@ -208,6 +209,18 @@ window {
   }
 }
 
-.bubble {
-  border-radius: 5px;
+.azalea-bubble {
+  border-radius: 10px;
+}
+
+.azalea-primary-border {
+  border: 3px solid var(--primary);
+}
+
+.azalea-transparent {
+  background: transparent;
+}
+
+.azalea-surface {
+  background: var(--surface);
 }
