@@ -56,10 +56,4 @@ nix run .#test
 It's possible to build the project without nix, but you'd need to install all
 the dependencies yourself.
 
-- gtk4
-- gtk4-layer-shell
-- openssl
-- dbus
-- alsa
-- clang
-- mold
+https://github.com/enzohideo/azalea-desktop-shell/blob/554a7c7858464344c8c5ad852ce8156ab1ef8c0f/nix/package.nix#L17-L40
