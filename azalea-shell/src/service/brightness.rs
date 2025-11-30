@@ -1,7 +1,11 @@
+use brightness::{Brightness, BrightnessDevice};
+use futures_lite::StreamExt;
 use tokio::sync::broadcast;
 
 #[derive(azalea_derive::StaticHandler)]
-pub struct Service {}
+pub struct Service {
+    tx: flume::Sender<f64>,
+}
 
 #[derive(Clone, Default)]
 pub struct Init {}
@@ -31,28 +35,40 @@ impl azalea_service::Service for Service {
         _: flume::Sender<Self::Input>,
         output_sender: broadcast::Sender<Self::Output>,
     ) -> Self {
-        if let Some(brightness) = Self::get_brightness() {
-            drop(output_sender.send(Output::SystemBrightness(brightness)));
+        let mut devices: Vec<BrightnessDevice> = brightness::brightness_devices()
+            .filter_map(|dev| dev.ok())
+            .collect()
+            .await;
+
+        if let Some(dev) = devices.first() {
+            let brightness = dev.get().await.unwrap_or(0);
+            drop(output_sender.send(Output::SystemBrightness(brightness as f64 / 100.)));
         }
-        Self {}
+
+        let (tx, rx) = flume::unbounded();
+
+        relm4::spawn(async move {
+            while let Ok(brightness_percent) = rx.recv_async().await {
+                for dev in &mut devices {
+                    drop(dev.set((brightness_percent * 100.) as u32).await);
+                }
+            }
+        });
+
+        Self { tx }
     }
 
     async fn message(
         &mut self,
         input: Self::Input,
-        _output_sender: &broadcast::Sender<Self::Output>,
+        output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
             Input::SystemBrightness(brightness_percent) => {
-                blight::set_bl((brightness_percent * 100.) as u32, None).unwrap();
+                drop(output_sender.send(Output::SystemBrightness(brightness_percent)));
+                // TODO: Debounce
+                let _ = self.tx.send_async(brightness_percent).await;
             }
         }
-    }
-}
-
-impl Service {
-    fn get_brightness() -> Option<f64> {
-        let dev = blight::Device::new(None).ok()?;
-        return Some(dev.current_percent() / 100.);
     }
 }

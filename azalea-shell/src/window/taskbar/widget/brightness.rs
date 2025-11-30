@@ -87,10 +87,9 @@ impl SimpleComponent for Model {
         match input {
             Input::Scroll(delta) => {
                 let brightness = self.brightness - delta * 0.05;
-                if brightness >= 0. && brightness <= 100. {
-                    self.brightness = brightness;
+                if brightness >= 0. && brightness <= 1. {
                     service::brightness::Service::send(
-                        service::brightness::Input::SystemBrightness(self.brightness),
+                        service::brightness::Input::SystemBrightness(brightness),
                     );
                 }
             }
