@@ -44,6 +44,7 @@ impl FactoryComponent for Model {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 12,
                 set_vexpand: true,
+                set_hexpand: true,
 
                 gtk::Label {
                     set_css_classes: &[
@@ -52,8 +53,8 @@ impl FactoryComponent for Model {
                     #[watch]
                     set_label: &self.notification.summary,
 
-                    set_width_chars: 5,
-                    set_ellipsize: gtk::pango::EllipsizeMode::End,
+                    set_max_width_chars: 30,
+                    set_wrap: true,
                     set_halign: gtk::Align::Start,
                     set_valign: gtk::Align::Start,
                 },
@@ -62,6 +63,7 @@ impl FactoryComponent for Model {
                     #[watch]
                     set_label: &self.notification.body,
 
+                    set_max_width_chars: 30,
                     set_wrap: true,
                     set_halign: gtk::Align::Start,
                     set_valign: gtk::Align::Center,
@@ -69,8 +71,10 @@ impl FactoryComponent for Model {
             },
 
             gtk::Button {
+                set_css_classes: &[
+                    "azalea-padding",
+                ],
                 set_halign: gtk::Align::End,
-                set_valign: gtk::Align::Center,
                 set_label: "X",
                 connect_clicked => Input::Close
             },
