@@ -223,6 +223,9 @@ window {
 
 .azalea-surface {
   background: var(--surface);
+  &.azalea-semi-transparent {
+    background: unquote("mix(var(--surface), transparent, 0.2)");
+  }
 }
 
 .azalea-padding {

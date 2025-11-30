@@ -137,7 +137,13 @@ impl Component for Model {
 
                     gtk::Box {
                         set_spacing: 12,
-                        set_css_classes: &[ "azalea-surface", "azalea-bubble", "azalea-primary-border", "azalea-padding" ],
+                        set_css_classes: &[
+                            "azalea-surface",
+                            "azalea-semi-transparent",
+                            "azalea-bubble",
+                            "azalea-primary-border",
+                            "azalea-padding"
+                        ],
 
                         gtk::Image {
                             set_icon_name: Some(icon::SEARCH),
@@ -160,7 +166,13 @@ impl Component for Model {
                         set_propagate_natural_width: true,
                         set_propagate_natural_height: true,
 
-                        set_css_classes: &[ "azalea-surface", "azalea-bubble", "azalea-primary-border" ],
+                        set_css_classes: &[
+                            "azalea-surface",
+                            "azalea-semi-transparent",
+                            "azalea-bubble",
+                            "azalea-primary-border",
+                            "azalea-padding"
+                        ],
 
                         #[local_ref]
                         search_result -> gtk::Box {
