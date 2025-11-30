@@ -108,7 +108,7 @@ impl Component for Model {
                     });
                 }
             }
-            Input::LoadPixbuf(pixbuf) => self.set_image(&pixbuf),
+            Input::LoadPixbuf(pixbuf) => self.set_image(&self.resize_pixbuf(pixbuf)),
             Input::Unload => self.set_spinner(),
         }
     }
@@ -121,21 +121,7 @@ impl Component for Model {
     ) {
         match message {
             CommandOutput::LoadedImage(url, Some(data)) => {
-                let mut pixbuf = gdk_pixbuf::Pixbuf::from_read(data).unwrap();
-
-                if self.height.is_some() || self.width.is_some() {
-                    let width = self
-                        .width
-                        .unwrap_or_else(|| pixbuf.width() * self.height.unwrap() / pixbuf.height());
-
-                    let height = self
-                        .height
-                        .unwrap_or_else(|| pixbuf.height() * self.width.unwrap() / pixbuf.width());
-
-                    pixbuf = pixbuf
-                        .scale_simple(width, height, gdk_pixbuf::InterpType::Hyper)
-                        .unwrap();
-                }
+                let pixbuf = self.resize_pixbuf(gdk_pixbuf::Pixbuf::from_read(data).unwrap());
                 self.set_image(&pixbuf);
                 Self::cache().borrow_mut().insert(url, pixbuf);
             }
@@ -153,6 +139,25 @@ impl Model {
 
     fn set_image(&mut self, pixbuf: &gdk_pixbuf::Pixbuf) {
         self.image = Some(gdk::Texture::for_pixbuf(&pixbuf));
+    }
+
+    fn resize_pixbuf(&self, mut pixbuf: gdk::gdk_pixbuf::Pixbuf) -> gdk::gdk_pixbuf::Pixbuf {
+        if self.height.is_some() || self.width.is_some() {
+            let width = self
+                .width
+                .unwrap_or_else(|| pixbuf.width() * self.height.unwrap() / pixbuf.height());
+
+            let height = self
+                .height
+                .unwrap_or_else(|| pixbuf.height() * self.width.unwrap() / pixbuf.width());
+
+            if let Some(new_pixbuf) =
+                pixbuf.scale_simple(width, height, gdk_pixbuf::InterpType::Hyper)
+            {
+                pixbuf = new_pixbuf
+            }
+        }
+        pixbuf
     }
 
     async fn load_image(url: &str) -> Option<VecDeque<u8>> {
