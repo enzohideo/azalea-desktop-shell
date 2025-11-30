@@ -73,7 +73,6 @@ impl azalea_service::Service for Service {
 
     async fn event_generator(&mut self) -> Self::Event {
         loop {
-            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
             if let Ok(event) = self.rx.recv_async().await {
                 return Event::Notifications(event);
             }
