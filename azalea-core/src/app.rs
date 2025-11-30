@@ -389,6 +389,7 @@ where
             window.set_namespace(Some(&layer_shell.namespace));
             window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::OnDemand);
             window.set_layer((&layer_shell.layer).into());
+            window.add_css_class(&layer_shell.namespace);
             for anchor in &layer_shell.anchors {
                 window.set_anchor(anchor.into(), true);
             }
