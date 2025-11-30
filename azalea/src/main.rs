@@ -100,8 +100,8 @@ fn main() {
                     use taskbar::{
                         Config,
                         widget::{
-                            ConfigWrapper::*, audio, bluetooth, media, network, search, separator,
-                            time,
+                            ConfigWrapper::*, audio, bluetooth, brightness, media, network, search,
+                            separator, time,
                         },
                     };
 
@@ -113,6 +113,7 @@ fn main() {
                             Separator(separator::Config { separator: None }),
                             Audio(audio::Config {}),
                             Separator(separator::Config { separator: None }),
+                            Brightness(brightness::Config {}),
                         ],
 
                         center: vec![Media(media::Config {})],
