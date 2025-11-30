@@ -8,6 +8,7 @@ pub use icons::PAUSE;
 pub use icons::PLAY;
 
 pub use icons::APPS_FILLED as APPS;
+pub use icons::BELL_OUTLINE as BELL;
 pub use icons::BLUETOOTH;
 pub use icons::BLUETOOTH_X;
 pub use icons::BRIGHTNESS_HIGH_FILLED as BRIGHTNESS;

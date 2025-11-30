@@ -26,6 +26,7 @@ fn main() {
             "search-filled",
             "brightness-high-filled",
             "megaphone-filled",
+            "bell-outline",
         ],
     );
 }
