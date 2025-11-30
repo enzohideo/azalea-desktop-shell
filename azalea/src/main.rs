@@ -94,13 +94,51 @@ fn main() {
             },
         ),
         (
+            format!("top-taskbar"),
+            config::window::Config {
+                config: ConfigWrapper::Taskbar({
+                    use taskbar::{
+                        Config,
+                        widget::{ConfigWrapper::*, search, time},
+                    };
+
+                    Config {
+                        spacing: 8,
+
+                        start: vec![Search(search::Config { top_down: false })],
+
+                        center: vec![Time(time::Config {
+                            format: format!("%d/%m/%y"),
+                        })],
+
+                        end: vec![],
+                    }
+                }),
+
+                layer_shell: Some({
+                    use config::layer_shell::{Anchor, Config, ExclusiveZone, Layer};
+
+                    Config {
+                        namespace: format!("taskbar"),
+                        layer: Layer::Top,
+                        anchors: vec![Anchor::Left, Anchor::Right, Anchor::Top],
+                        exclusive_zone: ExclusiveZone::Auto,
+                    }
+                }),
+
+                lazy: false,
+
+                monitor: Monitor::All,
+            },
+        ),
+        (
             format!("bottom-taskbar"),
             config::window::Config {
                 config: ConfigWrapper::Taskbar({
                     use taskbar::{
                         Config,
                         widget::{
-                            ConfigWrapper::*, audio, bluetooth, brightness, media, network, search,
+                            ConfigWrapper::*, audio, bluetooth, brightness, media, network,
                             separator, time,
                         },
                     };
@@ -109,8 +147,6 @@ fn main() {
                         spacing: 8,
 
                         start: vec![
-                            Search(search::Config { top_down: false }),
-                            Separator(separator::Config { separator: None }),
                             Audio(audio::Config {}),
                             Separator(separator::Config { separator: None }),
                             Brightness(brightness::Config {}),
@@ -122,10 +158,6 @@ fn main() {
                             Bluetooth(bluetooth::Config {}),
                             Separator(separator::Config { separator: None }),
                             Network(network::Config {}),
-                            Separator(separator::Config { separator: None }),
-                            Time(time::Config {
-                                format: format!("%d/%m/%y"),
-                            }),
                             Separator(separator::Config { separator: None }),
                             Time(time::Config {
                                 format: format!("%H:%M"),
