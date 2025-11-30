@@ -28,6 +28,7 @@ pub struct Init {
 pub enum Input {
     Unload,
     LoadImage(String),
+    LoadPixbuf(gdk::gdk_pixbuf::Pixbuf),
 }
 
 #[derive(Debug)]
@@ -107,6 +108,7 @@ impl Component for Model {
                     });
                 }
             }
+            Input::LoadPixbuf(pixbuf) => self.set_image(&pixbuf),
             Input::Unload => self.set_spinner(),
         }
     }
