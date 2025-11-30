@@ -1,8 +1,7 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
-use gtk::prelude::*;
-use relm4::{
-    Component, ComponentParts, ComponentSender, RelmWidgetExt, component, prelude::FactoryVecDeque,
-};
+use gtk::{gdk, glib, prelude::*};
+use gtk4_layer_shell::LayerShell;
+use relm4::{Component, ComponentParts, ComponentSender, component, prelude::FactoryVecDeque};
 
 use crate::{
     factory, icon,
@@ -42,10 +41,11 @@ impl Component for Model {
     type CommandOutput = CommandOutput;
 
     view! {
-        gtk::MenuButton {
-
+        gtk::Button {
             #[wrap(Some)]
             set_child= &gtk::Box {
+                set_spacing: 12,
+
                 gtk::Image {
                     set_icon_name: Some(icon::SEARCH),
                 },
@@ -56,41 +56,9 @@ impl Component for Model {
                 },
             },
 
-            #[wrap(Some)]
-            set_popover = &gtk::Popover {
-                set_has_arrow: false,
-
-                connect_closed => move |_| {
-                    entry_clone.set_text("");
-                },
-
-                gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
-
-                    #[local_ref]
-                    entry -> gtk::Entry {
-                        set_vexpand: false,
-                        set_width_request: 0,
-                        set_width_chars: 0,
-                        inline_css: "color: transparent; max-width: 0;",
-                        connect_activate => Input::SelectFirst,
-                        connect_changed[sender] => move |entry| {
-                            sender.input(Input::Search(entry.text().to_string()));
-                        },
-                    },
-
-                    gtk::ScrolledWindow {
-                        set_propagate_natural_width: true,
-                        set_propagate_natural_height: true,
-
-                        #[local_ref]
-                        search_result -> gtk::Box {
-                            set_orientation: gtk::Orientation::Vertical,
-                            set_spacing: 5,
-                        }
-                    }
-                }
-            }
+            connect_clicked => move |_| {
+                window.set_visible(!window.get_visible());
+            },
         }
     }
 
@@ -121,6 +89,89 @@ impl Component for Model {
         let entry = gtk::Entry::new();
         let entry_clone = entry.clone();
         let search_result = model.apps.widget();
+
+        relm4::view! {
+            window = gtk::Window {
+                init_layer_shell: (),
+
+                set_layer: gtk4_layer_shell::Layer::Overlay,
+
+                set_anchor: (gtk4_layer_shell::Edge::Top, true),
+                set_anchor: (gtk4_layer_shell::Edge::Bottom, true),
+                set_anchor: (gtk4_layer_shell::Edge::Left, true),
+                set_anchor: (gtk4_layer_shell::Edge::Right, true),
+
+                set_keyboard_mode: gtk4_layer_shell::KeyboardMode::OnDemand,
+
+                set_visible: false,
+
+                connect_visible_notify => move |this| {
+                    if !this.get_visible() {
+                        entry_clone.set_text("");
+                    }
+                },
+
+                add_controller = gtk::EventControllerKey {
+                    connect_key_pressed => move |this, key, _code, _modifier| {
+                        match key {
+                            gdk::Key::Escape => {
+                                if let Some(widget) = this.widget(){
+                                    widget.set_visible(false);
+                                }
+                                glib::Propagation::Stop
+                            },
+                            _ => glib::Propagation::Proceed,
+                        }
+                    },
+                },
+
+                add_css_class: "azalea-transparent",
+
+                gtk::Box {
+                    set_halign: gtk::Align::Center,
+                    set_valign: gtk::Align::Center,
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_spacing: 24,
+
+                    set_width_request: 300,
+
+                    gtk::Box {
+                        set_spacing: 12,
+                        set_css_classes: &[ "azalea-surface", "azalea-bubble", "azalea-primary-border", "azalea-padding" ],
+
+                        gtk::Image {
+                            set_icon_name: Some(icon::SEARCH),
+                        },
+
+                        gtk::Separator {
+                            set_orientation: gtk::Orientation::Vertical,
+                        },
+
+                        #[local_ref]
+                        entry -> gtk::Entry {
+                            connect_activate => Input::SelectFirst,
+                            connect_changed[sender] => move |entry| {
+                                sender.input(Input::Search(entry.text().to_string()));
+                            },
+                        },
+                    },
+
+                    gtk::ScrolledWindow {
+                        set_propagate_natural_width: true,
+                        set_propagate_natural_height: true,
+
+                        set_css_classes: &[ "azalea-surface", "azalea-bubble", "azalea-primary-border" ],
+
+                        #[local_ref]
+                        search_result -> gtk::Box {
+                            set_orientation: gtk::Orientation::Vertical,
+                            set_spacing: 5,
+                        }
+                    }
+                }
+            }
+        };
+
         let widgets = view_output!();
 
         ComponentParts { model, widgets }

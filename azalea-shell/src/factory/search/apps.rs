@@ -43,6 +43,8 @@ impl FactoryComponent for Model {
             gtk::Box {
                 set_spacing: 12,
 
+                add_css_class: "azalea-padding",
+
                 gtk::Image {
                     set_from_gicon: self.app_info.icon
                         .as_ref()

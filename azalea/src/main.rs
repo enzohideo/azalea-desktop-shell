@@ -108,7 +108,7 @@ fn main() {
                         start: vec![Search(search::Config { top_down: false })],
 
                         center: vec![Time(time::Config {
-                            format: format!("%d/%m/%y"),
+                            format: format!("%A, %B %d, %Y"),
                         })],
 
                         end: vec![],
@@ -158,6 +158,10 @@ fn main() {
                             Bluetooth(bluetooth::Config {}),
                             Separator(separator::Config { separator: None }),
                             Network(network::Config {}),
+                            Separator(separator::Config { separator: None }),
+                            Time(time::Config {
+                                format: format!("%d/%m/%y"),
+                            }),
                             Separator(separator::Config { separator: None }),
                             Time(time::Config {
                                 format: format!("%H:%M"),
