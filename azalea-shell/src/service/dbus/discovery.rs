@@ -32,7 +32,7 @@ impl azalea_service::Service for Service {
     type Output = Output;
 
     fn handler(init: Self::Init) -> azalea_service::Handler<Self> {
-        azalea_service::Handler::new(init, 1, 8)
+        azalea_service::Handler::new(init, 4, 8)
     }
 
     async fn new(
