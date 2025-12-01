@@ -47,7 +47,7 @@ impl SimpleComponent for Model {
                     set_reveal_child: model.latest_notification.is_some(),
 
                     gtk::Label {
-                        set_max_width_chars: 30,
+                        set_max_width_chars: 60,
                         set_ellipsize: gtk::pango::EllipsizeMode::End,
 
                         #[watch]
