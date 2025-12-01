@@ -1,13 +1,10 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
 use relm4::{
-    Component, ComponentController, ComponentParts, ComponentSender, SimpleComponent, component
+    Component, ComponentController, ComponentParts, ComponentSender, SimpleComponent, component,
 };
 
-use crate::{
-    component::image,
-    service,
-};
+use crate::{component::image, service};
 
 crate::init! {
     Model {
@@ -51,12 +48,11 @@ impl Default for SystemInformation {
 
 #[derive(Debug)]
 pub enum Input {
-    Weather(service::weather::Output)
+    Weather(service::weather::Output),
 }
 
 #[derive(Debug)]
-pub enum CommandOutput {
-}
+pub enum CommandOutput {}
 
 #[component(pub)]
 impl SimpleComponent for Model {
@@ -225,9 +221,8 @@ impl SimpleComponent for Model {
             Input::Weather(weather) => match weather {
                 service::weather::Output::Temperature(temperature) => {
                     self.temperature = temperature;
-                },
+                }
             },
         }
     }
-
 }
