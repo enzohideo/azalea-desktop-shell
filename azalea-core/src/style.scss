@@ -222,8 +222,12 @@ window {
   border-radius: 10px;
 }
 
+.azalea-circle-bubble {
+  border-radius: 50px;
+}
+
 .azalea-primary-border {
-  border: 3px solid var(--primary);
+  border: 2px solid var(--primary);
 }
 
 .azalea-transparent {
