@@ -38,6 +38,7 @@ wayland-protocols = { version = "0.32.9", features = ["staging", "client"] }
 wayland-client = "0.31.11"
 brightness = "0.8.0"
 open-meteo-rs = "0.0.4"
+ffetch = "0.6.0"
 
 [build-dependencies]
 relm4-icons-build = "0.10.0-beta.1"

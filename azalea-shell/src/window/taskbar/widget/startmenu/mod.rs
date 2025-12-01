@@ -1,20 +1,20 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
 use relm4::{
-    Component, ComponentController, ComponentParts, ComponentSender, RelmWidgetExt, component,
-    prelude::FactoryVecDeque,
+    Component, ComponentController, ComponentParts, ComponentSender, SimpleComponent, component
 };
 
 use crate::{
     component::image,
-    factory, icon,
-    service::{self, search::AppInfo},
+    service,
 };
 
 crate::init! {
     Model {
         taskbar_image: relm4::Controller<image::Model>,
-        apps: FactoryVecDeque<factory::search::apps::Model>,
+        popup_image: relm4::Controller<image::Model>,
+        sysinfo: SystemInformation,
+        temperature: (f64, String),
         _service_handle: LocalListenerHandle,
     }
 
@@ -22,24 +22,47 @@ crate::init! {
     }
 }
 
+// TODO: Service that polls for updates
+struct SystemInformation {
+    os_name: String,
+    username: String,
+    hostname: String,
+    kernel: String,
+    cpu: String,
+    gpu: String,
+    memory: String,
+    compositor: String,
+}
+
+impl Default for SystemInformation {
+    fn default() -> Self {
+        Self {
+            os_name: ffetch::get_os_name().unwrap_or("unknown".to_string()),
+            kernel: ffetch::get_kernel_version().unwrap_or("unknown".to_string()),
+            username: ffetch::get_username(),
+            hostname: ffetch::get_hostname().unwrap_or("unknown".to_string()),
+            cpu: ffetch::get_cpu_name().unwrap_or("unknown".to_string()),
+            gpu: ffetch::get_gpu(),
+            memory: ffetch::get_memory().unwrap_or("unknown".to_string()),
+            compositor: ffetch::get_desktop_env(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Input {
-    Search(String),
-    SelectFirst,
-    SearchResults(service::search::Output),
+    Weather(service::weather::Output)
 }
 
 #[derive(Debug)]
 pub enum CommandOutput {
-    SetApplications(Vec<AppInfo>),
 }
 
 #[component(pub)]
-impl Component for Model {
+impl SimpleComponent for Model {
     type Init = Init;
     type Input = Input;
     type Output = ();
-    type CommandOutput = CommandOutput;
 
     view! {
         gtk::MenuButton {
@@ -49,8 +72,6 @@ impl Component for Model {
 
                 #[local_ref]
                 taskbar_image_widget -> gtk::Widget {
-                    inline_css: "max-height: 30px;",
-                    set_vexpand: false,
                 },
 
                 gtk::Label {
@@ -60,47 +81,97 @@ impl Component for Model {
 
             #[wrap(Some)]
             set_popover = &gtk::Popover {
-                set_has_arrow: false,
-
                 gtk::Box {
-                    set_orientation: gtk::Orientation::Vertical,
-                    set_width_request: 300,
-
                     gtk::Box {
-                        set_spacing: 12,
-                        set_css_classes: &[
-                            "azalea-padding"
-                        ],
+                        set_orientation: gtk::Orientation::Vertical,
 
-                        gtk::Image {
-                            set_icon_name: Some(icon::SEARCH),
+                        #[local_ref]
+                        popup_image_widget -> gtk::Widget {
                         },
 
-                        gtk::Separator {
-                            set_orientation: gtk::Orientation::Vertical,
+                        gtk::Separator {},
+
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-primary-fg", ],
+                                set_label: &format!("{}@{}", model.sysinfo.username, model.sysinfo.hostname),
+                            },
                         },
 
-                        gtk::Entry {
-                            connect_changed[sender] => move |entry| {
-                                sender.input(Input::Search(entry.text().to_string()));
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-secondary-fg", ],
+                                set_label: " OS:",
+                            },
+                            gtk::Label {
+                                set_label: &model.sysinfo.os_name,
+                            },
+                        },
+
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-tertiary-fg", ],
+                                set_label: " Kernel:",
+                            },
+                            gtk::Label {
+                                set_label: &model.sysinfo.kernel,
+                            },
+                        },
+
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-primary-fg", ],
+                                set_label: "󰻠 CPU:",
+                            },
+                            gtk::Label {
+                                set_label: &model.sysinfo.cpu,
+                            },
+                        },
+
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-secondary-fg", ],
+                                set_label: "󰍛 GPU:",
+                            },
+                            gtk::Label {
+                                set_label: &model.sysinfo.gpu,
+                            },
+                        },
+
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-tertiary-fg", ],
+                                set_label: "󰑭 Memory:",
+                            },
+                            gtk::Label {
+                                set_label: &model.sysinfo.memory,
+                            },
+                        },
+
+                        gtk::Box {
+                            set_spacing: 8,
+                            set_halign: gtk::Align::Start,
+                            gtk::Label {
+                                set_css_classes: &[ "azalea-secondary-fg", ],
+                                set_label: " Compositor:",
+                            },
+                            gtk::Label {
+                                set_label: &model.sysinfo.compositor,
                             },
                         },
                     },
-
-                    gtk::ScrolledWindow {
-                        set_propagate_natural_width: true,
-                        set_height_request: 300,
-
-                        set_css_classes: &[
-                            "azalea-padding"
-                        ],
-
-                        #[local_ref]
-                        search_result -> gtk::Box {
-                            set_orientation: gtk::Orientation::Vertical,
-                            set_spacing: 5,
-                        }
-                    }
                 }
             }
         }
@@ -112,6 +183,8 @@ impl Component for Model {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
+            temperature: Default::default(),
+            sysinfo: Default::default(),
             taskbar_image: image::Model::builder()
                 .launch(image::Init {
                     fallback: None,
@@ -119,12 +192,16 @@ impl Component for Model {
                     height: Some(30),
                 })
                 .detach(),
-            apps: FactoryVecDeque::builder()
-                .launch(gtk::Box::default())
+            popup_image: image::Model::builder()
+                .launch(image::Init {
+                    fallback: None,
+                    width: None,
+                    height: Some(200),
+                })
                 .detach(),
-            _service_handle: service::search::Service::forward_local(
+            _service_handle: service::weather::Service::forward_local(
                 sender.input_sender().clone(),
-                Input::SearchResults,
+                Input::Weather,
             ),
         };
 
@@ -132,46 +209,25 @@ impl Component for Model {
             include_bytes!("../../../../../../assets/azalea-logo.png").to_vec(),
         )));
 
-        let (tx, rx) = flume::bounded(1);
-        service::search::Service::send(service::search::Input::GetAllApplications(tx));
-        sender.oneshot_command(async move {
-            let mut applications = rx.recv_async().await.unwrap();
-            applications.sort_by(|a, b| a.name.cmp(&b.name));
-            CommandOutput::SetApplications(applications)
-        });
+        drop(model.popup_image.sender().send(image::Input::LoadBytes(
+            include_bytes!("../../../../../../assets/azalea-logo.png").to_vec(),
+        )));
 
         let taskbar_image_widget: &gtk::Widget = model.taskbar_image.widget().upcast_ref();
-        let search_result = model.apps.widget();
+        let popup_image_widget: &gtk::Widget = model.popup_image.widget().upcast_ref();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
         match message {
-            Input::Search(message) => {
-                self.apps
-                    .broadcast(factory::search::apps::Input::FilterShowAll(message));
-            }
-            Input::SearchResults(_output) => todo!(),
-            Input::SelectFirst => todo!(),
+            Input::Weather(weather) => match weather {
+                service::weather::Output::Temperature(temperature) => {
+                    self.temperature = temperature;
+                },
+            },
         }
     }
 
-    fn update_cmd(
-        &mut self,
-        message: Self::CommandOutput,
-        _sender: ComponentSender<Self>,
-        _root: &Self::Root,
-    ) {
-        match message {
-            CommandOutput::SetApplications(app_infos) => {
-                let mut guard = self.apps.guard();
-
-                for app_info in app_infos {
-                    guard.push_back(app_info);
-                }
-            }
-        }
-    }
 }
