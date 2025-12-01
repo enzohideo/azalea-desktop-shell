@@ -117,6 +117,15 @@ switch {
   }
 }
 
+calendar {
+  background: transparent;
+
+  .today {
+    color: var(--on-primary);
+    background: var(--primary);
+  }
+}
+
 window {
   background: unquote("mix(var(--surface), transparent, 0.2)");
 }
