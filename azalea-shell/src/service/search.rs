@@ -117,8 +117,12 @@ impl azalea_service::Service for Service {
                     azalea_log::warning!("Application not found: {app_id}");
                     return;
                 };
-                // TODO: Fork
-                match std::process::Command::new(&app.executable).spawn() {
+                match std::process::Command::new(&app.executable)
+                    .stdin(std::process::Stdio::null())
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .spawn()
+                {
                     Ok(_) => azalea_log::debug!("Launched application: {:?}", app.executable),
                     Err(e) => azalea_log::warning!(
                         "Failed to launch application {:?}: {e}",
