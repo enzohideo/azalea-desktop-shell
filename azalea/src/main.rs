@@ -106,6 +106,7 @@ fn main() {
                         spacing: 8,
 
                         start: vec![
+                            Separator(separator::Config { separator: None }),
                             Audio(audio::Config {}),
                             Separator(separator::Config { separator: None }),
                             Brightness(brightness::Config {}),
@@ -116,7 +117,11 @@ fn main() {
                             format: format!("%A, %B %d, %Y"),
                         })],
 
-                        end: vec![Notification(notification::Config {})],
+                        end: vec![
+                            Separator(separator::Config { separator: None }),
+                            Notification(notification::Config {}),
+                            Separator(separator::Config { separator: None }),
+                        ],
                     }
                 }),
 
@@ -170,6 +175,7 @@ fn main() {
                             Time(time::Config {
                                 format: format!("%H:%M"),
                             }),
+                            Separator(separator::Config { separator: None }),
                         ],
                     }
                 }),

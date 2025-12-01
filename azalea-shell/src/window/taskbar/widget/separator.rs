@@ -1,3 +1,4 @@
+use gtk::prelude::*;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 
 crate::init! {
@@ -18,6 +19,9 @@ impl SimpleComponent for Model {
 
     view! {
         gtk::Label {
+            set_css_classes: &[
+                "azalea-primary-fg",
+            ],
             set_label: &model.separator,
         }
     }
