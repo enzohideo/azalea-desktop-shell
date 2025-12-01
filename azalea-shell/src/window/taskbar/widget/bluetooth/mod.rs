@@ -122,7 +122,6 @@ impl Component for Model {
 
         let (tx, rx) = flume::bounded(1);
         service::dbus::bluez::Service::send(service::dbus::bluez::Input::Devices(tx));
-        service::dbus::bluez::Service::start();
         sender.oneshot_command(async move {
             let devices = rx.recv_async().await.unwrap();
             CommandOutput::SetDevices(devices)
