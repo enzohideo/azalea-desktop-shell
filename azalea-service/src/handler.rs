@@ -136,11 +136,11 @@ where
     }
 
     pub fn start(&mut self) {
-        self._start(false);
-    }
-
-    pub fn start_local(&mut self) {
-        self._start(true);
+        if S::LOCAL {
+            self._start(true);
+        } else {
+            self._start(false);
+        }
     }
 
     pub fn stop(&mut self) {
