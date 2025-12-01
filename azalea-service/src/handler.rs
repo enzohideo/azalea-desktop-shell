@@ -89,7 +89,7 @@ where
         }
     }
 
-    pub fn start(&mut self) {
+    fn _start(&mut self, local: bool) {
         let Some(input) = self.status.lock().unwrap().take() else {
             return;
         };
@@ -100,16 +100,17 @@ where
         let mut cancellation_receiver = self.cancellation.subscribe();
         let status = self.status.clone();
 
-        relm4::spawn(async move {
+        let task = async move {
             let mut service = S::new(init, input_sender, output_sender.clone()).await;
-            log::info::<S>("Service started");
+            let thread_id = std::thread::current().id();
+            log::info::<S>(&format!("Service started at thread: {thread_id:?}"));
 
             loop {
                 tokio::select! {
                     event = service.event_generator(), if !S::DISABLE_EVENTS => {
                         match service.event_handler(event, &output_sender).await {
                             Ok(_) => continue,
-                            Err(e) => azalea_log::debug::<S>(&format!("Service iteration failed {e}")),
+                            Err(e) => log::debug::<S>(&format!("Service iteration failed {e}")),
                         }
                     },
                     Ok(msg) = input.recv_async() => service.message(msg, &output_sender).await,
@@ -123,7 +124,23 @@ where
             };
 
             log::info::<S>("Service stopped");
-        });
+        };
+
+        if local {
+            relm4::spawn_local(task);
+        } else {
+            relm4::spawn_blocking(move || {
+                tokio::runtime::Handle::current().block_on(task);
+            });
+        }
+    }
+
+    pub fn start(&mut self) {
+        self._start(false);
+    }
+
+    pub fn start_local(&mut self) {
+        self._start(true);
     }
 
     pub fn stop(&mut self) {
