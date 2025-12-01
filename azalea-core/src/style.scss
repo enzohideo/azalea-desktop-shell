@@ -54,6 +54,7 @@
 * {
   color: var(--on-surface);
   border: none;
+  outline: none;
 }
 
 entry {
@@ -123,6 +124,11 @@ calendar {
   .today {
     color: var(--on-primary);
     background: var(--primary);
+  }
+
+  *:selected {
+    color: var(--on-secondary);
+    background: var(--secondary);
   }
 }
 
