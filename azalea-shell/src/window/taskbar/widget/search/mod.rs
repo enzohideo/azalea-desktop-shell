@@ -42,9 +42,21 @@ impl Component for Model {
 
     view! {
         gtk::Button {
+            set_valign: gtk::Align::Center,
+            #[watch]
+            set_css_classes: if model.search.len() > 0 {
+                &[
+                    "azalea-primary-container",
+                    "azalea-circle-bubble",
+                    "azalea-primary-border",
+                    "azalea-secondary-container-hover",
+                ]
+            } else { &[] },
+
             #[wrap(Some)]
             set_child= &gtk::Box {
-                set_spacing: 12,
+                set_spacing: 8,
+                set_valign: gtk::Align::Center,
 
                 gtk::Image {
                     set_icon_name: Some(icon::SEARCH),

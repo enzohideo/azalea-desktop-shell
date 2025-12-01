@@ -31,6 +31,14 @@ impl SimpleComponent for Model {
 
     view! {
         gtk::Box {
+            inline_css: "padding: 2px 8px 2px 4px",
+            set_valign: gtk::Align::Center,
+            set_css_classes: &[
+                "azalea-tertiary-border",
+                "azalea-circle-bubble",
+                "azalea-tertiary-container",
+                "azalea-secondary-container-hover",
+            ],
             set_spacing: 8,
 
             gtk::Image {
@@ -50,7 +58,7 @@ impl SimpleComponent for Model {
 
                 #[watch]
                 inline_css: &format!(
-                    "background-image: linear-gradient(to right, var(--primary) {}%, var(--on-primary) 0);",
+                    "background-image: linear-gradient(to right, var(--tertiary) {}%, var(--on-tertiary) 0);",
                     model.brightness_percent()
                 ),
             },
