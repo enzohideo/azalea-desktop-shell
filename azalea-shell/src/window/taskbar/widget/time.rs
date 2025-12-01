@@ -1,5 +1,6 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
-use relm4::{Component, ComponentParts, ComponentSender, component};
+use gtk::prelude::*;
+use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt, component};
 
 use crate::service;
 
@@ -30,10 +31,36 @@ impl Component for Model {
     type CommandOutput = Input;
 
     view! {
-        gtk::Label {
-            #[watch]
-            set_label: &format!("{}", model.time.format(&model.format))
-        },
+        gtk::MenuButton {
+            #[wrap(Some)]
+            set_child = &gtk::Label {
+                #[watch]
+                set_label: &format!("{}", model.time.format(&model.format)),
+            },
+
+            #[wrap(Some)]
+            set_popover = &gtk::Popover {
+                gtk::Box {
+                    gtk::Box {
+                        set_valign: gtk::Align::Center,
+                        set_halign: gtk::Align::Center,
+                        set_orientation: gtk::Orientation::Vertical,
+                        inline_css: "padding: 0 60px 0 60px",
+
+                        gtk::Label {
+                            inline_css: "font-size: 50px",
+                            set_label: &format!("{}", model.time.format("%H:%M")),
+                        },
+
+                        gtk::Label {
+                            set_label: &format!("{}", model.time.format("%B %d, %Y")),
+                        },
+                    },
+
+                    gtk::Calendar { },
+                }
+            }
+        }
     }
 
     fn init(
