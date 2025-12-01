@@ -63,10 +63,11 @@ impl azalea_service::Service for Service {
             .unwrap_or(zbus::Connection::system().await.unwrap());
         let proxy = NetworkManagerProxy::new(&connection).await.unwrap();
 
-        azalea_log::debug::<Self>(&format!(
+        azalea_log::debug!(
+            Self,
             "Version: {}",
             proxy.version().await.unwrap_or_default()
-        ));
+        );
 
         Self {
             streams: Streams {

@@ -37,7 +37,10 @@ where
     }
 
     fn event_generator(&mut self) -> impl std::future::Future<Output = Self::Event> + Send {
-        async { azalea_log::error::<Self>("Event generator not implemented!") }
+        async {
+            azalea_log::error!(Self, "Event generator not implemented!");
+            panic!()
+        }
     }
 
     fn event_handler(

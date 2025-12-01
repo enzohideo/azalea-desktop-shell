@@ -103,14 +103,14 @@ where
         let task = async move {
             let mut service = S::new(init, input_sender, output_sender.clone()).await;
             let thread_id = std::thread::current().id();
-            log::info::<S>(&format!("Service started at thread: {thread_id:?}"));
+            log::info!(S, "Service started at thread: {:?}", thread_id);
 
             loop {
                 tokio::select! {
                     event = service.event_generator(), if !S::DISABLE_EVENTS => {
                         match service.event_handler(event, &output_sender).await {
                             Ok(_) => continue,
-                            Err(e) => log::debug::<S>(&format!("Service iteration failed {e}")),
+                            Err(e) => log::debug!(S, "Service iteration failed {}", e),
                         }
                     },
                     Ok(msg) = input.recv_async() => service.message(msg, &output_sender).await,
@@ -123,7 +123,7 @@ where
                 *status = Some(input);
             };
 
-            log::info::<S>("Service stopped");
+            log::info!(S, "Service stopped");
         };
 
         if local {
@@ -343,7 +343,7 @@ macro_rules! impl_static_handler {
                 HANDLER.with(|handler| {
                     handler
                         .get_or_init(move || {
-                            azalea_log::debug::<$service>("Service initialized");
+                            azalea_log::debug!($service, "Service initialized");
                             Rc::new(RefCell::new(<Self as $crate::Service>::handler(
                                 Default::default(),
                             )))
