@@ -25,7 +25,7 @@ fn main() {
             "apps-filled",
             "search-filled",
             "brightness-high-filled",
-            "megaphone-filled",
+            "music-note-single",
             "bell-outline",
         ],
     );
