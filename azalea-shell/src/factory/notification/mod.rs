@@ -6,6 +6,7 @@ use crate::{component::image, service::dbus::notification};
 pub struct Model {
     notification: notification::service::Notification,
     image: relm4::Controller<image::Model>,
+    has_image: bool,
     // image: Option<gdk::Texture>,
 }
 
@@ -34,6 +35,7 @@ impl FactoryComponent for Model {
         #[root]
         gtk::Box {
             gtk::Frame {
+                set_visible: self.has_image,
                 set_child: Some(self.image.widget()),
             },
 
@@ -82,7 +84,8 @@ impl FactoryComponent for Model {
     }
 
     fn init_model(notification: Self::Init, _index: &u32, _sender: FactorySender<Self>) -> Self {
-        let model = Self {
+        let mut model = Self {
+            has_image: false,
             image: image::Model::builder()
                 .launch(image::Init {
                     fallback: None,
@@ -94,33 +97,47 @@ impl FactoryComponent for Model {
         };
 
         match notification.image.clone() {
-            Some(image) => match image {
-                notification::service::Image::Data {
-                    width,
-                    height,
-                    rowstride,
-                    has_alpha,
-                    bits_per_sample,
-                    channels: _,
-                    data,
-                } => {
-                    let pixbuf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
-                        &glib::Bytes::from_owned(data),
-                        gtk::gdk_pixbuf::Colorspace::Rgb,
-                        has_alpha,
-                        bits_per_sample,
+            Some(image) => {
+                model.has_image = true;
+                match image {
+                    notification::service::Image::Data {
                         width,
                         height,
                         rowstride,
-                    );
+                        has_alpha,
+                        bits_per_sample,
+                        channels: _,
+                        data,
+                    } => {
+                        let pixbuf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
+                            &glib::Bytes::from_owned(data),
+                            gtk::gdk_pixbuf::Colorspace::Rgb,
+                            has_alpha,
+                            bits_per_sample,
+                            width,
+                            height,
+                            rowstride,
+                        );
 
-                    drop(model.image.sender().send(image::Input::LoadPixbuf(pixbuf)));
+                        drop(model.image.sender().send(image::Input::LoadPixbuf(pixbuf)));
+                    }
+                    notification::service::Image::Path(path) => {
+                        drop(model.image.sender().send(image::Input::LoadImage(path)));
+                    }
                 }
-                notification::service::Image::Path(path) => {
-                    drop(model.image.sender().send(image::Input::LoadImage(path)));
+            }
+            None => {
+                if notification.app_icon != "" {
+                    model.has_image = true;
+                    println!("{}", notification.app_icon);
+                    drop(
+                        model
+                            .image
+                            .sender()
+                            .send(image::Input::LoadImage(notification.app_icon)),
+                    );
                 }
-            },
-            None => (),
+            }
         };
 
         model
