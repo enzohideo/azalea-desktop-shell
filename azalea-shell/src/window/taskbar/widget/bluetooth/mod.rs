@@ -66,7 +66,7 @@ impl Component for Model {
 
                             #[watch]
                             set_css_classes: if model.is_powered {
-                                &[ "primary-fg" ]
+                                &[ "azalea-primary-fg" ]
                             } else {
                                 &[]
                             },

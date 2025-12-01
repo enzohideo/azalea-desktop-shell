@@ -48,7 +48,7 @@ impl FactoryComponent for Model {
 
                 gtk::Label {
                     set_css_classes: &[
-                        "primary-fg",
+                        "azalea-primary-fg",
                     ],
                     #[watch]
                     set_label: &self.notification.summary,

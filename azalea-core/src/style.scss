@@ -122,87 +122,87 @@ window {
 }
 
 * {
-  .primary-fg {
+  .azalea-primary-fg {
     color: var(--primary);
   }
 
-  .secondary-fg {
+  .azalea-secondary-fg {
     color: var(--secondary);
   }
 
-  .tertiary-fg {
+  .azalea-tertiary-fg {
     color: var(--tertiary);
   }
 
-  .primary-bg {
+  .azalea-primary-bg {
     background: var(--primary);
   }
 
-  .secondary-bg {
+  .azalea-secondary-bg {
     background: var(--secondary);
   }
 
-  .tertiary-bg {
+  .azalea-tertiary-bg {
     background: var(--tertiary);
   }
 
-  .primary {
+  .azalea-primary {
     color: var(--on-primary);
     background: var(--primary);
   }
 
-  .secondary {
+  .azalea-secondary {
     color: var(--on-secondary);
     background: var(--secondary);
   }
 
-  .tertiary {
+  .azalea-tertiary {
     color: var(--on-tertiary);
     background: var(--tertiary);
   }
 
-  .primary-container {
+  .azalea-primary-container {
     color: var(--on-primary-container);
     background: var(--primary-container);
   }
 
-  .secondary-container {
+  .azalea-secondary-container {
     color: var(--on-secondary-container);
     background: var(--secondary-container);
   }
 
-  .tertiary-container {
+  .azalea-tertiary-container {
     color: var(--on-tertiary-container);
     background: var(--tertiary-container);
   }
 
   &:checked {
-    &.primary-button {
+    &.azalea-primary-button {
       border: 3px solid var(--primary);
       background: var(--primary);
     }
 
-    &.secondary-button {
+    &.azalea-secondary-button {
       border: 3px solid var(--secondary);
       background: var(--secondary);
     }
 
-    &.tertiary-button {
+    &.azalea-tertiary-button {
       border: 3px solid var(--tertiary);
       background: var(--tertiary);
     }
 
-    &.primary-container-button {
+    &.azalea-primary-container-button {
       border: 3px solid var(--primary-container);
       background: var(--primary-container);
     }
 
-    &.secondary-container-button {
+    &.azalea-secondary-container-button {
       border: 3px solid var(--secondary-container);
       background: var(--secondary-container);
     }
 
-    &.tertiary-container-button {
+    &.azalea-tertiary-container-button {
       border: 3px solid var(--tertiary-container);
       background: var(--tertiary-container);
     }
