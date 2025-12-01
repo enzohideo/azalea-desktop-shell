@@ -109,10 +109,21 @@ fn main() {
                             Separator(separator::Config { separator: None }),
                             Search(search::Config { top_down: false }),
                             Separator(separator::Config { separator: None }),
-                            Audio(audio::Config {}),
-                            Separator(separator::Config { separator: None }),
-                            Brightness(brightness::Config {}),
-                            Separator(separator::Config { separator: None }),
+                            Shortcut(shortcut::Config {
+                                icon: Some(format!("steam")),
+                                name: Some(format!("Steam")),
+                                executable: format!("steam"),
+                            }),
+                            Shortcut(shortcut::Config {
+                                icon: Some(format!("osu")),
+                                name: Some(format!("osu!")),
+                                executable: format!("osu!"),
+                            }),
+                            Shortcut(shortcut::Config {
+                                icon: Some(format!("firefox")),
+                                name: Some(format!("firefox")),
+                                executable: format!("firefox"),
+                            }),
                         ],
 
                         center: vec![Time(time::Config {
@@ -158,16 +169,10 @@ fn main() {
                         start: vec![
                             StartMenu(startmenu::Config {}),
                             Separator(separator::Config { separator: None }),
-                            Shortcut(shortcut::Config {
-                                icon: Some(format!("steam")),
-                                name: Some(format!("Steam")),
-                                executable: format!("steam"),
-                            }),
-                            Shortcut(shortcut::Config {
-                                icon: Some(format!("osu")),
-                                name: Some(format!("osu!")),
-                                executable: format!("osu!"),
-                            }),
+                            Audio(audio::Config {}),
+                            Separator(separator::Config { separator: None }),
+                            Brightness(brightness::Config {}),
+                            Separator(separator::Config { separator: None }),
                         ],
 
                         center: vec![Media(media::Config {})],
