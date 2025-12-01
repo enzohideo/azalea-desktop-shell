@@ -127,7 +127,7 @@ where
         };
 
         if local {
-            relm4::spawn_local(task);
+            relm4::spawn(task);
         } else {
             relm4::spawn_blocking(move || {
                 tokio::runtime::Handle::current().block_on(task);
