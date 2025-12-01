@@ -126,6 +126,14 @@ calendar {
     background: var(--primary);
   }
 
+  header {
+    * {
+      color: var(--on-secondary-container);
+    }
+    border-radius: 5px;
+    background: var(--secondary-container);
+  }
+
   *:selected {
     color: var(--on-secondary);
     background: var(--secondary);
