@@ -107,6 +107,8 @@ fn main() {
 
                         start: vec![
                             Separator(separator::Config { separator: None }),
+                            Search(search::Config { top_down: false }),
+                            Separator(separator::Config { separator: None }),
                             Audio(audio::Config {}),
                             Separator(separator::Config { separator: None }),
                             Brightness(brightness::Config {}),
@@ -156,8 +158,16 @@ fn main() {
                         start: vec![
                             StartMenu(startmenu::Config {}),
                             Separator(separator::Config { separator: None }),
-                            Search(search::Config { top_down: false }),
-                            Separator(separator::Config { separator: None }),
+                            Shortcut(shortcut::Config {
+                                icon: Some(format!("steam")),
+                                name: Some(format!("Steam")),
+                                executable: format!("steam"),
+                            }),
+                            Shortcut(shortcut::Config {
+                                icon: Some(format!("osu")),
+                                name: Some(format!("osu!")),
+                                executable: format!("osu!"),
+                            }),
                         ],
 
                         center: vec![Media(media::Config {})],

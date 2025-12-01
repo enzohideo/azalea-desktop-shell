@@ -8,6 +8,7 @@ pub mod network;
 pub mod notification;
 pub mod search;
 pub mod separator;
+pub mod shortcut;
 pub mod startmenu;
 pub mod time;
 
@@ -19,6 +20,7 @@ register_widgets!(
     Network, network::Model;
     Notification, notification::Model;
     Search, search::Model;
+    Shortcut, shortcut::Model;
     Separator, separator::Model;
     StartMenu, startmenu::Model;
     Time, time::Model;
