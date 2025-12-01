@@ -29,6 +29,8 @@ pub enum Input {
     Unload,
     LoadImage(String),
     LoadPixbuf(gdk::gdk_pixbuf::Pixbuf),
+    LoadTexture(gdk::Texture),
+    LoadBytes(Vec<u8>),
 }
 
 #[derive(Debug)]
@@ -109,6 +111,15 @@ impl Component for Model {
                 }
             }
             Input::LoadPixbuf(pixbuf) => self.set_image(&self.resize_pixbuf(pixbuf)),
+            Input::LoadTexture(texture) => self.set_image_from_texture(texture),
+            Input::LoadBytes(bytes) => {
+                let bytes = gtk::glib::Bytes::from_owned(bytes);
+                let stream = gtk::gio::MemoryInputStream::from_bytes(&bytes);
+                let pixbuf =
+                    gtk::gdk_pixbuf::Pixbuf::from_stream(&stream, gtk::gio::Cancellable::NONE)
+                        .unwrap();
+                self.set_image(&self.resize_pixbuf(pixbuf))
+            }
             Input::Unload => self.set_spinner(),
         }
     }
@@ -139,6 +150,10 @@ impl Model {
 
     fn set_image(&mut self, pixbuf: &gdk_pixbuf::Pixbuf) {
         self.image = Some(gdk::Texture::for_pixbuf(&pixbuf));
+    }
+
+    fn set_image_from_texture(&mut self, texture: gdk::Texture) {
+        self.image = Some(texture)
     }
 
     fn resize_pixbuf(&self, mut pixbuf: gdk::gdk_pixbuf::Pixbuf) -> gdk::gdk_pixbuf::Pixbuf {
