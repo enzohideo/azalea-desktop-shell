@@ -175,7 +175,17 @@ window {
     background: var(--primary-container);
   }
 
+  .azalea-primary-container-hover:hover {
+    color: var(--on-primary-container);
+    background: var(--primary-container);
+  }
+
   .azalea-secondary-container {
+    color: var(--on-secondary-container);
+    background: var(--secondary-container);
+  }
+
+  .azalea-secondary-container-hover:hover {
     color: var(--on-secondary-container);
     background: var(--secondary-container);
   }
@@ -183,6 +193,11 @@ window {
   .azalea-tertiary-container {
     color: var(--on-tertiary-container);
     background: var(--tertiary-container);
+  }
+
+  .azalea-secondary-container-hover:hover {
+    color: var(--on-secondary-container);
+    background: var(--secondary-container);
   }
 
   &:checked {
@@ -227,7 +242,15 @@ window {
 }
 
 .azalea-primary-border {
-  border: 2px solid var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.azalea-secondary-border {
+  border: 1px solid var(--secondary);
+}
+
+.azalea-tertiary-border {
+  border: 1px solid var(--tertiary);
 }
 
 .azalea-transparent {
