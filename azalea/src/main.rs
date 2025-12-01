@@ -99,13 +99,18 @@ fn main() {
                 config: ConfigWrapper::Taskbar({
                     use taskbar::{
                         Config,
-                        widget::{ConfigWrapper::*, notification, search, time},
+                        widget::{ConfigWrapper::*, *},
                     };
 
                     Config {
                         spacing: 8,
 
-                        start: vec![Search(search::Config { top_down: false })],
+                        start: vec![
+                            Audio(audio::Config {}),
+                            Separator(separator::Config { separator: None }),
+                            Brightness(brightness::Config {}),
+                            Separator(separator::Config { separator: None }),
+                        ],
 
                         center: vec![Time(time::Config {
                             format: format!("%A, %B %d, %Y"),
@@ -137,24 +142,23 @@ fn main() {
                 config: ConfigWrapper::Taskbar({
                     use taskbar::{
                         Config,
-                        widget::{
-                            ConfigWrapper::*, audio, bluetooth, brightness, media, network,
-                            separator, time,
-                        },
+                        widget::{ConfigWrapper::*, *},
                     };
 
                     Config {
                         spacing: 8,
 
                         start: vec![
-                            Audio(audio::Config {}),
+                            StartMenu(startmenu::Config {}),
                             Separator(separator::Config { separator: None }),
-                            Brightness(brightness::Config {}),
+                            Search(search::Config { top_down: false }),
+                            Separator(separator::Config { separator: None }),
                         ],
 
                         center: vec![Media(media::Config {})],
 
                         end: vec![
+                            Separator(separator::Config { separator: None }),
                             Bluetooth(bluetooth::Config {}),
                             Separator(separator::Config { separator: None }),
                             Network(network::Config {}),
