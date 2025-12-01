@@ -80,11 +80,16 @@ impl SimpleComponent for Model {
                     }
                 }),
 
-                #[local_ref]
-                notifications_widget -> gtk::Box {
-                    add_css_class: "azalea-transparent",
-                    set_orientation: gtk::Orientation::Vertical,
-                    set_spacing: 5,
+                gtk::ScrolledWindow {
+                    set_propagate_natural_width: true,
+                    set_propagate_natural_height: true,
+
+                    #[local_ref]
+                    notifications_widget -> gtk::Box {
+                        add_css_class: "azalea-transparent",
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_spacing: 5,
+                    }
                 }
             },
         },
