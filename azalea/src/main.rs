@@ -115,9 +115,9 @@ fn main() {
                                 executable: format!("steam"),
                             }),
                             Shortcut(shortcut::Config {
-                                icon: Some(format!("osu")),
-                                name: Some(format!("osu!")),
-                                executable: format!("osu!"),
+                                icon: Some(format!("chromium")),
+                                name: Some(format!("chromium")),
+                                executable: format!("chromium"),
                             }),
                             Shortcut(shortcut::Config {
                                 icon: Some(format!("firefox")),
