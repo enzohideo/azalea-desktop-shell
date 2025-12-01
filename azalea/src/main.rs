@@ -110,19 +110,13 @@ fn main() {
                             Search(search::Config { top_down: false }),
                             Separator(separator::Config { separator: None }),
                             Shortcut(shortcut::Config {
-                                icon: Some(format!("steam")),
-                                name: Some(format!("Steam")),
-                                executable: format!("steam"),
+                                desktop_entry: format!("steam.desktop"),
                             }),
                             Shortcut(shortcut::Config {
-                                icon: Some(format!("chromium")),
-                                name: Some(format!("chromium")),
-                                executable: format!("chromium"),
+                                desktop_entry: format!("chromium-browser.desktop"),
                             }),
                             Shortcut(shortcut::Config {
-                                icon: Some(format!("firefox")),
-                                name: Some(format!("firefox")),
-                                executable: format!("firefox"),
+                                desktop_entry: format!("firefox.desktop"),
                             }),
                         ],
 

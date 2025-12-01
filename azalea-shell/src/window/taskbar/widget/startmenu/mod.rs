@@ -1,7 +1,7 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
 use relm4::{
-    Component, ComponentController, ComponentParts, ComponentSender, SimpleComponent, component
+    Component, ComponentController, ComponentParts, ComponentSender, SimpleComponent, component,
 };
 
 use crate::{component::image, service};
