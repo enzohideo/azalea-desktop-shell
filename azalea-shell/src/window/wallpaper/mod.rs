@@ -42,7 +42,7 @@ impl Component for Model {
                 .launch(image::Init {
                     fallback: Some(
                         gtk::gdk::Texture::from_bytes(&gtk::glib::Bytes::from_static(
-                            include_bytes!("../../../../assets/azalea-wallpaper.jpg"),
+                            include_bytes!("../../../../assets/azalea-wallpaper.png"),
                         ))
                         .unwrap(),
                     ),
