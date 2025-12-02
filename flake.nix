@@ -25,11 +25,18 @@
         in
         {
           default = azalea;
-          inherit azalea;
+          inherit (azalea) azalea-pkg azalea-docs;
 
-          test = pkgsFor.${system}.callPackage ./nix/test {
+          test = pkgs.callPackage ./nix/test {
             inherit azalea;
           };
+
+          docs = pkgs.linkFarm "azalea-desktop-shell-docs" [
+            {
+              name = "docs";
+              path = "${azalea.azalea-docs}/share/doc";
+            }
+          ];
         }
       );
 

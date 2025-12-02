@@ -65,15 +65,29 @@ let
       ];
     };
 in
-craneLib.buildPackage (
-  individualCrateArgs
-  // rec {
-    pname = "azalea";
-    cargoExtraArgs = "-p azalea";
-    src = fileSetForCrate ../azalea;
-    meta = with lib; {
-      mainProgram = pname;
-      maintainers = with maintainers; [ enzohideo ];
-    };
-  }
-)
+{
+  azalea-pkg = craneLib.buildPackage (
+    individualCrateArgs
+    // rec {
+      pname = "azalea";
+      cargoExtraArgs = "-p azalea";
+      src = fileSetForCrate ../azalea;
+      meta = with lib; {
+        mainProgram = pname;
+        maintainers = with maintainers; [ enzohideo ];
+      };
+    }
+  );
+  azalea-docs = craneLib.cargoDoc (
+    individualCrateArgs
+    // rec {
+      pname = "azalea";
+      cargoExtraArgs = "--lib";
+      src = fileSetForCrate ../azalea;
+      meta = with lib; {
+        mainProgram = pname;
+        maintainers = with maintainers; [ enzohideo ];
+      };
+    }
+  );
+}
