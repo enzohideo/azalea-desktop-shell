@@ -22,6 +22,9 @@ It runs on any compositor that implements wlroots' [Layer Shell
 - `azalea-derive`: Derive macros
 - `azalea-shell`: Implementation of services and widgets
 
+> [!TIP]
+> Cargo docs: https://enzohideo.github.io/azalea-desktop-shell/docs/azalea/
+
 ## Nix
 
 This project uses nix to package and test Azalea on different wayland
