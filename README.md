@@ -77,3 +77,10 @@ shell components:
 - [ags](https://aylur.github.io/ags/) / [astal](https://aylur.github.io/astal/) (gtk4)
 - [quickshell](https://quickshell.org/) (qt)
 - [Azalea](https://enzohideo.github.io/azalea-desktop-shell/docs/azalea/) (this project)
+
+## Other interesting Wayland protocols
+
+Here are some interesting protocols that are worth exploring:
+
+- [ext-session-lock-v1](https://wayland.app/protocols/ext-session-lock-v1) (useful for lock screens, widely supported)
+- [ext-workspace-v1](https://wayland.app/protocols/ext-workspace-v1) (useful for workspace managers, but it's fairly recent, so support is limited)
