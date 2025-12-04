@@ -28,6 +28,21 @@ pub enum Event {
     Notify(Notification),
 }
 
+#[derive(Debug, zbus::zvariant::Type, serde::Serialize, serde::Deserialize)]
+pub struct ServerInformation {
+    /// The product name of the server.
+    pub name: String,
+
+    /// The vendor name. For example "KDE," "GNOME," "freedesktop.org" or "Microsoft".
+    pub vendor: String,
+
+    /// The server's version number.
+    pub version: String,
+
+    /// The specification version the server is compliant with.
+    pub spec_version: String,
+}
+
 /// org.freedesktop.Notifications service state
 pub struct Notifications {
     last_id_used: u32,
@@ -45,13 +60,13 @@ impl Notifications {
 
 #[zbus::interface(name = "org.freedesktop.Notifications")]
 impl Notifications {
-    fn get_server_information(&self) -> zbus::fdo::Result<(String, String, String, String)> {
-        Ok((
-            format!(env!("CARGO_PKG_NAME")),
-            format!(env!("CARGO_PKG_AUTHORS")),
-            format!(env!("CARGO_PKG_VERSION")),
-            format!("1.2"),
-        ))
+    fn get_server_information(&self) -> zbus::fdo::Result<ServerInformation> {
+        Ok(ServerInformation {
+            name: format!(env!("CARGO_PKG_NAME")),
+            vendor: format!(env!("CARGO_PKG_AUTHORS")),
+            version: format!(env!("CARGO_PKG_VERSION")),
+            spec_version: format!("1.2"),
+        })
     }
 
     fn get_capabilities(&self) -> zbus::fdo::Result<Vec<String>> {
