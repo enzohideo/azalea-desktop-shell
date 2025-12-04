@@ -74,6 +74,8 @@
               dbus # bluer
               alsa-lib # volume
 
+              zbus-xmlgen # generate zbus code from xml specs
+
               cloc
             ];
           };
