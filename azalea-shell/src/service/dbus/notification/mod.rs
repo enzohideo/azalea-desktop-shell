@@ -48,35 +48,26 @@ impl azalea_service::Service for Service {
     ) -> Self {
         let (tx, rx) = flume::unbounded();
         let (discovery_tx, discovery_rx) = oneshot::channel();
-        super::discovery::Service::send(super::discovery::Input::QueryObjects(discovery_tx));
+
+        super::discovery::Service::send(super::discovery::Input::QueryServiceExists(
+            format!("org.freedesktop.StatusNotifierWatcher"),
+            discovery_tx,
+        ));
+
         let conn = match discovery_rx.await {
-            Ok(names) => {
-                let mut notification_server_found = false;
+            Ok(true) => None,
+            Ok(false) => {
+                let notifications = service::Notifications::new(tx);
 
-                for name in names {
-                    if name.contains("org.freedesktop.Notifications") {
-                        notification_server_found = true;
-                        break;
-                    }
-                }
-
-                if notification_server_found {
-                    None
+                if let Ok(conn) = zbus::conn::Builder::session()
+                    .and_then(|conn| conn.name("org.freedesktop.Notifications"))
+                    .and_then(|conn| conn.serve_at("/org/freedesktop/Notifications", notifications))
+                    .map(|conn| conn.build())
+                {
+                    conn.await.ok()
                 } else {
-                    let notifications = service::Notifications::new(tx);
-
-                    if let Ok(conn) = zbus::conn::Builder::session()
-                        .and_then(|conn| conn.name("org.freedesktop.Notifications"))
-                        .and_then(|conn| {
-                            conn.serve_at("/org/freedesktop/Notifications", notifications)
-                        })
-                        .map(|conn| conn.build())
-                    {
-                        conn.await.ok()
-                    } else {
-                        azalea_log::warning!("There's already a notification server running!");
-                        None
-                    }
+                    azalea_log::warning!("There's already a notification server running!");
+                    None
                 }
             }
             Err(e) => {

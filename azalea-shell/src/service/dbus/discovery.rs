@@ -17,6 +17,7 @@ pub struct Service {
 #[derive(Debug)]
 pub enum Input {
     QueryObjects(tokio::sync::oneshot::Sender<Vec<OwnedBusName>>),
+    QueryServiceExists(String, tokio::sync::oneshot::Sender<bool>),
 }
 
 #[derive(Clone, Debug)]
@@ -62,6 +63,18 @@ impl azalea_service::Service for Service {
             Input::QueryObjects(sender) => {
                 let names = self.objects.clone().into_iter().collect();
                 drop(sender.send(names));
+            }
+            Input::QueryServiceExists(service, sender) => {
+                let mut found = false;
+
+                for name in &self.objects {
+                    if name.contains(&service) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                drop(sender.send(found));
             }
         }
     }
