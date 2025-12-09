@@ -126,7 +126,7 @@ impl azalea_service::Service for Service {
                 if self.players.contains_key(&bus_name) {
                     return;
                 }
-                azalea_log::debug!("[MPRIS] Object created: {}", bus_name);
+                azalea_log::debug!(Self, "Object created: {}", bus_name);
                 let proxy = PlayerProxy::new(&self.connection, bus_name.clone())
                     .await
                     .unwrap();
@@ -138,7 +138,7 @@ impl azalea_service::Service for Service {
                 });
             }
             Input::ObjectDeleted(bus_name) => {
-                azalea_log::debug!("[MPRIS] Object deleted: {}", bus_name);
+                azalea_log::debug!(Self, "Object deleted: {}", bus_name);
                 self.players.remove(&bus_name);
             }
             Input::UpdatePositionAndRate(bus_name) => {
@@ -162,7 +162,8 @@ impl azalea_service::Service for Service {
                     return;
                 };
                 azalea_log::debug!(
-                    "[MPRIS] Metadata changed for object {}. {:#?}",
+                    Self,
+                    "Metadata changed for object {}. {:#?}",
                     bus_name,
                     metadata
                 );
@@ -172,7 +173,7 @@ impl azalea_service::Service for Service {
                 }));
             }
             Input::Action(action) => {
-                azalea_log::debug!("[MPRIS] Triggered action: {:?}", action);
+                azalea_log::debug!(Self, "Triggered action: {:?}", action);
                 // TODO: return anyhow error
                 match action {
                     Action::PlayPause(bus_name) => {
@@ -217,7 +218,7 @@ async fn listen_to_player<'a>(
         tokio::select! {
             Some(prop) = volume.next() => {
                 let Ok(value) = prop.get().await else { continue; };
-                azalea_log::debug!("[MPRIS] Volume changed for object {}: {}", name, value);
+                azalea_log::debug!(Service, "Volume changed for object {}: {}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::Volume(value),
@@ -225,7 +226,7 @@ async fn listen_to_player<'a>(
             },
             Some(prop) = metadata.next() => {
                 let Ok(value) = prop.get().await else { continue; };
-                azalea_log::debug!("[MPRIS] Metadata changed for object {}: {:#?}", name, value);
+                azalea_log::debug!(Service, "Metadata changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::Metadata(value),
@@ -233,7 +234,7 @@ async fn listen_to_player<'a>(
             },
             Some(prop) = playback_status.next() => {
                 let Ok(value) = prop.get().await else { continue; };
-                azalea_log::debug!("[MPRIS] PlaybackStatus changed for object {}: {:#?}", name, value);
+                azalea_log::debug!(Service, "PlaybackStatus changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::PlaybackStatus(value),
@@ -246,7 +247,7 @@ async fn listen_to_player<'a>(
             },
             Some(prop) = playback_rate.next() => {
                 let Ok(value) = prop.get().await else { continue; };
-                azalea_log::debug!("[MPRIS] PlaybackRate changed for object {}: {:#?}", name, value);
+                azalea_log::debug!(Service, "PlaybackRate changed for object {}: {:#?}", name, value);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::PlaybackRate(value),
@@ -254,7 +255,7 @@ async fn listen_to_player<'a>(
             },
             Some(prop) = seeked.next() => {
                 let Ok(value) = prop.args() else { continue; };
-                azalea_log::debug!("[MPRIS] Seeked position for object {}: {:#?}", name, value.position);
+                azalea_log::debug!(Service, "Seeked position for object {}: {:#?}", name, value.position);
                 drop(output_sender.send(Output {
                     name: name.clone(),
                     event: Event::Position(value.position),

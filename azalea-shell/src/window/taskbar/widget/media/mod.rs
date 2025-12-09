@@ -230,7 +230,7 @@ impl Component for Model {
             }
             Input::Event(output) => {
                 if !self.players.contains_key(&output.name) {
-                    azalea_log::debug!("[MPRIS]: Player added with name {}", output.name);
+                    azalea_log::debug!(Self, "Player added with name {}", output.name);
                     // TODO: Implement removal from menu
                     self.menu.guard().push_back(output.name.clone());
                     self.players.insert(output.name.clone(), Default::default());
