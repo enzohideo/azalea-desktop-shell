@@ -441,9 +441,7 @@ macro_rules! impl_local_static_handler {
 
                 thread_local! {
                     static HANDLER: LazyLock<Rc<RefCell<$crate::Handler<$service>>>> = LazyLock::new(|| {
-                        let thread_id = std::thread::current().id();
-                        azalea_log::debug!($service, "Service initialized at thread: {:?}", thread_id);
-
+                        azalea_log::debug!($service, "Service initialized");
                         Rc::new(RefCell::new(<$service as $crate::Service>::handler(
                             Default::default(),
                         )))
@@ -467,12 +465,7 @@ macro_rules! impl_static_handler {
 
                 static HANDLER: LazyLock<Arc<Mutex<$crate::Handler<$service>>>> =
                     LazyLock::new(|| {
-                        let thread_id = std::thread::current().id();
-                        azalea_log::debug!(
-                            $service,
-                            "Service initialized at thread: {:?}",
-                            thread_id
-                        );
+                        azalea_log::debug!($service, "Service initialized");
 
                         Arc::new(Mutex::new(<$service as $crate::Service>::handler(
                             Default::default(),
