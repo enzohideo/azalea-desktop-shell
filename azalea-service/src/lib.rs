@@ -17,7 +17,7 @@ where
     type Event: Send;
     type Output: Clone + 'static + Send;
     const DISABLE_EVENTS: bool = false;
-    const LOCAL: bool = true;
+    const LOCAL: bool = false;
 
     fn new(
         init: Self::Init,
