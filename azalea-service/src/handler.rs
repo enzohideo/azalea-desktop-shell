@@ -254,7 +254,7 @@ where
     }
 }
 
-pub trait StaticHandler
+pub trait LocalStaticHandler
 where
     Self: Service,
 {
@@ -329,10 +329,113 @@ where
     }
 }
 
+pub trait StaticHandler
+where
+    Self: Service,
+{
+    fn static_handler() -> Arc<Mutex<crate::Handler<Self>>>;
+
+    fn init(init: Self::Init) {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.init = init,
+            Err(e) => azalea_log::warning!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn start() {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.start(),
+            Err(e) => azalea_log::warning!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn stop() {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.stop(),
+            Err(e) => azalea_log::warning!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn status() -> crate::Status {
+        match Self::static_handler().lock() {
+            Ok(handler) => handler.status(),
+            Err(e) => {
+                azalea_log::warning!(Self, "Failed to lock service handler: {}", e);
+                crate::Status::Stopped
+            }
+        }
+    }
+
+    fn send(message: Self::Input) {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.send(message),
+            Err(e) => azalea_log::warning!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn listen<F: (Fn(Self::Output) -> bool) + Send + 'static>(
+        transform: F,
+    ) -> crate::ListenerHandle {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.listen(transform),
+            Err(e) => azalea_log::error!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn forward<X: Send + 'static, F: (Fn(Self::Output) -> X) + Send + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::ListenerHandle {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.forward(sender, transform),
+            Err(e) => azalea_log::error!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn filtered_forward<X: Send + 'static, F: (Fn(Self::Output) -> Option<X>) + Send + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::ListenerHandle {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.filtered_forward(sender, transform),
+            Err(e) => azalea_log::error!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn listen_local<F: (Fn(Self::Output) -> bool) + 'static>(
+        transform: F,
+    ) -> crate::LocalListenerHandle {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.listen_local(transform),
+            Err(e) => azalea_log::error!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn forward_local<X: 'static, F: (Fn(Self::Output) -> X) + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::LocalListenerHandle {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.forward_local(sender, transform),
+            Err(e) => azalea_log::error!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+
+    fn filtered_forward_local<X: 'static, F: (Fn(Self::Output) -> Option<X>) + 'static>(
+        sender: relm4::Sender<X>,
+        transform: F,
+    ) -> crate::LocalListenerHandle {
+        match Self::static_handler().lock() {
+            Ok(mut handler) => handler.filtered_forward_local(sender, transform),
+            Err(e) => azalea_log::error!(Self, "Failed to lock service handler: {}", e),
+        }
+    }
+}
+
 #[macro_export]
-macro_rules! impl_static_handler {
+macro_rules! impl_local_static_handler {
     ($service:ty) => {
-        impl $crate::StaticHandler for $service {
+        impl $crate::LocalStaticHandler for $service {
             fn static_handler() -> std::rc::Rc<std::cell::RefCell<$crate::Handler<Self>>> {
                 use std::{cell::RefCell, rc::Rc, sync::LazyLock};
 
@@ -353,4 +456,31 @@ macro_rules! impl_static_handler {
             }
         }
     }
+}
+
+#[macro_export]
+macro_rules! impl_static_handler {
+    ($service:ty) => {
+        impl $crate::StaticHandler for Service {
+            fn static_handler() -> std::sync::Arc<std::sync::Mutex<$crate::Handler<Self>>> {
+                use std::sync::{Arc, LazyLock, Mutex};
+
+                static HANDLER: LazyLock<Arc<Mutex<$crate::Handler<$service>>>> =
+                    LazyLock::new(|| {
+                        let thread_id = std::thread::current().id();
+                        azalea_log::debug!(
+                            $service,
+                            "Service initialized at thread: {:?}",
+                            thread_id
+                        );
+
+                        Arc::new(Mutex::new(<$service as $crate::Service>::handler(
+                            Default::default(),
+                        )))
+                    });
+
+                HANDLER.clone()
+            }
+        }
+    };
 }
