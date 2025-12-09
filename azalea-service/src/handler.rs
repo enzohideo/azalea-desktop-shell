@@ -334,21 +334,21 @@ macro_rules! impl_static_handler {
     ($service:ty) => {
         impl $crate::StaticHandler for $service {
             fn static_handler() -> std::rc::Rc<std::cell::RefCell<$crate::Handler<Self>>> {
-                use std::{cell::RefCell, rc::Rc, sync::OnceLock};
+                use std::{cell::RefCell, rc::Rc, sync::LazyLock};
 
                 thread_local! {
-                    static HANDLER: OnceLock<Rc<RefCell<$crate::Handler<$service>>>> = OnceLock::new();
+                    static HANDLER: LazyLock<Rc<RefCell<$crate::Handler<$service>>>> = LazyLock::new(|| {
+                        let thread_id = std::thread::current().id();
+                        azalea_log::debug!($service, "Service initialized at thread: {:?}", thread_id);
+
+                        Rc::new(RefCell::new(<$service as $crate::Service>::handler(
+                            Default::default(),
+                        )))
+                    });
                 }
 
                 HANDLER.with(|handler| {
-                    handler
-                        .get_or_init(move || {
-                            azalea_log::debug!($service, "Service initialized");
-                            Rc::new(RefCell::new(<Self as $crate::Service>::handler(
-                                Default::default(),
-                            )))
-                        })
-                        .clone()
+                    (*handler).clone()
                 })
             }
         }
