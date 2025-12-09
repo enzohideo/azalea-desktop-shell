@@ -1,3 +1,5 @@
+//! Icons used by Azalea
+
 mod icons {
     include!(concat!(env!("OUT_DIR"), "/icons.rs"));
 }

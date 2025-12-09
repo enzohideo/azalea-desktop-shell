@@ -1,3 +1,7 @@
+//! # azalea-service
+//!
+//! Service traits used by Azalea
+
 mod handler;
 pub use handler::*;
 
@@ -8,6 +12,7 @@ pub mod error;
 
 use tokio::sync::broadcast;
 
+/// Trait that Azalea services must implement
 pub trait Service
 where
     Self: Sized + Send + 'static,

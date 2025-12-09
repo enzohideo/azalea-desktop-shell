@@ -1,12 +1,15 @@
-pub mod core {
-    pub use azalea_core::*;
-}
-pub mod log {
-    pub use azalea_log::*;
-}
-pub mod shell {
-    pub use azalea_shell::*;
-}
-pub mod service {
-    pub use azalea_service::*;
-}
+//! # azalea
+//!
+//! This crate works as the main application and as a library that re-exports the inner crates
+
+#[doc(inline)]
+pub use azalea_core as core;
+
+#[doc(inline)]
+pub use azalea_log as log;
+
+#[doc(inline)]
+pub use azalea_shell as shell;
+
+#[doc(inline)]
+pub use azalea_service as service;

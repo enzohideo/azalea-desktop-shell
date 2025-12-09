@@ -1,3 +1,5 @@
+//! Azalea windows
+
 pub mod taskbar;
 pub mod wallpaper;
 

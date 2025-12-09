@@ -1,3 +1,5 @@
+//! Configuration structs
+
 use std::collections::HashMap;
 
 pub mod layer_shell {

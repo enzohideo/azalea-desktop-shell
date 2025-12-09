@@ -1,3 +1,7 @@
+//! # azalea-log
+//!
+//! Wrappers around glib's log methods
+
 pub static LOG_NAME: &str = "Azalea";
 pub use glib;
 

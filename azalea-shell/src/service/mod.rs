@@ -1,3 +1,5 @@
+//! # Azalea services
+
 pub mod audio;
 pub mod brightness;
 pub mod dbus;

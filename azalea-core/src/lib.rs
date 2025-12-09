@@ -1,3 +1,11 @@
+//! # azalea-core
+//!
+//! Crate responsible for implementing:
+//! - main application state
+//! - command line arguments
+//! - configuration structs
+//! - client-server through unix sockets
+
 pub mod app;
 pub mod cli;
 pub mod config;

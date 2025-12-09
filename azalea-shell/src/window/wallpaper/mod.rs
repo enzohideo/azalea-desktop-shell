@@ -1,3 +1,5 @@
+//! # Azalea wallpaper window
+
 use gtk::glib::object::Cast;
 use relm4::{Component, ComponentController, ComponentParts, ComponentSender, component};
 

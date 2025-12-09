@@ -59,6 +59,7 @@ impl Drop for LocalListenerHandle {
     }
 }
 
+/// Service handler responsible for managing/handling a service
 #[derive(Clone)]
 pub struct Handler<S>
 where
@@ -254,6 +255,9 @@ where
     }
 }
 
+/// Thread local static handler for a Service
+///
+/// This allows global (thread local) access to a service
 pub trait LocalStaticHandler
 where
     Self: Service,
@@ -329,6 +333,9 @@ where
     }
 }
 
+/// Static handler for a Service
+///
+/// This allows global (multi thread) access to a service
 pub trait StaticHandler
 where
     Self: Service,

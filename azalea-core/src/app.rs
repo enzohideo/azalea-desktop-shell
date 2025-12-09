@@ -16,6 +16,7 @@ use crate::{
 
 use super::cli::{Arguments, Command};
 
+/// Main application state
 pub struct AzaleaApp<WM>
 where
     WM: AzaleaAppExt,

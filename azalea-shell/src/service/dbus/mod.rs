@@ -1,3 +1,5 @@
+//! # Azalea services that rely on DBus
+
 pub mod bluez;
 pub mod discovery;
 pub mod mpris;

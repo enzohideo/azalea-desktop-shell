@@ -1,3 +1,5 @@
+//! # Azalea taskbar window
+
 use gtk::prelude::BoxExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 use widget::WidgetWrapper;

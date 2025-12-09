@@ -2,6 +2,7 @@ use clap::{Parser, arg, command};
 
 use crate::log;
 
+/// Command line arguments
 #[derive(clap::Parser, serde::Serialize)]
 #[command(version, about, long_about = None)]
 pub struct Arguments {
@@ -32,6 +33,7 @@ impl Arguments {
     }
 }
 
+/// Main command line commands
 #[derive(Parser, serde::Serialize, serde::Deserialize, Debug)]
 pub enum Command {
     #[command(subcommand)]
