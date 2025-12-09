@@ -94,16 +94,18 @@ impl Component for Model {
         match input {
             Input::LoadImage(url) => {
                 if let Some(pixbuf) = Self::cache().borrow().get(&url) {
-                    azalea_log::info!(
-                        "[IMAGE] Loaded image (cache hit): {}...",
+                    azalea_log::debug!(
+                        Self,
+                        "Loaded image (cache hit): {}...",
                         Self::truncate(&url)
                     );
                     self.set_image(&pixbuf);
                 } else {
                     sender.oneshot_command(async move {
                         let image = Self::load_image(&url).await;
-                        azalea_log::info!(
-                            "[IMAGE] Loaded image (cache miss): {}...",
+                        azalea_log::debug!(
+                            Self,
+                            "Loaded image (cache miss): {}...",
                             Self::truncate(&url)
                         );
                         CommandOutput::LoadedImage(url, image)
