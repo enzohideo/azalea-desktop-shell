@@ -74,7 +74,7 @@ impl azalea_service::Service for Service {
                     }
                 }
 
-                drop(sender.send(found));
+                let _ = sender.send(found);
             }
         }
     }
