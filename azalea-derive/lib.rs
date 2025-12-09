@@ -9,6 +9,7 @@ pub fn derive_static_handler(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         azalea_service::impl_static_handler!(#name);
+        azalea_service::impl_local_static_handler!(#name);
     };
 
     TokenStream::from(expanded)
