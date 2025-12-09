@@ -5,9 +5,11 @@ pub use glib;
 macro_rules! error {
     ($format:literal, $($arg:expr),* $(,)?) => {{
         $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Error, $format, $($arg),*);
+        panic!()
     }};
     ($format:literal $(,)?) => {{
         $crate::glib::g_log!($crate::LOG_NAME, $crate::glib::LogLevel::Error, $format);
+        panic!()
     }};
     ($context:ty, $format:literal, $($arg:expr),* $(,)?) => {{
         $crate::error!("[{}] {}", std::any::type_name::<$context>(), format!($format, $($arg),*));

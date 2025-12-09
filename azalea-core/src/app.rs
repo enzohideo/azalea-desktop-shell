@@ -128,7 +128,6 @@ where
             }
             _ => {
                 log::error!("Daemon isn't running, invalid command: {:?}", args.command);
-                return;
             }
         }
 

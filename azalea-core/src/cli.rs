@@ -27,7 +27,6 @@ impl Arguments {
             Ok(s) => s,
             Err(e) => {
                 log::error!("Failed to parse cli arguments {e}");
-                e.exit()
             }
         }
     }
