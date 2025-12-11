@@ -4,12 +4,16 @@ use relm4::{
     Component, ComponentController, ComponentParts, ComponentSender, SimpleComponent, component,
 };
 
-use crate::{component::image, service};
+use crate::{
+    component::{image, login},
+    service,
+};
 
 crate::init! {
     Model {
         taskbar_image: relm4::Controller<image::Model>,
         popup_image: relm4::Controller<image::Model>,
+        login_widget: relm4::Controller<login::Model>,
         sysinfo: SystemInformation,
         temperature: (f64, String),
         _service_handle: LocalListenerHandle,
@@ -85,6 +89,11 @@ impl SimpleComponent for Model {
                         #[local_ref]
                         popup_image_widget -> gtk::Widget {
                         },
+
+                        gtk::Separator {},
+
+                        #[local_ref]
+                        login_widget -> gtk::Widget {},
 
                         gtk::Separator {},
 
@@ -196,6 +205,7 @@ impl SimpleComponent for Model {
                     height: Some(200),
                 })
                 .detach(),
+            login_widget: login::Model::builder().launch(()).detach(),
             _service_handle: service::weather::Service::forward_local(
                 sender.input_sender().clone(),
                 Input::Weather,
@@ -212,6 +222,7 @@ impl SimpleComponent for Model {
 
         let taskbar_image_widget: &gtk::Widget = model.taskbar_image.widget().upcast_ref();
         let popup_image_widget: &gtk::Widget = model.popup_image.widget().upcast_ref();
+        let login_widget: &gtk::Widget = model.login_widget.widget().upcast_ref();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
