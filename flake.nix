@@ -24,7 +24,7 @@
           azalea = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
         in
         {
-          default = azalea;
+          default = azalea.azalea-pkg;
           inherit (azalea) azalea-pkg azalea-docs;
 
           test = pkgs.callPackage ./nix/test {
