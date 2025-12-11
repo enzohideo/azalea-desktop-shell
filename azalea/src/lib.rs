@@ -9,6 +9,9 @@ pub use azalea_core as core;
 pub use azalea_log as log;
 
 #[doc(inline)]
+pub use azalea_derive as derive;
+
+#[doc(inline)]
 pub use azalea_shell as shell;
 
 #[doc(inline)]
