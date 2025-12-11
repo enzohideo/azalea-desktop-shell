@@ -118,9 +118,7 @@ pub mod layer_shell {
             }
 
             if let Some(layer) = &self.layer {
-                let Some(win_layer) = window.layer() else {
-                    return false;
-                };
+                let win_layer = window.layer();
                 if Into::<gtk4_layer_shell::Layer>::into(layer) != win_layer {
                     return false;
                 }
