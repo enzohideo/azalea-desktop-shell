@@ -1,6 +1,7 @@
 //! Icons used by Azalea
 
 mod icons {
+    pub use shipped::*;
     include!(concat!(env!("OUT_DIR"), "/icons.rs"));
 }
 
@@ -10,6 +11,8 @@ pub use icons::PAUSE;
 pub use icons::PLAY;
 
 pub use icons::APPS_FILLED as APPS;
+pub use icons::ARROW_CLOCKWISE_FILLED as REBOOT;
+pub use icons::ARROW_EXIT_FILLED as SHUTDOWN;
 pub use icons::BELL_OUTLINE as BELL;
 pub use icons::BLUETOOTH;
 pub use icons::BLUETOOTH_X;
@@ -27,6 +30,8 @@ pub use icons::RADIOWAVES_NONE as WIFI_NONE;
 pub use icons::RADIOWAVES_QUESTION_MARK as WIFI_QUESTION_MARK;
 pub use icons::SEARCH_FILLED as SEARCH;
 pub use icons::WAVES_7 as WIFI_SLEEP;
+pub use icons::WEATHER_MOON_FILLED as HIBERNATE;
+pub use icons::WEATHER_MOON_REGULAR as SUSPEND;
 
 pub fn init() {
     relm4_icons::initialize_icons(icons::GRESOURCE_BYTES, icons::RESOURCE_PREFIX);

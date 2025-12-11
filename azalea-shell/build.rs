@@ -27,6 +27,10 @@ fn main() {
             "brightness-high-filled",
             "music-note-single",
             "bell-outline",
+            "arrow-clockwise-filled",
+            "arrow-exit-filled",
+            "weather-moon-filled",
+            "weather-moon-regular",
         ],
     );
 }
