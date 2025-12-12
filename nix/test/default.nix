@@ -12,6 +12,7 @@ testers.runNixOSTest {
   name = "azalea-integration-test";
 
   nodes.hyprland = import ./nodes/hyprland.nix;
+  # nodes.niri = import ./nodes/niri.nix; # Niri doesn't support software rendering
   nodes.sway = import ./nodes/sway.nix;
 
   defaults = {
