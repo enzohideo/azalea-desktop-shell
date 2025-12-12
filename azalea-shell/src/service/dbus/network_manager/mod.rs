@@ -4,7 +4,10 @@ use futures_lite::StreamExt;
 use proxy::{NMConnectivityState, NMState, NetworkManagerProxy};
 use tokio::sync::broadcast;
 
-use zbus::proxy::{PropertyChanged, PropertyStream};
+use zbus::{
+    proxy::{PropertyChanged, PropertyStream},
+    zvariant::OwnedObjectPath,
+};
 
 #[derive(azalea_derive::StaticHandler)]
 pub struct Service {
@@ -26,6 +29,7 @@ pub struct Init {
 
 #[derive(Clone, Debug)]
 pub enum Input {
+    GetDevices,
     Update,
     Enable(bool),
 }
@@ -38,6 +42,7 @@ pub enum Event {
 
 #[derive(Clone, Debug)]
 pub enum Output {
+    Devices(Vec<OwnedObjectPath>),
     NetworkingEnabledChanged(bool),
     StateChanged(NMState),
     ConnectivityChanged(NMConnectivityState),
@@ -85,10 +90,18 @@ impl azalea_service::Service for Service {
         output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
+            Input::GetDevices => {
+                drop(output_sender.send(Output::Devices(
+                    self.proxy.get_devices().await.unwrap_or_default(),
+                )));
+            }
             Input::Update => {
                 drop(output_sender.send(Output::StateChanged(self.proxy.state().await.unwrap())));
                 drop(output_sender.send(Output::ConnectivityChanged(
                     self.proxy.connectivity().await.unwrap(),
+                )));
+                drop(output_sender.send(Output::Devices(
+                    self.proxy.get_devices().await.unwrap_or_default(),
                 )));
             }
             Input::Enable(on) => {
