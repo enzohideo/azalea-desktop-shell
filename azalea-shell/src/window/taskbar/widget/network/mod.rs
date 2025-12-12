@@ -18,6 +18,7 @@ crate::init! {
         state_connectivity: (NMState, NMConnectivityState),
         _nm_handle: LocalListenerHandle,
         devices_menu: FactoryVecDeque<factory::network::device::Model>,
+        connections_menu: FactoryVecDeque<factory::network::connection::Model>,
     }
 
     Config {}
@@ -61,6 +62,7 @@ impl Component for Model {
                 set_position: gtk::PositionType::Right,
 
                 gtk::Box {
+                    set_spacing: 12,
                     set_orientation: gtk::Orientation::Vertical,
 
                     gtk::Box {
@@ -107,6 +109,20 @@ impl Component for Model {
                     devices_widget -> gtk::Box {
                         set_orientation: gtk::Orientation::Vertical,
                         set_spacing: 5,
+                    },
+
+                    gtk::Separator {},
+
+                    gtk::Label::new(Some("Connections")) {
+                        set_css_classes: &[ "azalea-primary-fg" ],
+                        set_halign: gtk::Align::Start,
+                        set_hexpand: true,
+                    },
+
+                    #[local_ref]
+                    connections_widget -> gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_spacing: 5,
                     }
                 },
             },
@@ -128,11 +144,15 @@ impl Component for Model {
             devices_menu: FactoryVecDeque::builder()
                 .launch(gtk::Box::default())
                 .detach(),
+            connections_menu: FactoryVecDeque::builder()
+                .launch(gtk::Box::default())
+                .detach(),
         };
 
         network_manager::Service::send(network_manager::Input::Update);
 
         let devices_widget = model.devices_menu.widget();
+        let connections_widget = model.connections_menu.widget();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -154,6 +174,15 @@ impl Component for Model {
 
                     for device in devices {
                         guard.push_back(device);
+                    }
+                }
+                Output::Connections(connections) => {
+                    let mut guard = self.connections_menu.guard();
+
+                    guard.clear();
+
+                    for connection in connections {
+                        guard.push_back(connection);
                     }
                 }
             },

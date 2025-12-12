@@ -17,12 +17,19 @@ pub trait NetworkManager {
     async fn get_all_devices(&self) -> zbus::Result<Vec<OwnedObjectPath>>;
     fn sleep(&self, sleep: bool) -> zbus::Result<()>;
     fn enable(&self, enable: bool) -> zbus::Result<()>;
+    fn deactivate_connection(
+        &self,
+        active_connection: OwnedObjectPath,
+    ) -> zbus::Result<Vec<OwnedObjectPath>>;
     fn activate_connection(
         &self,
         connection: OwnedObjectPath,
         device: OwnedObjectPath,
         specific_object: OwnedObjectPath,
     ) -> zbus::Result<OwnedObjectPath>;
+
+    #[zbus(property)]
+    fn active_connections(&self) -> zbus::Result<Vec<OwnedObjectPath>>;
 
     #[zbus(property)]
     fn networking_enabled(&self) -> zbus::Result<bool>;
@@ -235,6 +242,9 @@ pub enum NMDeviceType {
     NMDeviceTypeVeth = 20,
 }
 
+/// Netowkr Manager Device DBus interface
+///
+/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Device.html
 #[proxy(
     default_service = "org.freedesktop.NetworkManager",
     interface = "org.freedesktop.NetworkManager.Device"
@@ -253,4 +263,48 @@ pub trait NetworkManagerDevice {
 
     #[zbus(property)]
     fn active_connection(&self) -> zbus::Result<OwnedObjectPath>;
+}
+
+/// Network Manager Settings DBus interface
+///
+/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Settings
+#[proxy(
+    default_service = "org.freedesktop.NetworkManager",
+    default_path = "/org/freedesktop/NetworkManager/Settings",
+    interface = "org.freedesktop.NetworkManager.Settings"
+)]
+pub trait NetworkManagerSettings {
+    fn list_connections(&self) -> zbus::Result<Vec<OwnedObjectPath>>;
+
+    #[zbus(property)]
+    fn connections(&self) -> zbus::Result<Vec<OwnedObjectPath>>;
+}
+
+/// Network Manager Settings Connection DBus interface
+///
+/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Settings.Connection.html
+#[proxy(
+    default_service = "org.freedesktop.NetworkManager",
+    interface = "org.freedesktop.NetworkManager.Settings.Connection"
+)]
+pub trait NetworkManagerSettingsConnection {
+    /// This is a nested dictionary...
+    ///
+    /// It would be nice to have nested dictionaries, but it's not supported, see https://github.com/z-galaxy/zbus/issues/312
+    fn get_settings(
+        &self,
+    ) -> zbus::Result<HashMap<String, HashMap<String, zbus::zvariant::OwnedValue>>>;
+}
+
+/// Network Manager Connection Active DBus interface
+///
+/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Connection.Active.html
+#[proxy(
+    default_service = "org.freedesktop.NetworkManager",
+    interface = "org.freedesktop.NetworkManager.Connection.Active"
+)]
+pub trait NetworkManagerConnectionActive {
+    /// This refers to the connection settings...
+    #[zbus(property)]
+    fn connection(&self) -> zbus::Result<OwnedObjectPath>;
 }

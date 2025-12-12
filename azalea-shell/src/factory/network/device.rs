@@ -10,9 +10,7 @@ use crate::{
     icon,
     service::{
         self,
-        dbus::network_manager::proxy::{
-            NMDeviceState, NMDeviceType, NetworkManagerDeviceProxyBlocking,
-        },
+        dbus::network_manager::proxy::{NMDeviceState, NetworkManagerDeviceProxyBlocking},
     },
 };
 
@@ -87,8 +85,6 @@ impl FactoryComponent for Model {
     fn init_model(device: Self::Init, _index: &DynamicIndex, sender: FactorySender<Self>) -> Self {
         let connection = zbus::blocking::Connection::system().ok();
 
-        println!("{device:?}");
-
         let proxy = connection
             .as_ref()
             .and_then(|conn| NetworkManagerDeviceProxyBlocking::new(&conn, device.clone()).ok());
@@ -143,7 +139,7 @@ impl FactoryComponent for Model {
                 service::dbus::network_manager::Service::send(
                     service::dbus::network_manager::Input::ActivateConnection {
                         connection: None,
-                        device: self.device.clone(),
+                        device: Some(self.device.clone()),
                         specific_object: None,
                     },
                 );

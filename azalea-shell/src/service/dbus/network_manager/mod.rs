@@ -1,7 +1,9 @@
 pub mod proxy;
 
+use std::collections::HashMap;
+
 use futures_lite::StreamExt;
-use proxy::{NMConnectivityState, NMState, NetworkManagerProxy};
+use proxy::{NMConnectivityState, NMState, NetworkManagerProxy, NetworkManagerSettingsProxy};
 use tokio::sync::broadcast;
 
 use zbus::{
@@ -9,10 +11,12 @@ use zbus::{
     zvariant::OwnedObjectPath,
 };
 
+use crate::service::dbus::network_manager::proxy::NetworkManagerConnectionActiveProxy;
+
 #[derive(azalea_derive::StaticHandler)]
 pub struct Service {
-    #[allow(dead_code)]
     proxy: NetworkManagerProxy<'static>,
+    settings_proxy: NetworkManagerSettingsProxy<'static>,
     streams: Streams,
 }
 
@@ -30,11 +34,15 @@ pub struct Init {
 #[derive(Clone, Debug)]
 pub enum Input {
     GetDevices,
+    ListConnections,
     Update,
     Enable(bool),
+    DeactivateConnection {
+        active_connection: OwnedObjectPath,
+    },
     ActivateConnection {
         connection: Option<OwnedObjectPath>,
-        device: OwnedObjectPath,
+        device: Option<OwnedObjectPath>,
         specific_object: Option<OwnedObjectPath>,
     },
 }
@@ -47,6 +55,8 @@ pub enum Event {
 
 #[derive(Clone, Debug)]
 pub enum Output {
+    /// If the connection is active, it'll send the Connection.Active object too
+    Connections(Vec<(OwnedObjectPath, Option<OwnedObjectPath>)>),
     Devices(Vec<OwnedObjectPath>),
     NetworkingEnabledChanged(bool),
     StateChanged(NMState),
@@ -72,6 +82,7 @@ impl azalea_service::Service for Service {
             .dbus_connection
             .unwrap_or(zbus::Connection::system().await.unwrap());
         let proxy = NetworkManagerProxy::new(&connection).await.unwrap();
+        let settings_proxy = NetworkManagerSettingsProxy::new(&connection).await.unwrap();
 
         azalea_log::debug!(
             Self,
@@ -85,6 +96,7 @@ impl azalea_service::Service for Service {
                 state: proxy.receive_state_changed().await,
                 connectivity: proxy.receive_connectivity_changed().await,
             },
+            settings_proxy,
             proxy,
         }
     }
@@ -95,6 +107,14 @@ impl azalea_service::Service for Service {
         output_sender: &broadcast::Sender<Self::Output>,
     ) {
         match input {
+            Input::DeactivateConnection { active_connection } => {
+                azalea_log::debug!("Disconnecting: {:?}", active_connection);
+                drop(self.proxy.deactivate_connection(active_connection).await);
+                self.update_active_connections(output_sender).await;
+            }
+            Input::ListConnections => {
+                self.update_active_connections(output_sender).await;
+            }
             Input::GetDevices => {
                 drop(output_sender.send(Output::Devices(
                     self.proxy.get_devices().await.unwrap_or_default(),
@@ -108,6 +128,7 @@ impl azalea_service::Service for Service {
                 drop(output_sender.send(Output::Devices(
                     self.proxy.get_devices().await.unwrap_or_default(),
                 )));
+                self.update_active_connections(output_sender).await;
             }
             Input::Enable(on) => {
                 if let Err(e) = self.proxy.enable(on).await {
@@ -125,11 +146,13 @@ impl azalea_service::Service for Service {
                     self.proxy
                         .activate_connection(
                             connection.unwrap_or(root_object_path.clone()),
-                            device,
+                            device.unwrap_or(root_object_path.clone()),
                             specific_object.unwrap_or(root_object_path),
                         )
                         .await,
                 );
+
+                self.update_active_connections(output_sender).await;
             }
         }
     }
@@ -162,5 +185,37 @@ impl azalea_service::Service for Service {
         };
         output_sender.send(output)?;
         Ok(())
+    }
+}
+
+impl Service {
+    async fn get_active_connections(&self) -> HashMap<OwnedObjectPath, OwnedObjectPath> {
+        futures_lite::stream::iter(self.proxy.active_connections().await.unwrap_or_default())
+            .then(|v| async move {
+                let conn = zbus::Connection::system().await.unwrap();
+                let ca = NetworkManagerConnectionActiveProxy::new(&conn, v.clone())
+                    .await
+                    .unwrap();
+                (ca.connection().await.unwrap(), v)
+            })
+            .collect::<HashMap<OwnedObjectPath, OwnedObjectPath>>()
+            .await
+    }
+
+    async fn update_active_connections(&self, output_sender: &broadcast::Sender<Output>) {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        let active_connections = self.get_active_connections().await;
+
+        drop(
+            output_sender.send(Output::Connections(
+                self.settings_proxy
+                    .list_connections()
+                    .await
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|v| (v.clone(), active_connections.get(&v).cloned()))
+                    .collect(),
+            )),
+        );
     }
 }
