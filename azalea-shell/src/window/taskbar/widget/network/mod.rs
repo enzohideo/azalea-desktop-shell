@@ -66,17 +66,17 @@ impl Component for Model {
                     gtk::Box {
                         set_spacing: 12,
 
-                        inline_css: r#"
-                            background: var(--secondary-container);
-                            padding: 5px 10px 5px 10px;
-                            border-radius: 5px;
-                        "#,
-
                         gtk::Label::new(Some("Network")) {
                             inline_css: r#"
                                 font-weight: bold;
-                                color: var(--on-secondary-container);
                             "#,
+
+                            #[watch]
+                            set_css_classes: if model.enabled {
+                                &[ "azalea-primary-fg" ]
+                            } else {
+                                &[]
+                            },
                             set_halign: gtk::Align::Start,
                             set_hexpand: true,
                         },
@@ -96,6 +96,12 @@ impl Component for Model {
                     },
 
                     gtk::Separator {},
+
+                    gtk::Label::new(Some("Devices")) {
+                        set_css_classes: &[ "azalea-primary-fg" ],
+                        set_halign: gtk::Align::Start,
+                        set_hexpand: true,
+                    },
 
                     #[local_ref]
                     devices_widget -> gtk::Box {

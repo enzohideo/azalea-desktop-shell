@@ -32,6 +32,11 @@ pub enum Input {
     GetDevices,
     Update,
     Enable(bool),
+    ActivateConnection {
+        connection: Option<OwnedObjectPath>,
+        device: OwnedObjectPath,
+        specific_object: Option<OwnedObjectPath>,
+    },
 }
 
 pub enum Event {
@@ -108,6 +113,23 @@ impl azalea_service::Service for Service {
                 if let Err(e) = self.proxy.enable(on).await {
                     azalea_log::warning!("Failed to (dis)enable network: {}", e)
                 }
+            }
+            Input::ActivateConnection {
+                connection,
+                device,
+                specific_object,
+            } => {
+                let root_object_path = OwnedObjectPath::try_from("/").unwrap();
+
+                drop(
+                    self.proxy
+                        .activate_connection(
+                            connection.unwrap_or(root_object_path.clone()),
+                            device,
+                            specific_object.unwrap_or(root_object_path),
+                        )
+                        .await,
+                );
             }
         }
     }

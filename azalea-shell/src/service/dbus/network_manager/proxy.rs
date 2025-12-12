@@ -14,8 +14,15 @@ use zbus::zvariant::{OwnedObjectPath, OwnedValue};
 )]
 pub trait NetworkManager {
     async fn get_devices(&self) -> zbus::Result<Vec<OwnedObjectPath>>;
+    async fn get_all_devices(&self) -> zbus::Result<Vec<OwnedObjectPath>>;
     fn sleep(&self, sleep: bool) -> zbus::Result<()>;
     fn enable(&self, enable: bool) -> zbus::Result<()>;
+    fn activate_connection(
+        &self,
+        connection: OwnedObjectPath,
+        device: OwnedObjectPath,
+        specific_object: OwnedObjectPath,
+    ) -> zbus::Result<OwnedObjectPath>;
 
     #[zbus(property)]
     fn networking_enabled(&self) -> zbus::Result<bool>;
@@ -110,7 +117,13 @@ pub enum NMConnectivityState {
 ///
 /// See: https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMDeviceState
 #[derive(
-    Default, Clone, Debug, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, OwnedValue,
+    PartialEq,
+    Default,
+    Clone,
+    Debug,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
+    OwnedValue,
 )]
 #[repr(u32)]
 #[zvariant(signature = "u")]
