@@ -2,6 +2,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     crane.url = "github:ipetkov/crane";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -10,7 +14,7 @@
       crane,
       systems,
       ...
-    }:
+    }@inputs:
     let
       inherit (nixpkgs) lib;
       forAllSystems = lib.genAttrs (import systems);
@@ -28,7 +32,8 @@
           inherit (azalea) azalea-pkg azalea-docs;
 
           test = pkgs.callPackage ./nix/test {
-            inherit azalea;
+            azalea = azalea.azalea-pkg;
+            inherit inputs;
           };
 
           docs = pkgs.linkFarm "azalea-desktop-shell-docs" [
