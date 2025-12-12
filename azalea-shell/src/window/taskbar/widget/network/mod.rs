@@ -1,9 +1,11 @@
 use azalea_service::{LocalListenerHandle, StaticHandler};
 use gtk::prelude::*;
-use relm4::{Component, ComponentParts, ComponentSender, RelmWidgetExt, component};
+use relm4::{
+    Component, ComponentParts, ComponentSender, RelmWidgetExt, component, prelude::FactoryVecDeque,
+};
 
 use crate::{
-    icon,
+    factory, icon,
     service::dbus::network_manager::{
         self,
         proxy::{NMConnectivityState, NMState},
@@ -15,6 +17,7 @@ crate::init! {
         enabled: bool,
         state_connectivity: (NMState, NMConnectivityState),
         _nm_handle: LocalListenerHandle,
+        devices_menu: FactoryVecDeque<factory::network::device::Model>,
     }
 
     Config {}
@@ -94,11 +97,11 @@ impl Component for Model {
 
                     gtk::Separator {},
 
-                    // #[local_ref]
-                    // devices_widget -> gtk::Box {
-                    //     set_orientation: gtk::Orientation::Vertical,
-                    //     set_spacing: 5,
-                    // }
+                    #[local_ref]
+                    devices_widget -> gtk::Box {
+                        set_orientation: gtk::Orientation::Vertical,
+                        set_spacing: 5,
+                    }
                 },
             },
         },
@@ -116,10 +119,14 @@ impl Component for Model {
                 sender.input_sender().clone(),
                 Input::NetworkManager,
             ),
+            devices_menu: FactoryVecDeque::builder()
+                .launch(gtk::Box::default())
+                .detach(),
         };
 
         network_manager::Service::send(network_manager::Input::Update);
 
+        let devices_widget = model.devices_menu.widget();
         let widgets = view_output!();
 
         ComponentParts { model, widgets }
@@ -133,6 +140,15 @@ impl Component for Model {
                 Output::StateChanged(nmstate) => self.state_connectivity.0 = nmstate,
                 Output::ConnectivityChanged(nmconnectivity_state) => {
                     self.state_connectivity.1 = nmconnectivity_state
+                }
+                Output::Devices(devices) => {
+                    let mut guard = self.devices_menu.guard();
+
+                    guard.clear();
+
+                    for device in devices {
+                        guard.push_back(device);
+                    }
                 }
             },
             Input::Enable(on) => {
