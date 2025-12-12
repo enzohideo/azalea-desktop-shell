@@ -1,9 +1,13 @@
 {
+  inputs,
   lib,
   azalea,
   testers,
   foot,
 }:
+let
+  user = "alice";
+in
 testers.runNixOSTest {
   name = "azalea-integration-test";
 
@@ -11,9 +15,13 @@ testers.runNixOSTest {
   nodes.sway = import ./nodes/sway.nix;
 
   defaults = {
-    services.getty.autologinUser = "alice";
+    imports = [
+      inputs.home-manager.nixosModules.home-manager
+    ];
 
-    users.users.alice = {
+    services.getty.autologinUser = user;
+
+    users.users.${user} = {
       isNormalUser = true;
       uid = 1000;
     };
@@ -44,6 +52,7 @@ testers.runNixOSTest {
 
     virtualisation.memorySize = 8192;
     virtualisation.writableStore = true;
+    virtualisation.qemu.options = [ "-vga virtio" ];
   };
 
   testScript = ''
@@ -53,7 +62,7 @@ testers.runNixOSTest {
       machine.wait_for_unit("multi-user.target")
       machine.wait_for_file("/run/user/1000/wayland-1")
       machine.wait_until_succeeds("pgrep azalea")
-      machine.sleep(6)
+      machine.sleep(10)
 
       with subtest(f"{machine.name}: default"):
         machine.screenshot(f"{machine.name}-default")

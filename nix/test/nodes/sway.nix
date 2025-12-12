@@ -4,6 +4,8 @@ let
     include /etc/sway/config.d/*
 
     output * bg /run/current-system/sw/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+    output * mode 1920x1080 position 0,0
+    output * scale 1
     for_window [class="^.*"] opacity 0.7
 
     exec foot
@@ -16,7 +18,7 @@ in
 
   programs.bash.loginShellInit = ''
     if [ "$(tty)" = "/dev/tty1" ]; then
-      exec dbus-run-session -- sway --config ${cfg}
+      exec sway --config ${cfg}
     fi
   '';
 }
