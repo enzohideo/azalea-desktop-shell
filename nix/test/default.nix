@@ -48,7 +48,7 @@ testers.runNixOSTest {
       };
 
       serviceConfig = {
-        ExecStart = "${azalea}/bin/azalea daemon start";
+        ExecStart = "${azalea}/bin/azalea daemon start --config ${./config.ron}";
         Restart = "on-failure";
       };
     };

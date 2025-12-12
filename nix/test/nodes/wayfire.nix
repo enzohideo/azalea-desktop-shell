@@ -4,6 +4,7 @@ let
     [autostart]
     azalea = systemctl --user import-environment WAYLAND_DISPLAY && systemctl --user start azalea
     autostart_wf_shell = false
+    background = wf-background
 
     [output:Virtual-1]
     mode = 1920x1080
