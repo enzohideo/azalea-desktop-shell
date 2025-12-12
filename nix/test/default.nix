@@ -14,6 +14,7 @@ testers.runNixOSTest {
   nodes.hyprland = import ./nodes/hyprland.nix;
   # nodes.niri = import ./nodes/niri.nix; # Niri doesn't support software rendering
   nodes.sway = import ./nodes/sway.nix;
+  nodes.wayfire = import ./nodes/wayfire.nix;
 
   defaults = {
     imports = [
