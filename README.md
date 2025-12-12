@@ -48,7 +48,11 @@ nix run
 Testing azalea on different wayland compositors
 
 ```
-nix run .#test
+# Automatized tests, screenshots are saved to ./result
+nix build .#test
+
+# Interactive tests
+nix run .#test.driverInteractive
 ```
 
 > [!NOTE]

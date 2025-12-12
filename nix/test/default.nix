@@ -12,6 +12,7 @@ testers.runNixOSTest {
   name = "azalea-integration-test";
 
   nodes.hyprland = import ./nodes/hyprland.nix;
+  nodes.miracle-wm = import ./nodes/miracle-wm.nix;
   # nodes.niri = import ./nodes/niri.nix; # Niri doesn't support software rendering
   nodes.sway = import ./nodes/sway.nix;
   nodes.wayfire = import ./nodes/wayfire.nix;
@@ -62,7 +63,6 @@ testers.runNixOSTest {
       machine.start()
 
       machine.wait_for_unit("multi-user.target")
-      machine.wait_for_file("/run/user/1000/wayland-1")
       machine.wait_until_succeeds("pgrep azalea")
       machine.sleep(10)
 
