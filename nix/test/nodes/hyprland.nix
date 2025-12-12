@@ -4,7 +4,6 @@ let
     monitor=,1920x1080,auto,1
 
     exec-once = systemctl --user start azalea.service
-    exec-once = foot
 
     decoration {
       blur {

@@ -7,8 +7,6 @@ let
     output * mode 1920x1080 position 0,0
     output * scale 1
     for_window [class="^.*"] opacity 0.7
-
-    exec foot
   '';
 in
 {
