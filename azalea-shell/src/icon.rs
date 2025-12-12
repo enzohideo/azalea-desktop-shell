@@ -29,6 +29,7 @@ pub use icons::RADIOWAVES_DOTS as WIFI_DOTS;
 pub use icons::RADIOWAVES_NONE as WIFI_NONE;
 pub use icons::RADIOWAVES_QUESTION_MARK as WIFI_QUESTION_MARK;
 pub use icons::SEARCH_FILLED as SEARCH;
+pub use icons::SLASH_FORWARD_FILLED as SLASH_FORWARD;
 pub use icons::WAVES_7 as WIFI_SLEEP;
 pub use icons::WEATHER_MOON_FILLED as HIBERNATE;
 pub use icons::WEATHER_MOON_REGULAR as SUSPEND;

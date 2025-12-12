@@ -1,3 +1,5 @@
+use crate::icon;
+
 use gtk::prelude::*;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 
@@ -18,11 +20,11 @@ impl SimpleComponent for Model {
     type Output = ();
 
     view! {
-        gtk::Label {
+        gtk::Image {
             set_css_classes: &[
                 "azalea-primary-fg",
             ],
-            set_label: &model.separator,
+            set_icon_name: Some(&model.separator),
         }
     }
 
@@ -32,7 +34,10 @@ impl SimpleComponent for Model {
         _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let model = Model {
-            separator: init.config.separator.unwrap_or(format!("")),
+            separator: init
+                .config
+                .separator
+                .unwrap_or(String::from(icon::SLASH_FORWARD)),
         };
 
         let widgets = view_output!();

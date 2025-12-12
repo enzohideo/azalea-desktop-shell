@@ -31,6 +31,7 @@ fn main() {
             "arrow-exit-filled",
             "weather-moon-filled",
             "weather-moon-regular",
+            "slash-forward-filled",
         ],
     );
 }
