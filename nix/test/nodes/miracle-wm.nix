@@ -19,7 +19,7 @@ in
 {
   programs.wayland.miracle-wm.enable = true;
 
-  systemd.user.services.azalea.enable = true;
+  systemd.user.services.azalea-default.enable = true;
 
   programs.bash.loginShellInit = ''
     if [ "$(tty)" = "/dev/tty1" ]; then

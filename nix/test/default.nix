@@ -34,22 +34,26 @@ testers.runNixOSTest {
       foot
     ];
 
-    systemd.user.services.azalea = {
-      enable = lib.mkDefault false;
+    systemd.user.services = let
+      service = {
+        enable = lib.mkDefault false;
 
-      description = "Azalea Daemon";
+        description = "Azalea Daemon";
 
-      after = [ "graphical-session.target" ];
-      wantedBy = [ "graphical-session.target" ];
-      bindsTo = [ "graphical-session.target" ];
+        after = [ "graphical-session.target" ];
+        wantedBy = [ "graphical-session.target" ];
+        bindsTo = [ "graphical-session.target" ];
 
-      unitConfig = {
-        ConditionEnvironment = "WAYLAND_DISPLAY";
+        unitConfig = {
+          ConditionEnvironment = "WAYLAND_DISPLAY";
+        };
       };
-
-      serviceConfig = {
-        ExecStart = "${azalea}/bin/azalea daemon start --config ${./config.ron}";
-        Restart = "on-failure";
+    in {
+      azalea = service // {
+        serviceConfig.ExecStart = "${azalea}/bin/azalea daemon start --config ${./config.ron}";
+      };
+      azalea-default = service // {
+        serviceConfig.ExecStart = "${azalea}/bin/azalea daemon start";
       };
     };
 
