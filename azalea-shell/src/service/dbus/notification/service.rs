@@ -65,7 +65,7 @@ impl Notifications {
             name: format!(env!("CARGO_PKG_NAME")),
             vendor: format!(env!("CARGO_PKG_AUTHORS")),
             version: format!(env!("CARGO_PKG_VERSION")),
-            spec_version: format!("1.2"),
+            spec_version: format!("1.3"),
         })
     }
 
