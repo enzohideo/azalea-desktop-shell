@@ -1,4 +1,4 @@
-use azalea_service::StaticHandler;
+use azalea_service::StaticServiceManager;
 use gtk::prelude::*;
 use relm4::{
     FactorySender,

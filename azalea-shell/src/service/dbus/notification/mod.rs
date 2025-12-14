@@ -2,7 +2,7 @@ pub mod service;
 
 use std::collections::HashMap;
 
-use azalea_service::StaticHandler;
+use azalea_service::StaticServiceManager;
 use tokio::sync::{broadcast, oneshot};
 
 #[derive(azalea_derive::StaticHandler)]
@@ -37,8 +37,8 @@ impl azalea_service::Service for Service {
     type Event = Event;
     type Output = Output;
 
-    fn handler(init: Self::Init) -> azalea_service::Handler<Self> {
-        azalea_service::Handler::new(init, 16, 16)
+    fn handler(init: Self::Init) -> azalea_service::ServiceManager<Self> {
+        azalea_service::ServiceManager::new(init, 16, 16)
     }
 
     async fn new(

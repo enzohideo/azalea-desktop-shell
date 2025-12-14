@@ -61,7 +61,7 @@ impl Drop for LocalListenerHandle {
 
 /// Service handler responsible for managing/handling a service
 #[derive(Clone)]
-pub struct Handler<S>
+pub struct ServiceManager<S>
 where
     S: Service,
 {
@@ -72,7 +72,7 @@ where
     status: Arc<Mutex<Option<flume::Receiver<S::Input>>>>,
 }
 
-impl<S> Handler<S>
+impl<S> ServiceManager<S>
 where
     S: Service + 'static,
 {
@@ -258,11 +258,11 @@ where
 /// Thread local static handler for a Service
 ///
 /// This allows global (thread local) access to a service
-pub trait LocalStaticHandler
+pub trait LocalStaticServiceManager
 where
     Self: Service,
 {
-    fn static_handler() -> Rc<RefCell<crate::Handler<Self>>>;
+    fn static_handler() -> Rc<RefCell<crate::ServiceManager<Self>>>;
 
     fn init(init: Self::Init) {
         Self::static_handler().borrow_mut().init = init
@@ -336,11 +336,11 @@ where
 /// Static handler for a Service
 ///
 /// This allows global (multi thread) access to a service
-pub trait StaticHandler
+pub trait StaticServiceManager
 where
     Self: Service,
 {
-    fn static_handler() -> Arc<Mutex<crate::Handler<Self>>>;
+    fn static_handler() -> Arc<Mutex<crate::ServiceManager<Self>>>;
 
     fn init(init: Self::Init) {
         match Self::static_handler().lock() {
@@ -442,12 +442,12 @@ where
 #[macro_export]
 macro_rules! impl_local_static_handler {
     ($service:ty) => {
-        impl $crate::LocalStaticHandler for $service {
-            fn static_handler() -> std::rc::Rc<std::cell::RefCell<$crate::Handler<Self>>> {
+        impl $crate::LocalStaticServiceManager for $service {
+            fn static_handler() -> std::rc::Rc<std::cell::RefCell<$crate::ServiceManager<Self>>> {
                 use std::{cell::RefCell, rc::Rc, sync::LazyLock};
 
                 thread_local! {
-                    static HANDLER: LazyLock<Rc<RefCell<$crate::Handler<$service>>>> = LazyLock::new(|| {
+                    static HANDLER: LazyLock<Rc<RefCell<$crate::ServiceManager<$service>>>> = LazyLock::new(|| {
                         azalea_log::debug!($service, "Service initialized");
                         Rc::new(RefCell::new(<$service as $crate::Service>::handler(
                             Default::default(),
@@ -466,11 +466,11 @@ macro_rules! impl_local_static_handler {
 #[macro_export]
 macro_rules! impl_static_handler {
     ($service:ty) => {
-        impl $crate::StaticHandler for Service {
-            fn static_handler() -> std::sync::Arc<std::sync::Mutex<$crate::Handler<Self>>> {
+        impl $crate::StaticServiceManager for Service {
+            fn static_handler() -> std::sync::Arc<std::sync::Mutex<$crate::ServiceManager<Self>>> {
                 use std::sync::{Arc, LazyLock, Mutex};
 
-                static HANDLER: LazyLock<Arc<Mutex<$crate::Handler<$service>>>> =
+                static HANDLER: LazyLock<Arc<Mutex<$crate::ServiceManager<$service>>>> =
                     LazyLock::new(|| {
                         azalea_log::debug!($service, "Service initialized");
 

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use azalea_service::{ListenerHandle, StaticHandler};
+use azalea_service::{ListenerHandle, StaticServiceManager};
 use futures_lite::stream::StreamExt;
 use tokio::sync::{broadcast, oneshot};
 pub use zbus_names::OwnedBusName;
@@ -58,8 +58,8 @@ impl azalea_service::Service for Service {
     type Output = Output;
     const DISABLE_EVENTS: bool = true;
 
-    fn handler(init: Self::Init) -> azalea_service::Handler<Self> {
-        azalea_service::Handler::new(init, 8, 8)
+    fn handler(init: Self::Init) -> azalea_service::ServiceManager<Self> {
+        azalea_service::ServiceManager::new(init, 8, 8)
     }
 
     async fn new(

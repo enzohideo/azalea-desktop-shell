@@ -1,5 +1,5 @@
 use crate::{icon, service};
-use azalea_service::LocalStaticHandler;
+use azalea_service::LocalStaticServiceManager;
 use gtk::prelude::*;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};
 use std::fmt::Debug;

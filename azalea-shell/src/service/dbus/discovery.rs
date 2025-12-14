@@ -32,8 +32,8 @@ impl azalea_service::Service for Service {
     type Event = Output;
     type Output = Output;
 
-    fn handler(init: Self::Init) -> azalea_service::Handler<Self> {
-        azalea_service::Handler::new(init, 4, 8)
+    fn handler(init: Self::Init) -> azalea_service::ServiceManager<Self> {
+        azalea_service::ServiceManager::new(init, 4, 8)
     }
 
     async fn new(

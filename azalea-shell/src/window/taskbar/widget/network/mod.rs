@@ -1,4 +1,4 @@
-use azalea_service::{LocalListenerHandle, StaticHandler};
+use azalea_service::{LocalListenerHandle, StaticServiceManager};
 use gtk::prelude::*;
 use relm4::{
     Component, ComponentParts, ComponentSender, RelmWidgetExt, component, prelude::FactoryVecDeque,

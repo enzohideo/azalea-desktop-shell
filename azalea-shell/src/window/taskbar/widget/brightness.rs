@@ -1,4 +1,4 @@
-use azalea_service::{ListenerHandle, StaticHandler};
+use azalea_service::{ListenerHandle, StaticServiceManager};
 use gtk::prelude::*;
 use relm4::RelmWidgetExt;
 use relm4::{ComponentParts, ComponentSender, SimpleComponent, component};

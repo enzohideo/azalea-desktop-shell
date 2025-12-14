@@ -10,7 +10,7 @@ use crate::{
         },
     },
 };
-use azalea_service::{LocalListenerHandle, StaticHandler};
+use azalea_service::{LocalListenerHandle, StaticServiceManager};
 use gtk::{
     glib::object::Cast,
     prelude::{BoxExt, ButtonExt, OrientableExt, PopoverExt, WidgetExt},
