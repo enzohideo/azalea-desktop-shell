@@ -31,17 +31,32 @@
           default = azalea.azalea-pkg;
           inherit (azalea) azalea-pkg azalea-docs;
 
-          test = pkgs.callPackage ./nix/test {
-            azalea = azalea.azalea-pkg;
-            inherit inputs;
-          };
-
           docs = pkgs.linkFarm "azalea-desktop-shell-docs" [
             {
               name = "docs";
               path = "${azalea.azalea-docs}/share/doc";
             }
           ];
+        }
+      );
+
+      legacyPackages = forAllSystems (
+        system:
+        let
+          pkgs = pkgsFor.${system};
+          azalea = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
+        in
+        {
+          test = pkgs.callPackage ./nix/test {
+            azalea = azalea.azalea-pkg;
+            inherit inputs;
+          };
+
+          interactive-test =
+            (pkgs.callPackage ./nix/test/interactive.nix {
+              azalea = azalea.azalea-pkg;
+              inherit inputs;
+            }).driverInteractive;
         }
       );
 

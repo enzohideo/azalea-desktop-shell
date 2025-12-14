@@ -2,11 +2,20 @@
   inputs,
   lib,
   azalea,
-  testers,
   foot,
+  testers,
 }:
 let
   user = "alice";
+  config = import ./config.nix {
+    inherit
+      user
+      inputs
+      lib
+      azalea
+      foot
+      ;
+  };
 in
 testers.runNixOSTest {
   name = "azalea-integration-test";
@@ -17,48 +26,7 @@ testers.runNixOSTest {
   nodes.sway = import ./nodes/sway.nix;
   nodes.wayfire = import ./nodes/wayfire.nix;
 
-  defaults = {
-    imports = [
-      inputs.home-manager.nixosModules.home-manager
-    ];
-
-    services.getty.autologinUser = user;
-
-    users.users.${user} = {
-      isNormalUser = true;
-      uid = 1000;
-    };
-
-    environment.systemPackages = [
-      azalea
-      foot
-    ];
-
-    systemd.user.services = let
-      service = {
-        enable = lib.mkDefault false;
-
-        description = "Azalea Daemon";
-
-        after = [ "graphical-session.target" ];
-        wantedBy = [ "graphical-session.target" ];
-        bindsTo = [ "graphical-session.target" ];
-
-        unitConfig = {
-          ConditionEnvironment = "WAYLAND_DISPLAY";
-        };
-      };
-    in {
-      azalea = service // {
-        serviceConfig.ExecStart = "${azalea}/bin/azalea daemon start --config ${./config.ron}";
-      };
-      azalea-default = service // {
-        serviceConfig.ExecStart = "${azalea}/bin/azalea daemon start";
-      };
-    };
-
-    virtualisation.memorySize = 8192;
-    virtualisation.writableStore = true;
+  defaults = config // {
     virtualisation.qemu.options = [ "-vga virtio" ];
   };
 

@@ -2,7 +2,11 @@
 let
   cfg = pkgs.writeText "azalea-niri.kdl" ''
     spawn-at-startup "foot"
-    spawn-at-startup "systemctl" "--user" "start" "azalea.service`"
+    spawn-at-startup "systemctl" "--user" "start" "azalea.service"
+    output "Virtual-1" {
+      mode "1920x1080"
+      scale 1.0
+    }
   '';
 in
 {
