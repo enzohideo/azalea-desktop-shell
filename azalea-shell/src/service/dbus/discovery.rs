@@ -8,7 +8,7 @@ use zbus_names::OwnedBusName;
 /// DBus Discovery Service
 ///
 /// Listens for newly created or destroyed DBus objects
-#[derive(azalea_derive::StaticHandler)]
+#[derive(azalea_derive::StaticServiceManager)]
 pub struct Service {
     stream: NameOwnerChangedStream,
     objects: HashSet<OwnedBusName>,

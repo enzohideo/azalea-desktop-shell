@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use azalea_service::StaticServiceManager;
 use tokio::sync::{broadcast, oneshot};
 
-#[derive(azalea_derive::StaticHandler)]
+#[derive(azalea_derive::StaticServiceManager)]
 pub struct Service {
     notifications: HashMap<u32, service::Notification>,
     conn: Option<zbus::Connection>,

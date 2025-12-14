@@ -1,7 +1,7 @@
 use alsa::mixer::{SelemChannelId, SelemId};
 use tokio::sync::broadcast;
 
-#[derive(azalea_derive::StaticHandler)]
+#[derive(azalea_derive::StaticServiceManager)]
 pub struct Service {
     mixer: alsa::Mixer,
     selem_id: SelemId,

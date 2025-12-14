@@ -1,6 +1,6 @@
 use tokio::sync::broadcast;
 
-#[derive(azalea_derive::StaticHandler)]
+#[derive(azalea_derive::StaticServiceManager)]
 pub struct Service {
     client: open_meteo_rs::Client,
 }

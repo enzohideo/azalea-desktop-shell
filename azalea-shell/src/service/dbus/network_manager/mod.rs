@@ -13,7 +13,7 @@ use zbus::{
 
 use crate::service::dbus::network_manager::proxy::NetworkManagerConnectionActiveProxy;
 
-#[derive(azalea_derive::StaticHandler)]
+#[derive(azalea_derive::StaticServiceManager)]
 pub struct Service {
     proxy: NetworkManagerProxy<'static>,
     settings_proxy: NetworkManagerSettingsProxy<'static>,

@@ -6,7 +6,7 @@ use gtk::{
 };
 use tokio::sync::broadcast;
 
-#[derive(Default, azalea_derive::StaticHandler)]
+#[derive(Default, azalea_derive::StaticServiceManager)]
 
 pub struct Service {
     applications: HashMap<AppId, AppInfo>,

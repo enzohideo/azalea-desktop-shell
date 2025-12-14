@@ -1,7 +1,7 @@
 use chrono::Timelike;
 use tokio::sync::broadcast;
 
-#[derive(Default, azalea_derive::StaticHandler)]
+#[derive(Default, azalea_derive::StaticServiceManager)]
 pub struct Service {
     minute: u32,
     hour: u32,

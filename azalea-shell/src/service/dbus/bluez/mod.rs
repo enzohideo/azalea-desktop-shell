@@ -4,7 +4,7 @@ use bluer::DeviceEvent;
 use futures_lite::StreamExt;
 use tokio::sync::broadcast;
 
-#[derive(azalea_derive::StaticHandler)]
+#[derive(azalea_derive::StaticServiceManager)]
 pub struct Service {
     session: bluer::Session,
     adapter: bluer::Adapter,
