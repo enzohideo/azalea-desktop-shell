@@ -1,0 +1,4 @@
+.logo-container > img {
+  width: auto !important;
+  max-width: unset !important;
+}
