@@ -97,19 +97,20 @@ impl Component for Model {
                         },
                     },
 
-                    gtk::Separator {},
-
-                    gtk::Label::new(Some("Devices")) {
-                        set_css_classes: &[ "azalea-primary-fg" ],
-                        set_halign: gtk::Align::Start,
-                        set_hexpand: true,
-                    },
-
-                    #[local_ref]
-                    devices_widget -> gtk::Box {
-                        set_orientation: gtk::Orientation::Vertical,
-                        set_spacing: 5,
-                    },
+                    // This isn't particularly useful (at least for me)
+                    // gtk::Separator {},
+                    //
+                    // gtk::Label::new(Some("Devices")) {
+                    //     set_css_classes: &[ "azalea-primary-fg" ],
+                    //     set_halign: gtk::Align::Start,
+                    //     set_hexpand: true,
+                    // },
+                    //
+                    // #[local_ref]
+                    // devices_widget -> gtk::Box {
+                    //     set_orientation: gtk::Orientation::Vertical,
+                    //     set_spacing: 5,
+                    // },
 
                     gtk::Separator {},
 
@@ -151,7 +152,6 @@ impl Component for Model {
 
         network_manager::Service::send(network_manager::Input::Update);
 
-        let devices_widget = model.devices_menu.widget();
         let connections_widget = model.connections_menu.widget();
         let widgets = view_output!();
 
