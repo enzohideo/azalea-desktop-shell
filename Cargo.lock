@@ -286,7 +286,7 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "azalea"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "azalea-core",
  "azalea-derive",
@@ -300,7 +300,7 @@ dependencies = [
 
 [[package]]
 name = "azalea-core"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "async-net",
  "azalea-log",
@@ -320,7 +320,7 @@ dependencies = [
 
 [[package]]
 name = "azalea-derive"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "azalea-service",
  "quote",
@@ -329,14 +329,14 @@ dependencies = [
 
 [[package]]
 name = "azalea-log"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "glib",
 ]
 
 [[package]]
 name = "azalea-service"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "azalea-log",
@@ -349,7 +349,7 @@ dependencies = [
 
 [[package]]
 name = "azalea-shell"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "alsa",
  "azalea-derive",
