@@ -15,7 +15,6 @@
 //!pub enum ConfigWrapper {
 //!    Default,
 //!    Taskbar(taskbar::Config),
-//!    Wallpaper(wallpaper::Config),
 //!}
 //!```
 //!
@@ -24,7 +23,6 @@
 //!pub enum WindowWrapper {
 //!    Default(gtk::Window),
 //!    Taskbar(relm4::component::Controller<taskbar::Model>),
-//!    Wallpaper(relm4::component::Controller<wallpaper::Model>),
 //!}
 //!```
 //!
@@ -60,7 +58,6 @@
 //!        match window {
 //!            WindowWrapper::Default(window) => window,
 //!            WindowWrapper::Taskbar(controller) => controller.widget(),
-//!            WindowWrapper::Wallpaper(controller) => controller.widget(),
 //!        }
 //!    }
 //!}
