@@ -6,7 +6,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{DeriveInput, parse_macro_input};
 
-/// Derive macro to implement StaticServiceManager and LocalStaticServiceManager for a Service.
+/// Derive macro to implement [azalea_service::StaticServiceManager] and [azalea_service::LocalStaticServiceManager] for a Service.
 ///
 /// ```rust
 /// #[derive(azalea_derive::StaticServiceManager)]
