@@ -5,8 +5,9 @@ use zbus::zvariant::{OwnedObjectPath, OwnedValue};
 
 /// NetworkManager root interface
 ///
-/// See: https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.html
-/// https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.html
+/// See:
+/// - <https://networkmanager.dev/docs/api/latest/gdbus-org.freedesktop.NetworkManager.html>
+/// - <https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.html>
 #[proxy(
     default_service = "org.freedesktop.NetworkManager",
     default_path = "/org/freedesktop/NetworkManager",
@@ -55,7 +56,7 @@ pub trait NetworkManager {
 
 /// NMState values indicate the current overall networking state.
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMState
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMState>
 #[derive(
     Default,
     Clone,
@@ -96,7 +97,7 @@ pub enum NMState {
 
 /// NMState values indicate the current overall networking state.
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMConnectivityState
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMConnectivityState>
 #[derive(
     Default, Clone, Debug, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, OwnedValue,
 )]
@@ -122,7 +123,7 @@ pub enum NMConnectivityState {
 
 /// NMDeviceState values indicate the device state.
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMDeviceState
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMDeviceState>
 #[derive(
     PartialEq,
     Default,
@@ -191,7 +192,7 @@ pub enum NMDeviceState {
 
 /// NMDeviceType indicates the type of device, e.g.: wifi, ethernet, bluetooth, etc
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMDeviceType
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/nm-dbus-types.html#NMDeviceType>
 #[derive(
     Default, Clone, Debug, serde_repr::Serialize_repr, serde_repr::Deserialize_repr, OwnedValue,
 )]
@@ -244,7 +245,7 @@ pub enum NMDeviceType {
 
 /// Netowkr Manager Device DBus interface
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Device.html
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Device.html>
 #[proxy(
     default_service = "org.freedesktop.NetworkManager",
     interface = "org.freedesktop.NetworkManager.Device"
@@ -267,7 +268,7 @@ pub trait NetworkManagerDevice {
 
 /// Network Manager Settings DBus interface
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Settings
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Settings>
 #[proxy(
     default_service = "org.freedesktop.NetworkManager",
     default_path = "/org/freedesktop/NetworkManager/Settings",
@@ -282,7 +283,7 @@ pub trait NetworkManagerSettings {
 
 /// Network Manager Settings Connection DBus interface
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Settings.Connection.html
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Settings.Connection.html>
 #[proxy(
     default_service = "org.freedesktop.NetworkManager",
     interface = "org.freedesktop.NetworkManager.Settings.Connection"
@@ -290,7 +291,7 @@ pub trait NetworkManagerSettings {
 pub trait NetworkManagerSettingsConnection {
     /// This is a nested dictionary...
     ///
-    /// It would be nice to have nested dictionaries, but it's not supported, see https://github.com/z-galaxy/zbus/issues/312
+    /// It would be nice to have nested dictionaries, but it's not supported, see <https://github.com/z-galaxy/zbus/issues/312>
     fn get_settings(
         &self,
     ) -> zbus::Result<HashMap<String, HashMap<String, zbus::zvariant::OwnedValue>>>;
@@ -298,7 +299,7 @@ pub trait NetworkManagerSettingsConnection {
 
 /// Network Manager Connection Active DBus interface
 ///
-/// See: https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Connection.Active.html
+/// See: <https://people.freedesktop.org/~lkundrak/nm-docs/gdbus-org.freedesktop.NetworkManager.Connection.Active.html>
 #[proxy(
     default_service = "org.freedesktop.NetworkManager",
     interface = "org.freedesktop.NetworkManager.Connection.Active"

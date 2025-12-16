@@ -34,7 +34,7 @@ pub enum Output {}
 
 #[relm4::factory(pub)]
 impl FactoryComponent for Model {
-    /// Settings, Option<Active Connection>
+    /// `(Settings, Option<ActiveConnection>)`
     type Init = (OwnedObjectPath, Option<OwnedObjectPath>);
     type Input = Input;
     type Output = Output;

@@ -4,7 +4,7 @@ use zbus::proxy;
 ///
 /// DBus interface responsible for shutdown, reboot, suspend, hibernate, etc.
 ///
-/// See: https://www.freedesktop.org/software/systemd/man/latest/org.freedesktop.login1.html
+/// See: <https://www.freedesktop.org/software/systemd/man/latest/org.freedesktop.login1.html>
 #[proxy(
     default_service = "org.freedesktop.login1",
     default_path = "/org/freedesktop/login1",
