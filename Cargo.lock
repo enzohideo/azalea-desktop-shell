@@ -293,12 +293,9 @@ dependencies = [
  "azalea-log",
  "azalea-service",
  "azalea-shell",
- "clap",
- "gtk4",
  "gtk4-layer-shell",
  "relm4",
  "serde",
- "serde_json",
 ]
 
 [[package]]

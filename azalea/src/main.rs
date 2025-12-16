@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use azalea::{
     core::{
         app::{self},
-        config,
+        config::{self, Config},
+        monitor::Monitor
     },
-    shell::{self, icon, window::taskbar},
+    shell::{self, icon, window::{taskbar,wallpaper}},
 };
-use azalea_core::{config::Config, monitor::Monitor};
-use azalea_shell::window::wallpaper;
+use relm4::gtk;
 use relm4::{Component, ComponentController};
 
 // TODO: Macro to create Init based on list of widgets?
