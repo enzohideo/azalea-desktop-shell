@@ -1,3 +1,5 @@
+#![doc(html_logo_url = "../azalea-logo.png")]
+
 //! # azalea
 //!
 //! This crate works as the main application and as a library that re-exports the inner crates

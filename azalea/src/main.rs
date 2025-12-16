@@ -4,9 +4,12 @@ use azalea::{
     core::{
         app::{self},
         config::{self, Config},
-        monitor::Monitor
+        monitor::Monitor,
     },
-    shell::{self, icon, window::{taskbar,wallpaper}},
+    shell::{
+        self, icon,
+        window::{taskbar, wallpaper},
+    },
 };
 use relm4::gtk;
 use relm4::{Component, ComponentController};
