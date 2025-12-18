@@ -10,6 +10,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       crane,
       systems,
@@ -28,8 +29,10 @@
           azalea = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
         in
         {
-          default = azalea.azalea-pkg;
-          inherit (azalea) azalea-pkg azalea-docs;
+          default = self.packages.${system}.azalea;
+
+          azalea = azalea.azalea-pkg;
+          inherit (azalea) azalea-docs;
 
           docs = pkgs.linkFarm "azalea-desktop-shell-docs" [
             {
@@ -44,18 +47,16 @@
         system:
         let
           pkgs = pkgsFor.${system};
-          azalea = pkgs.callPackage ./nix/package.nix { craneLib = crane.mkLib pkgs; };
+          azalea = self.packages.${system}.azalea;
         in
         {
           test = pkgs.callPackage ./nix/test {
-            azalea = azalea.azalea-pkg;
-            inherit inputs;
+            inherit azalea inputs;
           };
 
           interactive-test =
             (pkgs.callPackage ./nix/test/interactive.nix {
-              azalea = azalea.azalea-pkg;
-              inherit inputs;
+              inherit azalea inputs;
             }).driverInteractive;
         }
       );
