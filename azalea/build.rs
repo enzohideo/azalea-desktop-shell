@@ -5,9 +5,5 @@ fn main() {
     // Solution from:
     // https://stackoverflow.com/a/67704588
     println!("cargo:rerun-if-changed=assets");
-    std::fs::copy(
-        "../assets/azalea-logo.png",
-        "../target/doc/azalea-logo.png",
-    )
-    .expect("Failed to copy azalea-logo.png");
+    let _ = std::fs::copy("../assets/azalea-logo.png", "../target/doc/azalea-logo.png");
 }
